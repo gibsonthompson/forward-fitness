@@ -99,31 +99,107 @@ function computeRec(history, exId) {
   return { weight: w, reps: Math.min(Math.round(avgReps) + 1, 12), note: `Add a rep. Target ${Math.min(Math.round(avgReps) + 1, 12)} reps at RIR 1-2.`, type: "progress" };
 }
 
-// ─── Storage ───
-function load(k, fb) { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : fb; } catch { return fb; } }
-function sv(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) { console.error(e); } }
+// ─── Storage (Supabase + localStorage fallback) ───
+import { supabase } from './supabaseClient';
+
+async function loadProfile(userId) {
+  const { data } = await supabase.from('iron_profiles').select('*').eq('user_id', userId).single();
+  return data ? { weight: Number(data.weight), age: data.age } : null;
+}
+async function saveProfile(userId, p) {
+  await supabase.from('iron_profiles').upsert({ user_id: userId, weight: p.weight, age: p.age }, { onConflict: 'user_id' });
+}
+async function loadWorkouts(userId) {
+  const { data } = await supabase.from('iron_workouts').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(200);
+  return (data || []).map(r => ({ date: r.date, exercises: r.exercises, id: r.id })).reverse();
+}
+async function saveWorkout(userId, workout) {
+  await supabase.from('iron_workouts').insert({ user_id: userId, date: workout.date, exercises: workout.exercises });
+}
+async function deleteWorkout(id) {
+  await supabase.from('iron_workouts').delete().eq('id', id);
+}
+async function loadMeals(userId) {
+  const { data } = await supabase.from('iron_meals').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(60);
+  const obj = {};
+  (data || []).forEach(r => { obj[r.date] = r.entries || []; });
+  return obj;
+}
+async function saveMealsForDate(userId, date, entries) {
+  await supabase.from('iron_meals').upsert({ user_id: userId, date, entries }, { onConflict: 'user_id,date' });
+}
+async function loadMeasurements(userId) {
+  const { data } = await supabase.from('iron_measurements').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(50);
+  return (data || []).map(r => ({ date: r.date, weight: r.weight, chest: r.chest, waist: r.waist, arms: r.arms, shoulders: r.shoulders, quads: r.quads, id: r.id }));
+}
+async function saveMeasurement(userId, m) {
+  await supabase.from('iron_measurements').insert({ user_id: userId, date: m.date, weight: m.weight || null, chest: m.chest || null, waist: m.waist || null, arms: m.arms || null, shoulders: m.shoulders || null, quads: m.quads || null });
+}
 
 // ─── Main App ───
 export default function App() {
   const [tab, setTab] = useState("workout");
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState({ weight: 180, age: 28 });
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
   const [measurements, setMeasurements] = useState([]);
   const [showSetup, setShowSetup] = useState(false);
 
+  // Auth listener
   useEffect(() => {
-    const p = load("ip2-profile", null);
-    const w = load("ip2-workouts", []);
-    const m = load("ip2-meals", {});
-    const ms = load("ip2-meas", []);
-    if (p) setProfile(p); else setShowSetup(true);
-    setWorkouts(w); setMeals(m); setMeasurements(ms);
-    setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) setLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) setLoading(false);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
-  const up = (k, v, setter) => { setter(v); sv(k, v); };
+  // Load data when user is set
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      setLoading(true);
+      const [p, w, m, ms] = await Promise.all([
+        loadProfile(user.id),
+        loadWorkouts(user.id),
+        loadMeals(user.id),
+        loadMeasurements(user.id),
+      ]);
+      if (p) setProfile(p); else setShowSetup(true);
+      setWorkouts(w); setMeals(m); setMeasurements(ms);
+      setLoading(false);
+    })();
+  }, [user]);
+
+  const handleSaveProfile = async (p) => {
+    setProfile(p);
+    setShowSetup(false);
+    if (user) await saveProfile(user.id, p);
+  };
+  const handleFinishWorkout = async (workout) => {
+    const updated = [...workouts, workout];
+    setWorkouts(updated);
+    if (user) await saveWorkout(user.id, workout);
+  };
+  const handleSetMeals = async (date, entries, fullMeals) => {
+    setMeals(fullMeals);
+    if (user) await saveMealsForDate(user.id, date, entries);
+  };
+  const handleAddMeasurement = async (m) => {
+    setMeasurements(prev => [m, ...prev]);
+    if (user) await saveMeasurement(user.id, m);
+  };
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setWorkouts([]); setMeals({}); setMeasurements([]);
+    setProfile({ weight: 180, age: 28 });
+  };
 
   const proteinTarget = Math.round(profile.weight * 1);
   const calTarget = Math.round(profile.weight * 16 + 300);
@@ -145,6 +221,8 @@ export default function App() {
     </div>
   );
 
+  if (!user) return <AuthScreen />;
+
   return (
     <div style={{ background: "#000", color: "#fff", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: 90, WebkitFontSmoothing: "antialiased" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -157,22 +235,27 @@ export default function App() {
         ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:#222;border-radius:2px}
       `}</style>
 
-      {showSetup && <Setup profile={profile} onSave={p => { up("ip2-profile", p, setProfile); setShowSetup(false); }} />}
+      {showSetup && <Setup profile={profile} onSave={handleSaveProfile} />}
 
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid #111" }}>
         <div>
           <h1 style={{ fontSize: 18, fontFamily: "'Space Mono', monospace", fontWeight: 400, letterSpacing: 2, margin: 0, color: "#666" }}>IRON<span style={{ color: "#fff", fontWeight: 700 }}>PROTOCOL</span></h1>
           <span style={{ fontSize: 7, letterSpacing: 4, color: "#333", fontFamily: "'Space Mono', monospace" }}>PROGRESSIVE OVERLOAD ENGINE</span>
         </div>
-        <button onClick={() => setShowSetup(true)} style={S.iconBtn} aria-label="Settings">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button onClick={handleLogout} style={S.iconBtn} aria-label="Logout" title="Logout">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+          <button onClick={() => setShowSetup(true)} style={S.iconBtn} aria-label="Settings">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </header>
 
       <div style={{ padding: "20px 16px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} setWorkouts={w => up("ip2-workouts", w, setWorkouts)} wv={wv} />}
-        {tab === "nutrition" && <NutritionTab meals={meals} setMeals={m => up("ip2-meals", m, setMeals)} pt={proteinTarget} ct={calTarget} />}
-        {tab === "progress" && <ProgressTab workouts={workouts} measurements={measurements} setMeasurements={m => up("ip2-meas", m, setMeasurements)} wv={wv} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onFinish={handleFinishWorkout} wv={wv} />}
+        {tab === "nutrition" && <NutritionTab meals={meals} onMealChange={handleSetMeals} pt={proteinTarget} ct={calTarget} />}
+        {tab === "progress" && <ProgressTab workouts={workouts} measurements={measurements} onAddMeasurement={handleAddMeasurement} wv={wv} />}
         {tab === "reference" && <ReferenceTab />}
       </div>
 
@@ -189,6 +272,58 @@ export default function App() {
           </button>
         ))}
       </nav>
+    </div>
+  );
+}
+
+// ─── Auth Screen ───
+function AuthScreen() {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setErr(""); setLoading(true);
+    try {
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        if (error) setErr(error.message);
+      } else {
+        const { error } = await supabase.auth.signUp({ email, password: pass });
+        if (error) setErr(error.message);
+        else setErr("Check your email to confirm, then log in.");
+      }
+    } catch (e) { setErr(e.message); }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ background: "#000", color: "#fff", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+      <style>{`body{margin:0;background:#000} *{box-sizing:border-box}`}</style>
+      <h1 style={{ fontSize: 28, fontFamily: "'Space Mono', monospace", fontWeight: 400, letterSpacing: 3, margin: "0 0 4px", color: "#666" }}>IRON<span style={{ color: "#fff", fontWeight: 700 }}>PROTOCOL</span></h1>
+      <span style={{ fontSize: 8, letterSpacing: 5, color: "#333", fontFamily: "'Space Mono', monospace", marginBottom: 48 }}>PROGRESSIVE OVERLOAD ENGINE</span>
+
+      <div style={{ width: "100%", maxWidth: 340 }}>
+        <div style={{ display: "flex", marginBottom: 24, borderBottom: "1px solid #222" }}>
+          <button onClick={() => { setMode("login"); setErr(""); }} style={{ flex: 1, background: "none", border: "none", color: mode === "login" ? "#fff" : "#444", padding: "12px 0", fontSize: 12, letterSpacing: 3, fontFamily: "'Space Mono', monospace", cursor: "pointer", borderBottom: mode === "login" ? "2px solid #fff" : "2px solid transparent" }}>LOGIN</button>
+          <button onClick={() => { setMode("signup"); setErr(""); }} style={{ flex: 1, background: "none", border: "none", color: mode === "signup" ? "#fff" : "#444", padding: "12px 0", fontSize: 12, letterSpacing: 3, fontFamily: "'Space Mono', monospace", cursor: "pointer", borderBottom: mode === "signup" ? "2px solid #fff" : "2px solid transparent" }}>SIGN UP</button>
+        </div>
+
+        <label style={{ display: "block", fontSize: 10, letterSpacing: 2, color: "#666", fontFamily: "'Space Mono', monospace", marginBottom: 6 }}>EMAIL</label>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{ width: "100%", background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, color: "#fff", padding: "12px 14px", fontSize: 15, fontFamily: "'DM Sans', sans-serif", outline: "none", marginBottom: 16 }} />
+
+        <label style={{ display: "block", fontSize: 10, letterSpacing: 2, color: "#666", fontFamily: "'Space Mono', monospace", marginBottom: 6 }}>PASSWORD</label>
+        <input type="password" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSubmit()} style={{ width: "100%", background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, color: "#fff", padding: "12px 14px", fontSize: 15, fontFamily: "'DM Sans', sans-serif", outline: "none", marginBottom: 24 }} />
+
+        {err && <p style={{ color: err.includes("Check your email") ? "#00ff88" : "#ff4444", fontSize: 12, marginBottom: 16, fontFamily: "'Space Mono', monospace", lineHeight: 1.6 }}>{err}</p>}
+
+        <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", background: "#fff", color: "#000", border: "none", borderRadius: 6, padding: "14px 0", fontSize: 13, letterSpacing: 3, fontFamily: "'Space Mono', monospace", fontWeight: 700, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.5 : 1 }}>
+          {loading ? "..." : mode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -216,7 +351,7 @@ function Setup({ profile, onSave }) {
 }
 
 // ─── Workout Tab ───
-function WorkoutTab({ workouts, setWorkouts, wv }) {
+function WorkoutTab({ workouts, onFinish, wv }) {
   const [activeSplit, setActiveSplit] = useState(null);
   const [workout, setWorkout] = useState({ date: today(), exercises: [] });
   const [showPicker, setShowPicker] = useState(false);
@@ -274,7 +409,7 @@ function WorkoutTab({ workouts, setWorkouts, wv }) {
 
   const finish = () => {
     if (!workout.exercises.length) return;
-    setWorkouts([...workouts, workout]);
+    onFinish(workout);
     setWorkout({ date: today(), exercises: [] });
     setActiveSplit(null);
   };
@@ -415,7 +550,7 @@ function WorkoutTab({ workouts, setWorkouts, wv }) {
 }
 
 // ─── Nutrition ───
-function NutritionTab({ meals, setMeals, pt, ct }) {
+function NutritionTab({ meals, onMealChange, pt, ct }) {
   const [date, setDate] = useState(today());
   const [showP, setShowP] = useState(false);
   const [custom, setCustom] = useState({ name: "", protein: "", cals: "" });
@@ -426,12 +561,18 @@ function NutritionTab({ meals, setMeals, pt, ct }) {
 
   const add = (p) => {
     const m = { name: p.name, protein: p.protein, cals: p.cals, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
-    setMeals({ ...meals, [date]: [...(meals[date] || []), m] });
+    const newEntries = [...(meals[date] || []), m];
+    const fullMeals = { ...meals, [date]: newEntries };
+    onMealChange(date, newEntries, fullMeals);
     setShowP(false);
   };
 
   const addC = () => { if (!custom.name) return; add({ name: custom.name, protein: +custom.protein || 0, cals: +custom.cals || 0 }); setCustom({ name: "", protein: "", cals: "" }); };
-  const rm = (i) => setMeals({ ...meals, [date]: (meals[date] || []).filter((_, j) => j !== i) });
+  const rm = (i) => {
+    const newEntries = (meals[date] || []).filter((_, j) => j !== i);
+    const fullMeals = { ...meals, [date]: newEntries };
+    onMealChange(date, newEntries, fullMeals);
+  };
 
   const prev = () => { const d = new Date(date); d.setDate(d.getDate()-1); setDate(d.toISOString().split("T")[0]); };
   const next = () => { const d = new Date(date); d.setDate(d.getDate()+1); setDate(d.toISOString().split("T")[0]); };
@@ -544,9 +685,9 @@ function Ring({ label, val, tgt, unit, pct }) {
 }
 
 // ─── Progress ───
-function ProgressTab({ workouts, measurements, setMeasurements, wv }) {
+function ProgressTab({ workouts, measurements, onAddMeasurement, wv }) {
   const [nm, setNm] = useState({ date: today(), weight: "", chest: "", waist: "", arms: "", shoulders: "", quads: "" });
-  const addM = () => { setMeasurements([...measurements, { ...nm }]); setNm({ date: today(), weight: "", chest: "", waist: "", arms: "", shoulders: "", quads: "" }); };
+  const addM = () => { onAddMeasurement({ ...nm }); setNm({ date: today(), weight: "", chest: "", waist: "", arms: "", shoulders: "", quads: "" }); };
 
   const prs = {};
   workouts.forEach(w => (w.exercises||[]).forEach(ex => {

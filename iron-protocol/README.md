@@ -4,6 +4,7 @@ Progressive overload workout tracker with smart weight recommendations, nutritio
 
 ## Features
 
+- **Supabase Auth** — Email/password login, data syncs across all devices.
 - **Smart Weight Recommendations** — Double progression algorithm with RIR tracking. Automatically calculates your next session's target weight based on performance.
 - **Plateau Detection** — Flags stalled exercises after 3+ sessions and prescribes deload protocols.
 - **Pre-loaded Split** — Chest/Back, Arms, Shoulders/Legs with full exercise library and custom exercise support.
@@ -11,30 +12,57 @@ Progressive overload workout tracker with smart weight recommendations, nutritio
 - **Weekly Volume Monitor** — Real-time sets-per-muscle-group tracking against the 10-20 optimal range.
 - **Progress Dashboard** — Estimated 1RM PRs, lifetime stats, volume heatmap, and body measurement logging.
 - **Training Intel** — Evidence-based reference sections on progressive overload, volume, aesthetics, nutrition, and recovery.
+- **PWA** — Install to home screen, offline-capable, safe-area support.
 
 ## Tech Stack
 
-- React 18
-- Vite
-- localStorage for persistence
-- Zero dependencies beyond React
+- React 18 + Vite
+- Supabase (PostgreSQL + Auth) — shared project with DetailPro/JunkLine/RSA
+- PWA with service worker
+- Zero UI dependencies beyond React
 
 ## Getting Started
 
 ```bash
+# 1. Install dependencies
 npm install
+
+# 2. Copy env and add your anon key
+cp .env.example .env
+
+# 3. Run the Supabase migration
+#    Go to oschjeuhejqibymdaqxw.supabase.co → SQL Editor
+#    Paste and run database/schema.sql
+
+# 4. Start dev server
 npm run dev
 ```
 
 Opens at `http://localhost:3000`.
 
-## Build
+## Deploy to Vercel
 
 ```bash
 npm run build
+vercel deploy
 ```
 
-Output in `dist/` — deploy anywhere (Vercel, Netlify, static hosting).
+Set env vars in Vercel dashboard:
+```
+VITE_SUPABASE_URL=https://oschjeuhejqibymdaqxw.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+## Database
+
+Uses the shared Supabase project (`oschjeuhejqibymdaqxw`). Tables are prefixed with `iron_` to avoid collisions:
+
+- `iron_profiles` — user weight/age for macro targets
+- `iron_workouts` — date + exercises JSONB (sets/reps/weight/rir)
+- `iron_meals` — date + entries JSONB (per-day meal log)
+- `iron_measurements` — body measurements over time
+
+All tables have RLS enabled — users can only access their own data.
 
 ## Progressive Overload Algorithm
 
