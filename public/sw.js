@@ -1,4 +1,4 @@
-const CACHE_NAME = 'forward-fitness-v1';
+const CACHE_NAME = 'forward-fitness-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
