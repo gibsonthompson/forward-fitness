@@ -293,7 +293,6 @@ function AuthScreen() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password: pass });
         if (error) setErr(error.message);
-        else setErr("Check your email to confirm, then log in.");
       }
     } catch (e) { setErr(e.message); }
     setLoading(false);
@@ -318,7 +317,7 @@ function AuthScreen() {
         <label style={{ display: "block", fontSize: 10, letterSpacing: 2, color: "#666", fontFamily: "'Space Mono', monospace", marginBottom: 6 }}>PASSWORD</label>
         <input type="password" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSubmit()} style={{ width: "100%", background: "#0a0a0a", border: "1px solid #222", borderRadius: 6, color: "#fff", padding: "12px 14px", fontSize: 15, fontFamily: "'DM Sans', sans-serif", outline: "none", marginBottom: 24 }} />
 
-        {err && <p style={{ color: err.includes("Check your email") ? "#00ff88" : "#ff4444", fontSize: 12, marginBottom: 16, fontFamily: "'Space Mono', monospace", lineHeight: 1.6 }}>{err}</p>}
+        {err && <p style={{ color: "#ff4444", fontSize: 12, marginBottom: 16, fontFamily: "'Space Mono', monospace", lineHeight: 1.6 }}>{err}</p>}
 
         <button onClick={handleSubmit} disabled={loading} style={{ width: "100%", background: "#fff", color: "#000", border: "none", borderRadius: 6, padding: "14px 0", fontSize: 13, letterSpacing: 3, fontFamily: "'Space Mono', monospace", fontWeight: 700, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.5 : 1 }}>
           {loading ? "..." : mode === "login" ? "LOG IN" : "CREATE ACCOUNT"}
