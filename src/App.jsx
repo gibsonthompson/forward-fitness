@@ -193,22 +193,25 @@ export default function App() {
   );
 
   return (
-    <div style={{ background: "#000", color: "#fff", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: 90, WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ background: "#000", color: "#fff", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingTop: "env(safe-area-inset-top)", paddingBottom: 90, WebkitFontSmoothing: "antialiased" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
       <style>{`
         *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
         input[type="number"]{-moz-appearance:textfield}
         input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+        input,select,textarea{font-size:16px!important}
         @keyframes spin{to{transform:rotate(360deg)}}
-        body{margin:0;background:#000;overscroll-behavior:none}
+        body{margin:0;background:#000;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+        html{touch-action:manipulation}
         ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:#222;border-radius:2px}
+        button{-webkit-appearance:none;touch-action:manipulation}
       `}</style>
 
       {showSetup && <Setup profile={profile} onSave={handleSaveProfile} />}
 
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid #111" }}>
         <div>
-          <h1 style={{ fontSize: 18, fontFamily: "'Space Mono', monospace", fontWeight: 400, letterSpacing: 2, margin: 0, color: "#666" }}>IRON<span style={{ color: "#fff", fontWeight: 700 }}>PROTOCOL</span></h1>
+          <h1 style={{ fontSize: 18, fontFamily: "'Space Mono', monospace", fontWeight: 400, letterSpacing: 2, margin: 0, color: "#666" }}>FORWARD<span style={{ color: "#fff", fontWeight: 700 }}>FITNESS</span></h1>
           <span style={{ fontSize: 7, letterSpacing: 4, color: "#333", fontFamily: "'Space Mono', monospace" }}>PROGRESSIVE OVERLOAD ENGINE</span>
         </div>
         <button onClick={() => setShowSetup(true)} style={S.iconBtn} aria-label="Settings">

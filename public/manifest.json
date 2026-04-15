@@ -1,6 +1,6 @@
 {
-  "name": "Iron Protocol",
-  "short_name": "IronProtocol",
+  "name": "Forward Fitness",
+  "short_name": "ForwardFit",
   "description": "Progressive overload workout tracker with smart weight recommendations",
   "start_url": "/",
   "display": "standalone",
