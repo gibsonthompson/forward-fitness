@@ -193,33 +193,30 @@ export default function App() {
   );
 
   return (
-    <div style={{ background: "#f5f7fa", color: "#1a2332", fontFamily: "'DM Sans', sans-serif", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingTop: "env(safe-area-inset-top)", paddingBottom: 90, WebkitFontSmoothing: "antialiased" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <div style={{ background: "#f5f7fa", color: "#1a2332", fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingTop: "env(safe-area-inset-top)", paddingBottom: 90, WebkitFontSmoothing: "antialiased", overflow: "hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
         input[type="number"]{-moz-appearance:textfield}
         input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-        input,select,textarea{font-size:16px!important}
+        input,select,textarea{font-size:16px!important;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
         @keyframes spin{to{transform:rotate(360deg)}}
-        body{margin:0;background:#f5f7fa;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+        body{margin:0;background:#f5f7fa;overscroll-behavior:none;-webkit-text-size-adjust:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
         html{touch-action:manipulation}
         ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#f5f7fa}::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
-        button{-webkit-appearance:none;touch-action:manipulation}
+        button{-webkit-appearance:none;touch-action:manipulation;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
       `}</style>
 
       {showSetup && <Setup profile={profile} onSave={handleSaveProfile} />}
 
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid #e8ecf0", background: "#fff" }}>
-        <div>
-          <h1 style={{ fontSize: 18, fontFamily: "'Space Mono', monospace", fontWeight: 400, letterSpacing: 2, margin: 0, color: "#8895a7" }}>FORWARD<span style={{ color: "#1a73e8", fontWeight: 700 }}>FITNESS</span></h1>
-          <span style={{ fontSize: 7, letterSpacing: 4, color: "#b0bac5", fontFamily: "'Space Mono', monospace" }}>PROGRESSIVE OVERLOAD ENGINE</span>
-        </div>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid #e8ecf0", background: "#fff" }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: 0.3, margin: 0, color: "#1a2332" }}>Forward<span style={{ color: "#1a73e8" }}>Fitness</span></h1>
         <button onClick={() => setShowSetup(true)} style={S.iconBtn} aria-label="Settings">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </header>
 
-      <div style={{ padding: "20px 16px" }}>
+      <div style={{ padding: "16px 20px" }}>
         {tab === "workout" && <WorkoutTab workouts={workouts} onFinish={handleFinishWorkout} wv={wv} />}
         {tab === "nutrition" && <NutritionTab meals={meals} onMealChange={handleSetMeals} pt={proteinTarget} ct={calTarget} />}
         {tab === "progress" && <ProgressTab workouts={workouts} measurements={measurements} onAddMeasurement={handleAddMeasurement} wv={wv} />}
@@ -228,14 +225,14 @@ export default function App() {
 
       <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "#fff", borderTop: "1px solid #e8ecf0", padding: "6px 0 max(8px, env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
-          { id: "workout", label: "TRAIN", d: "M6.5 6.5h11M6.5 17.5h11M4 12h16M2 6.5h2M2 17.5h2M20 6.5h2M20 17.5h2" },
-          { id: "nutrition", label: "FUEL", d: "M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14a4 4 0 1 1 4-4 4 4 0 0 1-4 4z" },
-          { id: "progress", label: "STATS", d: "M3 20h18M5 16l4-4 4 4 6-8" },
-          { id: "reference", label: "INTEL", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
+          { id: "workout", label: "Train", d: "M6.5 6.5h11M6.5 17.5h11M4 12h16M2 6.5h2M2 17.5h2M20 6.5h2M20 17.5h2" },
+          { id: "nutrition", label: "Fuel", d: "M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 14a4 4 0 1 1 4-4 4 4 0 0 1-4 4z" },
+          { id: "progress", label: "Stats", d: "M3 20h18M5 16l4-4 4 4 6-8" },
+          { id: "reference", label: "Learn", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#a0aab5", transition: "color .15s" }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? "2" : "1.5"}><path d={t.d}/></svg>
-            <span style={{ fontSize: 9, letterSpacing: 2, fontFamily: "'Space Mono', monospace", marginTop: 2 }}>{t.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 500, marginTop: 2 }}>{t.label}</span>
           </button>
         ))}
       </nav>
@@ -335,10 +332,10 @@ function WorkoutTab({ workouts, onFinish, wv }) {
     <div>
       {/* Split Selector */}
       <div style={{ marginBottom: 20 }}>
-        <div style={S.secLabel}>MY SPLIT</div>
+        <div style={S.secLabel}>My Split</div>
         <div style={{ display: "flex", gap: 8 }}>
           {MY_SPLIT.map((s, i) => (
-            <button key={i} onClick={() => loadSplit(i)} style={{ flex: 1, background: activeSplit === i ? "#1a73e8" : "#fff", color: activeSplit === i ? "#fff" : "#5a6b7d", border: "1px solid #e8ecf0", borderRadius: 8, padding: "14px 4px", cursor: "pointer", fontSize: 10, letterSpacing: 1, fontFamily: "'Space Mono', monospace", fontWeight: 600, minHeight: 50, transition: "all .15s" }}>
+            <button key={i} onClick={() => loadSplit(i)} style={{ flex: 1, background: activeSplit === i ? "#1a73e8" : "#fff", color: activeSplit === i ? "#fff" : "#5a6b7d", border: "1px solid #e8ecf0", borderRadius: 10, padding: "12px 4px", cursor: "pointer", fontSize: 12, fontWeight: 600, minHeight: 48, transition: "all .15s" }}>
               {s.name}
             </button>
           ))}
@@ -347,18 +344,18 @@ function WorkoutTab({ workouts, onFinish, wv }) {
 
       {/* Volume */}
       <div style={{ marginBottom: 20 }}>
-        <div style={S.secLabel}>WEEKLY VOLUME</div>
-        <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+        <div style={S.secLabel}>Weekly Volume</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 4 }}>
           {MUSCLE_GROUPS.map(g => {
             const v = wv[g] || 0;
             const c = v < 10 ? "#b0bac5" : v <= 20 ? "#1a73e8" : "#e53935";
             return (
-              <div key={g} style={{ flex: "1 0 45px", textAlign: "center" }}>
-                <div style={{ fontSize: 7, color: c, fontFamily: "'Space Mono', monospace", letterSpacing: 1, marginBottom: 2 }}>{g.slice(0,3).toUpperCase()}</div>
-                <div style={{ height: 3, background: "#e8ecf0", borderRadius: 2, overflow: "hidden" }}>
+              <div key={g} style={{ textAlign: "center", minWidth: 0 }}>
+                <div style={{ fontSize: 9, color: c, fontWeight: 600, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.slice(0,4)}</div>
+                <div style={{ height: 4, background: "#e8ecf0", borderRadius: 2, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${Math.min(v/20*100, 100)}%`, background: c, borderRadius: 2 }} />
                 </div>
-                <div style={{ fontSize: 9, color: c, fontFamily: "'Space Mono', monospace", marginTop: 2 }}>{v}</div>
+                <div style={{ fontSize: 11, color: c, fontWeight: 600, marginTop: 2 }}>{v}</div>
               </div>
             );
           })}
@@ -374,16 +371,16 @@ function WorkoutTab({ workouts, onFinish, wv }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.3 }}>{db?.name || ex.exerciseId}</div>
-                <div style={{ fontSize: 11, color: "#8895a7", fontFamily: "'Space Mono', monospace" }}>{db?.group} • {db?.type}</div>
+                <div style={{ fontSize: 11, color: "#8895a7" }}>{db?.group} • {db?.type}</div>
               </div>
               <button style={S.xBtn} onClick={() => rmEx(ei)}>✕</button>
             </div>
 
             {ex.recommendation && (
               <div style={{ background: "#f0f4f8", borderLeft: `3px solid ${recColor}`, padding: "10px 12px", borderRadius: "0 6px 6px 0", margin: "10px 0 14px" }}>
-                <div style={{ fontSize: 8, letterSpacing: 2, color: "#8895a7", fontFamily: "'Space Mono', monospace", marginBottom: 4 }}>RECOMMENDATION</div>
+                <div style={{ fontSize: 8,  color: "#8895a7", marginBottom: 4 }}>RECOMMENDATION</div>
                 <div style={{ fontSize: 13, color: "#5a6b7d", lineHeight: 1.5, marginBottom: 6 }}>{ex.recommendation.note}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>→ {ex.recommendation.weight} lbs × {ex.recommendation.reps}</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>→ {ex.recommendation.weight} lbs × {ex.recommendation.reps}</div>
               </div>
             )}
 
@@ -397,7 +394,7 @@ function WorkoutTab({ workouts, onFinish, wv }) {
 
             {ex.sets.map((s, si) => (
               <div key={si} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                <span style={{ width: 28, textAlign: "center", color: "#8895a7", fontFamily: "'Space Mono', monospace", fontSize: 13 }}>{si+1}</span>
+                <span style={{ width: 28, textAlign: "center", color: "#8895a7", fontSize: 13 }}>{si+1}</span>
                 <input style={S.sInput} type="number" inputMode="decimal" value={s.weight} onChange={e => updateSet(ei, si, "weight", e.target.value)} />
                 <input style={S.sInput} type="number" inputMode="numeric" value={s.reps} onChange={e => updateSet(ei, si, "reps", e.target.value)} />
                 <input style={{ ...S.sInput, width: 52, flex: "none" }} type="number" inputMode="numeric" min="0" max="5" value={s.rir} onChange={e => updateSet(ei, si, "rir", e.target.value)} />
@@ -405,12 +402,12 @@ function WorkoutTab({ workouts, onFinish, wv }) {
               </div>
             ))}
 
-            <button onClick={() => addSet(ei)} style={{ background: "none", border: "1px dashed #ccd5de", borderRadius: 6, color: "#8895a7", padding: "10px 0", width: "100%", cursor: "pointer", fontSize: 11, letterSpacing: 2, fontFamily: "'Space Mono', monospace", marginTop: 4, minHeight: 44 }}>+ SET</button>
+            <button onClick={() => addSet(ei)} style={{ background: "none", border: "1px dashed #ccd5de", borderRadius: 6, color: "#8895a7", padding: "10px 0", width: "100%", cursor: "pointer", fontSize: 11,  marginTop: 4, minHeight: 44 }}>+ SET</button>
           </div>
         );
       })}
 
-      <button onClick={() => setShowPicker(true)} style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: 10, color: "#1a73e8", padding: "16px 0", width: "100%", cursor: "pointer", fontSize: 12, letterSpacing: 3, fontFamily: "'Space Mono', monospace", fontWeight: 600, marginBottom: 10, minHeight: 52 }}>+ ADD EXERCISE</button>
+      <button onClick={() => setShowPicker(true)} style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: 10, color: "#1a73e8", padding: "16px 0", width: "100%", cursor: "pointer", fontSize: 12,  fontWeight: 600, marginBottom: 10, minHeight: 52 }}>+ ADD EXERCISE</button>
 
       {workout.exercises.length > 0 && <button style={S.btnW} onClick={finish}>FINISH WORKOUT</button>}
 
@@ -421,14 +418,14 @@ function WorkoutTab({ workouts, onFinish, wv }) {
           {[...workouts].reverse().slice(0, 5).map((w, i) => (
             <div key={i} style={{ ...S.card, padding: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: "#8895a7" }}>{w.date}</span>
+                <span style={{ fontSize: 12, color: "#8895a7" }}>{w.date}</span>
                 <span style={{ fontSize: 11, color: "#8895a7" }}>{w.exercises.length} ex • {w.exercises.reduce((a, e) => a + e.sets.length, 0)} sets</span>
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {w.exercises.map((e, j) => {
                   const d = EXERCISE_DB.find(x => x.id === e.exerciseId);
                   const top = e.sets.reduce((b, s) => s.weight > b.weight ? s : b, e.sets[0]);
-                  return <span key={j} style={{ fontSize: 11, background: "#e8ecf0", padding: "5px 8px", borderRadius: 4, color: "#999", fontFamily: "'Space Mono', monospace" }}>{d?.name?.split(" ").slice(0,2).join(" ") || "?"} {top.weight}×{top.reps}</span>;
+                  return <span key={j} style={{ fontSize: 11, background: "#e8ecf0", padding: "5px 8px", borderRadius: 4, color: "#999" }}>{d?.name?.split(" ").slice(0,2).join(" ") || "?"} {top.weight}×{top.reps}</span>;
                 })}
               </div>
             </div>
@@ -444,16 +441,16 @@ function WorkoutTab({ workouts, onFinish, wv }) {
               <h2 style={S.sheetTitle}>ADD EXERCISE</h2>
               <button style={S.xBtn} onClick={() => setShowPicker(false)}>✕</button>
             </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 16, paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
               {["All", ...MUSCLE_GROUPS].map(g => (
-                <button key={g} onClick={() => setFilterGroup(g)} style={{ background: filterGroup === g ? "#1a73e8" : "#f0f4f8", color: filterGroup === g ? "#fff" : "#5a6b7d", border: "1px solid #dde3ea", borderRadius: 20, padding: "7px 14px", fontSize: 11, cursor: "pointer", fontFamily: "'Space Mono', monospace", minHeight: 34 }}>{g}</button>
+                <button key={g} onClick={() => setFilterGroup(g)} style={{ background: filterGroup === g ? "#1a73e8" : "#f0f4f8", color: filterGroup === g ? "#fff" : "#5a6b7d", border: "1px solid #dde3ea", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer", minHeight: 36, whiteSpace: "nowrap", flexShrink: 0 }}>{g}</button>
               ))}
             </div>
             <div style={{ maxHeight: "50vh", overflow: "auto" }}>
               {filtered.map(e => (
                 <button key={e.id} onClick={() => addEx(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #e8ecf0", color: "#1a2332", padding: "14px 4px", width: "100%", cursor: "pointer", textAlign: "left", minHeight: 50 }}>
                   <span style={{ fontSize: 15 }}>{e.name}</span>
-                  <span style={{ fontSize: 10, color: "#8895a7", fontFamily: "'Space Mono', monospace" }}>{e.group}</span>
+                  <span style={{ fontSize: 10, color: "#8895a7" }}>{e.group}</span>
                 </button>
               ))}
             </div>
@@ -502,7 +499,7 @@ function NutritionTab({ meals, onMealChange, pt, ct }) {
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 24 }}>
         <button style={S.iconBtn} onClick={prev}>←</button>
-        <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, letterSpacing: 2, color: date === today() ? "#fff" : "#888" }}>{date === today() ? "TODAY" : date}</span>
+        <span style={{ fontSize: 13,  color: date === today() ? "#1a73e8" : "#8895a7" }}>{date === today() ? "TODAY" : date}</span>
         <button style={S.iconBtn} onClick={next}>→</button>
       </div>
 
@@ -510,10 +507,10 @@ function NutritionTab({ meals, onMealChange, pt, ct }) {
         <Ring label="PROTEIN" val={tp} tgt={pt} unit="g" pct={ppct} />
         <Ring label="CALORIES" val={tc} tgt={ct} unit="" pct={cpct} />
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 8, letterSpacing: 2, color: "#8895a7", fontFamily: "'Space Mono', monospace", marginBottom: 8 }}>MEALS</div>
+          <div style={{ fontSize: 8,  color: "#8895a7", marginBottom: 8 }}>MEALS</div>
           <div style={{ width: 76, height: 76, border: `2px solid ${dm.length >= 3 ? "#2e7d32" : "#e53935"}`, borderRadius: "50%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 26, fontWeight: 700, fontFamily: "'Space Mono', monospace", color: dm.length >= 3 ? "#2e7d32" : "#e53935" }}>{dm.length}</span>
-            <span style={{ fontSize: 7, color: "#555", fontFamily: "'Space Mono', monospace" }}>{dm.length >= 3 ? "ON TRACK" : "EAT 3+"}</span>
+            <span style={{ fontSize: 26, fontWeight: 700, color: dm.length >= 3 ? "#2e7d32" : "#e53935" }}>{dm.length}</span>
+            <span style={{ fontSize: 7, color: "#8895a7" }}>{dm.length >= 3 ? "ON TRACK" : "EAT 3+"}</span>
           </div>
         </div>
       </div>
@@ -526,7 +523,7 @@ function NutritionTab({ meals, onMealChange, pt, ct }) {
               <div style={{ flex: 1, width: "100%", background: "#e8ecf0", borderRadius: 2, display: "flex", alignItems: "flex-end" }}>
                 <div style={{ width: "100%", height: `${Math.min(w.p/pt*100, 100)}%`, background: w.p >= pt ? "#2e7d32" : "#8895a7", borderRadius: 2, minHeight: 2 }} />
               </div>
-              <span style={{ fontSize: 9, color: "#8895a7", fontFamily: "'Space Mono', monospace" }}>{w.d}</span>
+              <span style={{ fontSize: 9, color: "#8895a7" }}>{w.d}</span>
             </div>
           ))}
         </div>
@@ -535,14 +532,14 @@ function NutritionTab({ meals, onMealChange, pt, ct }) {
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div style={S.secLabel}>MEALS</div>
-          <button onClick={() => setShowP(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 12, fontFamily: "'Space Mono', monospace", cursor: "pointer", minHeight: 36 }}>+ ADD</button>
+          <button onClick={() => setShowP(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 12, cursor: "pointer", minHeight: 36 }}>+ ADD</button>
         </div>
-        {!dm.length && <p style={{ color: "#333", fontSize: 13, textAlign: "center", padding: 20 }}>No meals logged</p>}
+        {!dm.length && <p style={{ color: "#a0aab5", fontSize: 13, textAlign: "center", padding: 20 }}>No meals logged</p>}
         {dm.map((m, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #111" }}>
+          <div key={i} style={{ display: "flex", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #e8ecf0" }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 15, fontWeight: 500 }}>{m.name}</div>
-              <div style={{ fontSize: 12, color: "#555", marginTop: 2 }}>{m.protein}g P • {m.cals} cal{m.time ? ` • ${m.time}` : ""}</div>
+              <div style={{ fontSize: 12, color: "#8895a7", marginTop: 2 }}>{m.protein}g P • {m.cals} cal{m.time ? ` • ${m.time}` : ""}</div>
             </div>
             <button style={S.xBtn} onClick={() => rm(i)}>✕</button>
           </div>
@@ -570,7 +567,7 @@ function NutritionTab({ meals, onMealChange, pt, ct }) {
               {PROTEIN_PRESETS.map((p, i) => (
                 <button key={i} onClick={() => add(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #e8ecf0", color: "#1a2332", padding: "14px 4px", width: "100%", cursor: "pointer", textAlign: "left", minHeight: 50 }}>
                   <span style={{ fontSize: 14 }}>{p.name}</span>
-                  <span style={{ fontSize: 11, color: "#888", fontFamily: "'Space Mono', monospace" }}>{p.protein}g • {p.cals}cal</span>
+                  <span style={{ fontSize: 11, color: "#888" }}>{p.protein}g • {p.cals}cal</span>
                 </button>
               ))}
             </div>
@@ -584,15 +581,15 @@ function NutritionTab({ meals, onMealChange, pt, ct }) {
 function Ring({ label, val, tgt, unit, pct }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 8, letterSpacing: 2, color: "#8895a7", fontFamily: "'Space Mono', monospace", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 8,  color: "#8895a7", marginBottom: 8 }}>{label}</div>
       <div style={{ position: "relative", width: 76, height: 76 }}>
         <svg width="76" height="76" viewBox="0 0 76 76">
           <circle cx="38" cy="38" r="32" fill="none" stroke="#e8ecf0" strokeWidth="5" />
-          <circle cx="38" cy="38" r="32" fill="none" stroke={pct >= 100 ? "#2e7d32" : "#fff"} strokeWidth="5" strokeDasharray={`${pct * 2.01} 201`} strokeLinecap="round" transform="rotate(-90 38 38)" />
+          <circle cx="38" cy="38" r="32" fill="none" stroke={pct >= 100 ? "#2e7d32" : "#1a73e8"} strokeWidth="5" strokeDasharray={`${pct * 2.01} 201`} strokeLinecap="round" transform="rotate(-90 38 38)" />
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>{val}{unit}</span>
-          <span style={{ fontSize: 8, color: "#8895a7", fontFamily: "'Space Mono', monospace" }}>/{tgt}{unit}</span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>{val}{unit}</span>
+          <span style={{ fontSize: 8, color: "#8895a7" }}>/{tgt}{unit}</span>
         </div>
       </div>
     </div>
@@ -621,10 +618,10 @@ function ProgressTab({ workouts, measurements, onAddMeasurement, wv }) {
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 24 }}>
-        {[{ v: ts, l: "SESSIONS" }, { v: tsets, l: "SETS" }, { v: `${(tvol/1000).toFixed(0)}k`, l: "LBS MOVED" }].map((s, i) => (
+        {[{ v: ts, l: "Sessions" }, { v: tsets, l: "Sets" }, { v: `${(tvol/1000).toFixed(0)}k`, l: "Lbs Moved" }].map((s, i) => (
           <div key={i} style={{ ...S.card, textAlign: "center", padding: 16 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>{s.v}</div>
-            <div style={{ fontSize: 8, letterSpacing: 2, color: "#8895a7", fontFamily: "'Space Mono', monospace" }}>{s.l}</div>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>{s.v}</div>
+            <div style={{ fontSize: 8,  color: "#8895a7" }}>{s.l}</div>
           </div>
         ))}
       </div>
@@ -635,8 +632,8 @@ function ProgressTab({ workouts, measurements, onAddMeasurement, wv }) {
           {Object.entries(prs).sort((a,b) => b[1].e1rm - a[1].e1rm).map(([n, pr]) => (
             <div key={n} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #e8ecf0" }}>
               <span style={{ flex: 1, fontSize: 13 }}>{n}</span>
-              <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'Space Mono', monospace", marginRight: 12 }}>{pr.e1rm}</span>
-              <span style={{ fontSize: 10, color: "#8895a7", fontFamily: "'Space Mono', monospace" }}>{pr.w}×{pr.r}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, marginRight: 12 }}>{pr.e1rm}</span>
+              <span style={{ fontSize: 10, color: "#8895a7" }}>{pr.w}×{pr.r}</span>
             </div>
           ))}
         </div>
@@ -650,7 +647,7 @@ function ProgressTab({ workouts, measurements, onAddMeasurement, wv }) {
             const bg = v === 0 ? "#f0f4f8" : v < 10 ? "#e8ecf0" : v <= 20 ? "rgba(26,115,232,.12)" : "rgba(229,57,53,.12)";
             return <div key={g} style={{ background: bg, borderRadius: 6, padding: "10px 6px", textAlign: "center" }}>
               <div style={{ fontSize: 11, fontWeight: 600 }}>{g}</div>
-              <div style={{ fontSize: 10, color: "#888", fontFamily: "'Space Mono', monospace" }}>{v} sets</div>
+              <div style={{ fontSize: 10, color: "#888" }}>{v} sets</div>
             </div>;
           })}
         </div>
@@ -670,11 +667,11 @@ function ProgressTab({ workouts, measurements, onAddMeasurement, wv }) {
           <div style={{ marginTop: 16 }}>
             {[...measurements].reverse().slice(0,5).map((m, i) => (
               <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #e8ecf0", flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: "#8895a7", minWidth: 80 }}>{m.date}</span>
-                {m.weight && <span style={{ fontSize: 12, color: "#5a6b7d", fontFamily: "'Space Mono', monospace" }}>W:{m.weight}</span>}
-                {m.chest && <span style={{ fontSize: 12, color: "#5a6b7d", fontFamily: "'Space Mono', monospace" }}>Ch:{m.chest}"</span>}
-                {m.waist && <span style={{ fontSize: 12, color: "#5a6b7d", fontFamily: "'Space Mono', monospace" }}>Wa:{m.waist}"</span>}
-                {m.arms && <span style={{ fontSize: 12, color: "#5a6b7d", fontFamily: "'Space Mono', monospace" }}>Ar:{m.arms}"</span>}
+                <span style={{ fontSize: 11, color: "#8895a7", minWidth: 80 }}>{m.date}</span>
+                {m.weight && <span style={{ fontSize: 12, color: "#5a6b7d" }}>W:{m.weight}</span>}
+                {m.chest && <span style={{ fontSize: 12, color: "#5a6b7d" }}>Ch:{m.chest}"</span>}
+                {m.waist && <span style={{ fontSize: 12, color: "#5a6b7d" }}>Wa:{m.waist}"</span>}
+                {m.arms && <span style={{ fontSize: 12, color: "#5a6b7d" }}>Ar:{m.arms}"</span>}
               </div>
             ))}
           </div>
@@ -697,15 +694,15 @@ function ReferenceTab() {
 
   return (
     <div>
-      <h2 style={{ fontFamily: "'Space Mono', monospace", fontSize: 18, letterSpacing: 4, color: "#1a2332", marginBottom: 4, marginTop: 0 }}>TRAINING INTEL</h2>
+      <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1a2332", marginBottom: 4, marginTop: 0 }}>Training Intel</h2>
       <p style={{ color: "#8895a7", fontSize: 13, marginBottom: 20, marginTop: 4 }}>Evidence-based. Tap to expand.</p>
       {secs.map(s => (
         <div key={s.id} style={{ border: "1px solid #e8ecf0", borderRadius: 8, marginBottom: 8, overflow: "hidden" }}>
-          <button onClick={() => setOpen(open === s.id ? null : s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", border: "none", color: "#1a2332", padding: "16px", width: "100%", cursor: "pointer", fontSize: 12, fontFamily: "'Space Mono', monospace", letterSpacing: 2, minHeight: 52 }}>
+          <button onClick={() => setOpen(open === s.id ? null : s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", border: "none", color: "#1a2332", padding: "16px", width: "100%", cursor: "pointer", fontSize: 12,  minHeight: 52 }}>
             <span>{s.t}</span>
             <span style={{ transform: open === s.id ? "rotate(180deg)" : "none", transition: "transform .2s", fontSize: 14 }}>▾</span>
           </button>
-          {open === s.id && <pre style={{ padding: "0 16px 16px", fontSize: 13, color: "#5a6b7d", lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "'DM Sans', sans-serif", margin: 0 }}>{s.c}</pre>}
+          {open === s.id && <pre style={{ padding: "0 16px 16px", fontSize: 13, color: "#5a6b7d", lineHeight: 1.8, whiteSpace: "pre-wrap", margin: 0 }}>{s.c}</pre>}
         </div>
       ))}
     </div>
@@ -713,18 +710,18 @@ function ReferenceTab() {
 }
 
 // ─── Shared Styles ───
-const B = "#1a73e8"; // primary blue
+const B = "#1a73e8";
 const S = {
-  card: { background: "#fff", border: "1px solid #e8ecf0", borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: "0 1px 3px rgba(0,0,0,.06)" },
-  secLabel: { fontSize: 10, letterSpacing: 3, color: "#8895a7", fontFamily: "'Space Mono', monospace", marginBottom: 10, fontWeight: 700 },
-  colHead: { fontSize: 9, letterSpacing: 1, color: "#a0aab5", fontFamily: "'Space Mono', monospace", textAlign: "center" },
-  sInput: { flex: 1, background: "#f5f7fa", border: "1px solid #dde3ea", borderRadius: 6, color: "#1a2332", padding: "10px 4px", fontSize: 16, textAlign: "center", fontFamily: "'Space Mono', monospace", outline: "none" },
-  input: { background: "#f5f7fa", border: "1px solid #dde3ea", borderRadius: 8, color: "#1a2332", padding: "12px 14px", fontSize: 16, fontFamily: "'DM Sans', sans-serif", outline: "none", width: "100%" },
-  fLabel: { display: "flex", flexDirection: "column", fontSize: 10, color: "#8895a7", letterSpacing: 1, fontFamily: "'Space Mono', monospace", gap: 6 },
-  btnW: { background: B, color: "#fff", border: "none", borderRadius: 10, padding: "14px 24px", fontSize: 13, letterSpacing: 3, fontFamily: "'Space Mono', monospace", fontWeight: 700, cursor: "pointer", width: "100%", minHeight: 50 },
+  card: { background: "#fff", border: "1px solid #e8ecf0", borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: "0 1px 3px rgba(0,0,0,.06)", overflow: "hidden" },
+  secLabel: { fontSize: 13, fontWeight: 600, color: "#8895a7", marginBottom: 12, letterSpacing: 0.3 },
+  colHead: { fontSize: 11, fontWeight: 500, color: "#a0aab5", textAlign: "center" },
+  sInput: { flex: 1, background: "#f5f7fa", border: "1px solid #dde3ea", borderRadius: 8, color: "#1a2332", padding: "10px 4px", fontSize: 16, textAlign: "center", fontWeight: 600, outline: "none", minWidth: 0 },
+  input: { background: "#f5f7fa", border: "1px solid #dde3ea", borderRadius: 10, color: "#1a2332", padding: "14px 16px", fontSize: 16, outline: "none", width: "100%" },
+  fLabel: { display: "flex", flexDirection: "column", fontSize: 12, color: "#8895a7", fontWeight: 500, gap: 6 },
+  btnW: { background: B, color: "#fff", border: "none", borderRadius: 12, padding: "16px 24px", fontSize: 15, fontWeight: 600, cursor: "pointer", width: "100%", minHeight: 52 },
   iconBtn: { background: "none", border: "none", color: "#8895a7", cursor: "pointer", padding: 10, minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" },
-  xBtn: { background: "none", border: "none", color: "#a0aab5", fontSize: 18, cursor: "pointer", padding: 8, minWidth: 36, minHeight: 36, display: "flex", alignItems: "center", justifyContent: "center" },
+  xBtn: { background: "none", border: "none", color: "#a0aab5", fontSize: 20, cursor: "pointer", padding: 8, minWidth: 40, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" },
   overlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,.4)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" },
-  sheet: { background: "#fff", border: "1px solid #e8ecf0", borderRadius: "16px 16px 0 0", padding: "24px 20px max(20px, env(safe-area-inset-bottom))", width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "auto" },
-  sheetTitle: { fontSize: 15, fontFamily: "'Space Mono', monospace", letterSpacing: 3, margin: 0, color: "#1a2332" },
+  sheet: { background: "#fff", borderRadius: "20px 20px 0 0", padding: "24px 20px max(20px, env(safe-area-inset-bottom))", width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "auto" },
+  sheetTitle: { fontSize: 17, fontWeight: 700, margin: 0, color: "#1a2332" },
 };
