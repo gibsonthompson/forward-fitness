@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 
 const USER_ID = "gibson";
@@ -74,18 +74,21 @@ const GROUPS = ["Chest","Back","Shoulders","Quads","Hamstrings","Glutes","Biceps
 const today = () => new Date().toISOString().split("T")[0];
 const findEx = (id) => EXERCISES.find(e => e.id === id);
 
+// Input helper: keeps raw string while typing, only converts on blur/save
+const numVal = (v) => v === "" || v === undefined || v === null ? "" : String(v);
+
 function getRec(history, exId) {
   if (!history?.length) return null;
   const last = history[history.length - 1];
   if (!last.sets?.length) return null;
   const ex = findEx(exId);
-  const avgR = last.sets.reduce((a, s) => a + s.reps, 0) / last.sets.length;
-  const avgRir = last.sets.reduce((a, s) => a + (s.rir ?? 2), 0) / last.sets.length;
-  const w = last.sets[0].weight;
+  const avgR = last.sets.reduce((a, s) => a + (Number(s.reps)||0), 0) / last.sets.length;
+  const avgRir = last.sets.reduce((a, s) => a + (Number(s.rir) || 2), 0) / last.sets.length;
+  const w = Number(last.sets[0].weight) || 0;
   const inc = ex?.area === "lower" ? 10 : 5;
   let stall = 0;
   for (let i = history.length - 1; i >= Math.max(0, history.length - 3); i--) {
-    if (history[i].sets?.[0]?.weight === w) stall++;
+    if (Number(history[i].sets?.[0]?.weight) === w) stall++;
   }
   if (stall >= 3) return { w: Math.round(w * 0.6), r: 12, msg: "Deload week", color: "#e53935" };
   if (avgR >= 12 && avgRir <= 1) return { w: w + inc, r: 8, msg: `Move up to ${w + inc}lbs`, color: "#22c55e" };
@@ -122,37 +125,38 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        let q1 = supabase.from("iron_workouts").select("*").eq("user_id", USER_ID).order("date", { ascending: false }).limit(200);
-        let q2 = supabase.from("iron_meals").select("*").eq("user_id", USER_ID).order("date", { ascending: false }).limit(60);
-        const [r1, r2] = await Promise.all([q1, q2]);
+        const [r1, r2] = await Promise.all([
+          supabase.from("iron_workouts").select("*").eq("user_id", USER_ID).order("date", { ascending: false }).limit(200),
+          supabase.from("iron_meals").select("*").eq("user_id", USER_ID).order("date", { ascending: false }).limit(60),
+        ]);
         if (r1.error) throw r1.error;
         if (r2.error) throw r2.error;
         setWorkouts((r1.data || []).map(r => ({ id: r.id, date: r.date, exercises: r.exercises })).reverse());
-        const mObj = {};
-        (r2.data || []).forEach(r => { mObj[r.date] = r.entries || []; });
-        setMeals(mObj);
+        const mObj = {}; (r2.data || []).forEach(r => { mObj[r.date] = r.entries || []; }); setMeals(mObj);
         setDbOk(true);
-      } catch (e) {
-        console.error("DB:", e);
-        flash("Database connection failed", "err");
-        setDbOk(false);
-      }
+      } catch (e) { console.error("DB:", e); flash("Database connection failed", "err"); setDbOk(false); }
       setLoading(false);
     })();
   }, []);
 
   const saveWorkout = async (workout) => {
     try {
-      const { error } = await supabase.from("iron_workouts").insert({ user_id: USER_ID, date: workout.date, exercises: workout.exercises });
+      const { data, error } = await supabase.from("iron_workouts").insert({ user_id: USER_ID, date: workout.date, exercises: workout.exercises }).select().single();
       if (error) throw error;
-      setWorkouts(prev => [...prev, workout]);
+      setWorkouts(prev => [...prev, { id: data.id, date: data.date, exercises: data.exercises }]);
       localStorage.removeItem("ff-draft");
       flash("Workout saved!");
       return true;
-    } catch (e) {
-      flash("Save failed: " + e.message, "err");
-      return false;
-    }
+    } catch (e) { flash("Save failed: " + e.message, "err"); return false; }
+  };
+
+  const deleteWorkout = async (id) => {
+    try {
+      const { error } = await supabase.from("iron_workouts").delete().eq("id", id);
+      if (error) throw error;
+      setWorkouts(prev => prev.filter(w => w.id !== id));
+      flash("Workout deleted");
+    } catch (e) { flash("Delete failed", "err"); }
   };
 
   const saveMeal = async (date, entries) => {
@@ -184,13 +188,14 @@ export default function App() {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} flash={flash} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onDelete={deleteWorkout} flash={flash} />}
         {tab === "nutrition" && <NutritionTab meals={meals} onSave={saveMeal} pt={BODY_WEIGHT} ct={Math.round(BODY_WEIGHT * 16 + 300)} />}
         {tab === "progress" && <ProgressTab workouts={workouts} />}
+        {tab === "learn" && <LearnTab />}
       </div>
 
       <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "#fff", borderTop: "1px solid #edf0f3", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
-        {[{ id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },{ id: "nutrition", label: "Fuel", d: "M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" },{ id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" }].map(t => (
+        {[{ id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },{ id: "nutrition", label: "Fuel", d: "M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3" },{ id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" },{ id: "learn", label: "Learn", d: "M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#9ca3af" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? 2.2 : 1.5} strokeLinecap="round" strokeLinejoin="round"><path d={t.d}/></svg>
             <span style={{ fontSize: 11, fontWeight: tab === t.id ? 600 : 400 }}>{t.label}</span>
@@ -202,27 +207,31 @@ export default function App() {
 }
 
 // ─── Workout ───
-function WorkoutTab({ workouts, onSave, flash }) {
+function WorkoutTab({ workouts, onSave, onDelete, flash }) {
   const [workout, setWorkout] = useState(() => {
     try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
     catch { return { date: today(), exercises: [] }; }
   });
   const [picker, setPicker] = useState(false);
-  const [rest, setRest] = useState(0);
-  const [resting, setResting] = useState(false);
-  const ref = useRef(null);
+  const [draftMsg, setDraftMsg] = useState(false);
 
-  useEffect(() => { if (workout.exercises.length) localStorage.setItem("ff-draft", JSON.stringify(workout)); }, [workout]);
-  useEffect(() => { if (resting) { ref.current = setInterval(() => setRest(t => t+1), 1000); } else { clearInterval(ref.current); } return () => clearInterval(ref.current); }, [resting]);
-
-  const stopRest = () => { setResting(false); setRest(0); };
-  const fmt = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,"0")}`;
+  // Auto-save draft on every change
+  useEffect(() => {
+    if (workout.exercises.length) {
+      localStorage.setItem("ff-draft", JSON.stringify(workout));
+      setDraftMsg(true);
+      const t = setTimeout(() => setDraftMsg(false), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [workout]);
 
   const loadSplit = (i) => {
     const exs = MY_SPLIT[i].exercises.map(id => {
       const rec = getRec(getHist(workouts, id), id);
       const last = getLast(workouts, id);
-      return { exerciseId: id, sets: [{ weight: rec?.w || last?.sets?.[0]?.weight || "", reps: rec?.r || last?.sets?.[0]?.reps || "", rir: "" }] };
+      const dw = rec?.w || (last?.sets?.[0]?.weight) || "";
+      const dr = rec?.r || (last?.sets?.[0]?.reps) || "";
+      return { exerciseId: id, sets: [{ weight: numVal(dw), reps: numVal(dr), rir: "" }] };
     });
     setWorkout({ date: today(), exercises: exs });
   };
@@ -230,38 +239,76 @@ function WorkoutTab({ workouts, onSave, flash }) {
   const addEx = (id) => {
     const rec = getRec(getHist(workouts, id), id);
     const last = getLast(workouts, id);
-    setWorkout(w => ({ ...w, exercises: [...w.exercises, { exerciseId: id, sets: [{ weight: rec?.w || last?.sets?.[0]?.weight || "", reps: rec?.r || last?.sets?.[0]?.reps || "", rir: "" }] }] }));
+    const dw = rec?.w || (last?.sets?.[0]?.weight) || "";
+    const dr = rec?.r || (last?.sets?.[0]?.reps) || "";
+    setWorkout(w => ({ ...w, exercises: [...w.exercises, { exerciseId: id, sets: [{ weight: numVal(dw), reps: numVal(dr), rir: "" }] }] }));
     setPicker(false);
   };
 
-  const setVal = (ei, si, f, v) => {
-    setWorkout(w => { const e = [...w.exercises]; const s = [...e[ei].sets]; s[si] = { ...s[si], [f]: v === "" ? "" : +v }; e[ei] = { ...e[ei], sets: s }; return { ...w, exercises: e }; });
+  // Store raw string so "0" doesn't stick
+  const setVal = (ei, si, f, rawVal) => {
+    setWorkout(w => {
+      const e = [...w.exercises];
+      const s = [...e[ei].sets];
+      s[si] = { ...s[si], [f]: rawVal };
+      e[ei] = { ...e[ei], sets: s };
+      return { ...w, exercises: e };
+    });
   };
 
   const addSet = (ei) => {
-    setWorkout(w => { const e = [...w.exercises]; e[ei] = { ...e[ei], sets: [...e[ei].sets, { ...e[ei].sets[e[ei].sets.length-1] }] }; return { ...w, exercises: e }; });
-    setRest(0); setResting(true);
+    setWorkout(w => {
+      const e = [...w.exercises];
+      const lastSet = e[ei].sets[e[ei].sets.length - 1];
+      e[ei] = { ...e[ei], sets: [...e[ei].sets, { ...lastSet }] };
+      return { ...w, exercises: e };
+    });
   };
 
   const rmSet = (ei, si) => {
-    setWorkout(w => { const e = [...w.exercises]; e[ei] = { ...e[ei], sets: e[ei].sets.filter((_,i) => i !== si) }; if (!e[ei].sets.length) e.splice(ei, 1); return { ...w, exercises: e }; });
+    setWorkout(w => {
+      const e = [...w.exercises];
+      e[ei] = { ...e[ei], sets: e[ei].sets.filter((_, i) => i !== si) };
+      if (!e[ei].sets.length) e.splice(ei, 1);
+      return { ...w, exercises: e };
+    });
+  };
+
+  const rmExercise = (ei) => {
+    setWorkout(w => {
+      const e = [...w.exercises];
+      e.splice(ei, 1);
+      if (!e.length) localStorage.removeItem("ff-draft");
+      return { ...w, exercises: e };
+    });
   };
 
   const finish = async () => {
     if (!workout.exercises.length) return;
-    if (!workout.exercises.some(e => e.sets.some(s => s.weight > 0 && s.reps > 0))) { flash("Enter weight and reps", "err"); return; }
-    if (await onSave(workout)) { setWorkout({ date: today(), exercises: [] }); stopRest(); }
+    // Convert string values to numbers for storage
+    const cleaned = {
+      ...workout,
+      exercises: workout.exercises.map(ex => ({
+        ...ex,
+        sets: ex.sets.map(s => ({ weight: Number(s.weight) || 0, reps: Number(s.reps) || 0, rir: Number(s.rir) || 0 }))
+      }))
+    };
+    if (!cleaned.exercises.some(e => e.sets.some(s => s.weight > 0 && s.reps > 0))) {
+      flash("Enter weight and reps", "err"); return;
+    }
+    if (await onSave(cleaned)) {
+      setWorkout({ date: today(), exercises: [] });
+    }
   };
 
   return (
     <div>
-      {resting && (
-        <div style={{ background: "#1a73e8", color: "#fff", borderRadius: 14, padding: "14px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div><div style={{ fontSize: 12, opacity: .8 }}>Rest Timer</div><div style={{ fontSize: 28, fontWeight: 700 }}>{fmt(rest)}</div></div>
-          <button onClick={stopRest} style={{ background: "rgba(255,255,255,.2)", border: "none", color: "#fff", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>Done</button>
-        </div>
+      {/* Draft indicator */}
+      {workout.exercises.length > 0 && draftMsg && (
+        <div style={{ textAlign: "center", fontSize: 11, color: "#9ca3af", marginBottom: 8 }}>Draft saved locally</div>
       )}
 
+      {/* Split selector - only when no exercises loaded */}
       {!workout.exercises.length && (
         <div style={{ marginBottom: 20 }}>
           <Lbl>Select Workout</Lbl>
@@ -271,6 +318,7 @@ function WorkoutTab({ workouts, onSave, flash }) {
         </div>
       )}
 
+      {/* Exercise cards */}
       {workout.exercises.map((ex, ei) => {
         const db = findEx(ex.exerciseId);
         const last = getLast(workouts, ex.exerciseId);
@@ -279,20 +327,21 @@ function WorkoutTab({ workouts, onSave, flash }) {
           <div key={ei} style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <div><div style={{ fontSize: 16, fontWeight: 600 }}>{db?.name}</div><div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{db?.group}</div></div>
-              <button onClick={() => { const e = [...workout.exercises]; e.splice(ei, 1); setWorkout({...workout, exercises: e}); }} style={xStyle}>✕</button>
+              <button onClick={() => rmExercise(ei)} style={xStyle}>✕</button>
             </div>
             {last && <div style={{ background: "#f9fafb", borderRadius: 8, padding: "8px 12px", marginBottom: 10, fontSize: 13, color: "#6b7280" }}><b style={{ color: "#9ca3af", fontWeight: 600, fontSize: 11 }}>LAST: </b>{last.sets.map((s,i) => <span key={i}>{i>0&&" → "}{s.weight}×{s.reps}</span>)}</div>}
             {rec && <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, padding: "8px 12px", background: rec.color+"10", borderRadius: 8, borderLeft: `3px solid ${rec.color}` }}><span style={{ fontSize: 13, fontWeight: 600, color: rec.color, flex: 1 }}>{rec.msg}</span><span style={{ fontWeight: 700, color: rec.color }}>{rec.w}×{rec.r}</span></div>}
+
             <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px 36px", gap: 6, marginBottom: 6 }}>
               <span style={col}>Set</span><span style={col}>Lbs</span><span style={col}>Reps</span><span style={col}>RIR</span><span/>
             </div>
             {ex.sets.map((s, si) => (
               <div key={si} style={{ display: "grid", gridTemplateColumns: "32px 1fr 1fr 48px 36px", gap: 6, alignItems: "center", marginBottom: 6 }}>
                 <span style={{ textAlign: "center", fontSize: 13, fontWeight: 600, color: "#9ca3af" }}>{si+1}</span>
-                <input type="number" inputMode="decimal" value={s.weight} onChange={e => setVal(ei,si,"weight",e.target.value)} style={inp} placeholder="0" />
-                <input type="number" inputMode="numeric" value={s.reps} onChange={e => setVal(ei,si,"reps",e.target.value)} style={inp} placeholder="0" />
-                <input type="number" inputMode="numeric" value={s.rir} onChange={e => setVal(ei,si,"rir",e.target.value)} style={{ ...inp, color: "#9ca3af" }} placeholder="—" />
-                <button onClick={() => rmSet(ei,si)} style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, padding: 0, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                <input type="number" inputMode="decimal" value={numVal(s.weight)} onChange={e => setVal(ei, si, "weight", e.target.value)} style={inp} placeholder="lbs" />
+                <input type="number" inputMode="numeric" value={numVal(s.reps)} onChange={e => setVal(ei, si, "reps", e.target.value)} style={inp} placeholder="reps" />
+                <input type="number" inputMode="numeric" value={numVal(s.rir)} onChange={e => setVal(ei, si, "rir", e.target.value)} style={{ ...inp, color: "#9ca3af" }} placeholder="—" />
+                <button onClick={() => rmSet(ei, si)} style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, padding: 0, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
               </div>
             ))}
             <button onClick={() => addSet(ei)} style={{ width: "100%", background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#9ca3af", fontSize: 13, fontWeight: 500, marginTop: 4, minHeight: 44 }}>+ Add Set</button>
@@ -301,15 +350,32 @@ function WorkoutTab({ workouts, onSave, flash }) {
       })}
 
       <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "16px", color: "#1a73e8", fontSize: 15, fontWeight: 600, marginBottom: 12, minHeight: 52 }}>+ Add Exercise</button>
-      {workout.exercises.length > 0 && <button onClick={finish} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56 }}>Save Workout</button>}
 
+      {/* Save Workout button */}
+      {workout.exercises.length > 0 && (
+        <button onClick={finish} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, marginBottom: 24 }}>Save Workout</button>
+      )}
+
+      {/* History with delete */}
       {workouts.length > 0 && (
-        <div style={{ marginTop: 28 }}>
+        <div style={{ marginTop: 12 }}>
           <Lbl>Recent Workouts</Lbl>
-          {[...workouts].reverse().slice(0, 5).map((w, i) => (
-            <div key={i} style={{ ...card, padding: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}><span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>{w.date}</span><span style={{ fontSize: 12, color: "#9ca3af" }}>{w.exercises?.length} exercises</span></div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{(w.exercises||[]).map((e,j) => { const d = findEx(e.exerciseId); const t = e.sets?.reduce((b,s) => s.weight > b.weight ? s : b, e.sets[0]); return <span key={j} style={{ fontSize: 12, background: "#f3f4f6", padding: "4px 10px", borderRadius: 6, color: "#6b7280", fontWeight: 500 }}>{d?.name} {t?.weight}×{t?.reps}</span>; })}</div>
+          {[...workouts].reverse().slice(0, 10).map((w, i) => (
+            <div key={w.id || i} style={{ ...card, padding: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>{w.date}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 12, color: "#9ca3af" }}>{w.exercises?.length} exercises</span>
+                  <button onClick={() => { if (confirm("Delete this workout?")) onDelete(w.id); }} style={{ background: "none", border: "none", color: "#e53935", fontSize: 12, fontWeight: 600, padding: "4px 8px" }}>Delete</button>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {(w.exercises || []).map((e, j) => {
+                  const d = findEx(e.exerciseId);
+                  const t = e.sets?.reduce((b, s) => (Number(s.weight)||0) > (Number(b.weight)||0) ? s : b, e.sets[0]);
+                  return <span key={j} style={{ fontSize: 12, background: "#f3f4f6", padding: "4px 10px", borderRadius: 6, color: "#6b7280", fontWeight: 500 }}>{d?.name} {t?.weight}×{t?.reps}</span>;
+                })}
+              </div>
             </div>
           ))}
         </div>
@@ -440,9 +506,9 @@ function Ring({ label, val, tgt, unit, pct }) {
 function ProgressTab({ workouts }) {
   const ts = workouts.length;
   const tsets = workouts.reduce((a,w) => a + (w.exercises||[]).reduce((b,e) => b + (e.sets?.length||0), 0), 0);
-  const tvol = workouts.reduce((a,w) => a + (w.exercises||[]).reduce((b,e) => b + (e.sets||[]).reduce((c,s) => c + (s.weight||0)*(s.reps||0), 0), 0), 0);
+  const tvol = workouts.reduce((a,w) => a + (w.exercises||[]).reduce((b,e) => b + (e.sets||[]).reduce((c,s) => c + (Number(s.weight)||0)*(Number(s.reps)||0), 0), 0), 0);
   const prs = {};
-  workouts.forEach(w => (w.exercises||[]).forEach(ex => { const db = findEx(ex.exerciseId); if (!db) return; (ex.sets||[]).forEach(s => { if (!s.weight||!s.reps) return; const e1 = Math.round(s.weight*(1+s.reps/30)); if (!prs[db.name]||e1>prs[db.name].e1rm) prs[db.name] = { e1rm: e1, w: s.weight, r: s.reps, d: w.date }; }); }));
+  workouts.forEach(w => (w.exercises||[]).forEach(ex => { const db = findEx(ex.exerciseId); if (!db) return; (ex.sets||[]).forEach(s => { const wt = Number(s.weight)||0; const rp = Number(s.reps)||0; if (!wt||!rp) return; const e1 = Math.round(wt*(1+rp/30)); if (!prs[db.name]||e1>prs[db.name].e1rm) prs[db.name] = { e1rm: e1, w: wt, r: rp, d: w.date }; }); }));
 
   return (
     <div>
@@ -468,6 +534,35 @@ function ProgressTab({ workouts }) {
         </div>
       )}
       {ts === 0 && <p style={{ color: "#9ca3af", fontSize: 15, textAlign: "center", padding: 40 }}>Complete your first workout to see stats</p>}
+    </div>
+  );
+}
+
+// ─── Learn ───
+function LearnTab() {
+  const [open, setOpen] = useState(null);
+  const toggle = (id) => setOpen(open === id ? null : id);
+  const sections = [
+    { id: "overload", t: "Progressive Overload", c: `The engine of all muscle growth. Your body only adapts when forced to handle increasing demands.\n\nDOUBLE PROGRESSION (what this app uses):\n• Pick a rep range (8-12 for hypertrophy)\n• Start at 8 reps with a challenging weight\n• Add reps each session until you hit 12 at RIR 0-1\n• Increase weight 5lbs (upper) or 10lbs (lower)\n• Reset to 8 reps and repeat\n\nRIR (Reps in Reserve):\n• RIR 3 = could do 3 more (warm-up zone)\n• RIR 2 = could do 2 more (stimulus begins)\n• RIR 1 = could do 1 more (sweet spot)\n• RIR 0 = failure (last set only)\n\nResearch shows RIR 1-3 produces the same hypertrophy as failure with less fatigue and injury risk.\n\nPLATEAU PROTOCOL:\n3+ sessions stalled → deload week at 60% → come back and push.` },
+    { id: "volume", t: "Training Volume", c: `Volume (sets per muscle per week) is the #1 driver of hypertrophy.\n\nOPTIMAL RANGES:\n• 10-20 sets per muscle group per week\n• Under 10 = leaving gains on the table\n• Over 20 = diminishing returns\n• Beginners: 10-12 sets/week\n• Intermediate: 14-18 sets/week\n\nFREQUENCY:\n• Hit each muscle 2-3x per week\n• MPS elevated only 24-48 hours post-training\n• More frequent = more growth signals\n\nSPLIT OPTIONS:\n• 3 days: Full Body × 3\n• 4 days: Upper / Lower / Upper / Lower\n• 5 days: Push / Pull / Legs / Upper / Lower\n• 6 days: PPL / PPL` },
+    { id: "aesthetics", t: "Training for Aesthetics", c: `Visual balance > raw size.\n\nPRIORITY ORDER:\n1. Shoulders (width = aesthetics)\n2. Back (V-taper)\n3. Upper Chest (fullness)\n4. Arms (proportional)\n5. Legs (sweep & shape)\n6. Core (low BF% + direct work)\n\nEXERCISE SELECTION:\n• Compounds first → isolation after\n• Stretched-position exercises are superior\n  (incline curls, RDLs, overhead extensions)\n• Machines/cables often give better tension than free weights for isolation\n\nREP RANGES:\n• 6-12 for compounds\n• 10-20 for isolation\n• Rest: 2-3 min compounds, 60-90s isolation` },
+    { id: "nutrition", t: "Nutrition for Muscle", c: `Training = stimulus. Nutrition = raw materials.\n\nPROTEIN:\n• 1g per pound of bodyweight daily\n• Spread across 3-5 meals (20-40g each)\n• Post-workout within 2 hours\n• 30-40g casein before bed\n• Total daily protein > timing\n\nCALORIES:\n• Surplus: maintenance + 200-400 cal/day\n• Maintenance ≈ bodyweight × 14-16\n• Faster gains = mostly fat, not muscle\n• Cutting: maintenance - 500 (keep protein at 1g/lb)\n\nTOP PROTEIN SOURCES (per 4oz):\n• Chicken breast: 31g\n• Steak sirloin: 28g\n• Salmon: 25g\n• Tuna: 24g\n• Greek yogurt (1 cup): 17g\n• Whey scoop: 25g\n• Eggs (1 large): 6g` },
+    { id: "recovery", t: "Recovery & Deloads", c: `You grow during recovery, not in the gym.\n\nSLEEP:\n• 7-9 hours minimum (non-negotiable)\n• Growth hormone peaks during deep sleep\n• Poor sleep reduces MPS and increases cortisol\n\nDELOAD PROTOCOL:\n• Every 4-6 weeks of hard training\n• Reduce to 60% of working weight\n• Keep showing up (maintain frequency)\n• Signs you need one: persistent soreness, performance drops, poor sleep, irritability\n\nRECOVERY BY MUSCLE:\n• Small (biceps, triceps, delts): 24-36 hours\n• Medium (chest, back): 36-48 hours\n• Large (quads, glutes, hams): 48-72 hours\n\nBASICS:\n• 1g/lb protein\n• Hydrate (1oz per lb bodyweight)\n• Manage stress (cortisol is catabolic)` },
+  ];
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4, marginTop: 0 }}>Training Knowledge</h2>
+      <p style={{ color: "#9ca3af", fontSize: 14, marginBottom: 20, marginTop: 4 }}>Evidence-based training principles. Tap to expand.</p>
+      {sections.map(s => (
+        <div key={s.id} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
+          <button onClick={() => toggle(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: "16px", width: "100%", textAlign: "left", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>
+            {s.t}
+            <span style={{ transform: open === s.id ? "rotate(180deg)" : "none", transition: "transform .2s", color: "#9ca3af", fontSize: 18 }}>▾</span>
+          </button>
+          {open === s.id && <pre style={{ padding: "0 16px 16px", fontSize: 13, color: "#6b7280", lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "Inter,-apple-system,sans-serif", margin: 0 }}>{s.c}</pre>}
+        </div>
+      ))}
     </div>
   );
 }
