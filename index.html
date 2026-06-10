@@ -7,25 +7,26 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="ForwardFitness" />
-    <meta name="description" content="Progressive overload workout tracker with smart weight recommendations" />
+    <meta name="apple-mobile-web-app-title" content="ForwardFit" />
+    <meta name="description" content="Progressive overload workout tracker" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <title>FORWARD FITNESS</title>
+    <title>Forward Fitness</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { background: #f5f7fa; color: #1a2332; -webkit-font-smoothing: antialiased; }
-      input[type="number"]::-webkit-inner-spin-button,
-      input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-      input[type="number"] { -moz-appearance: textfield; }
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-track { background: #f5f7fa; }
-      ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      body { background: #f5f7fa; -webkit-font-smoothing: antialiased; }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    </script>
   </body>
 </html>
