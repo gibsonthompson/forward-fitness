@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 
 // ─── Config ───
-const USER_ID = "gibson";
 const DEFAULT_WEIGHT = 180;
 const BAR_WEIGHT = 45;
 const PLATES = [45, 35, 25, 10, 5, 2.5];
@@ -184,8 +183,106 @@ function getRec(workouts, exId) {
   return rec;
 }
 
-// ─── App ───
+// ─── AUTH GATE ───
 export default function App() {
+  const [session, setSession] = useState(undefined); // undefined = still checking
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => { if (active) setSession(data.session); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => setSession(s));
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, []);
+
+  if (session === undefined) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f7fa" }}>
+        <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#f5f7fa}"}</style>
+        <div style={{ width: 28, height: 28, border: "3px solid #e5e7eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+      </div>
+    );
+  }
+  if (!session) return <AuthScreen />;
+  return <Main userId={session.user.id} onSignOut={() => supabase.auth.signOut()} />;
+}
+
+// ─── AUTH SCREEN (username + password) ───
+// Supabase auth keys on email, so each username maps to an internal synthetic
+// address. The user never sees it and no email is ever sent.
+const USERNAME_DOMAIN = "forwardfit.app";
+function cleanUsername(u) { return (u || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, ""); }
+function emailForUsername(u) { return cleanUsername(u) + "@" + USERNAME_DOMAIN; }
+
+function AuthScreen() {
+  const [mode, setMode] = useState("signin");
+  const [username, setUsername] = useState("");
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  async function submit() {
+    setMsg(null);
+    const u = cleanUsername(username);
+    if (!u || !pw) { setMsg({ type: "err", text: "Enter a username and password" }); return; }
+    if (u.length < 3) { setMsg({ type: "err", text: "Username must be at least 3 characters" }); return; }
+    if (mode === "signup" && pw.length < 6) { setMsg({ type: "err", text: "Password must be at least 6 characters" }); return; }
+    const email = emailForUsername(u);
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email, password: pw, options: { data: { username: u } } });
+        if (error) throw error;
+        if (!data.session) {
+          // Only happens if email confirmation is still enabled on the project.
+          setMsg({ type: "err", text: "Signups are blocked by an email-confirmation setting. Turn off Confirm Email in Supabase Auth settings." });
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        if (error) throw error;
+      }
+    } catch (err) {
+      const raw = (err && err.message) || "";
+      let text = raw;
+      if (/already registered/i.test(raw)) text = "That username is taken";
+      else if (/invalid login credentials/i.test(raw)) text = "Wrong username or password";
+      setMsg({ type: "err", text: text || "Something went wrong" });
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f5f7fa", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa}input{font-family:inherit;font-size:16px!important}button{font-family:inherit;-webkit-appearance:none;cursor:pointer}"}</style>
+      <div style={{ width: "100%", maxWidth: 380 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, textAlign: "center", marginBottom: 4 }}>Forward<span style={{ color: "#1a73e8" }}>Fitness</span></h1>
+        <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, marginBottom: 28 }}>{mode === "signup" ? "Create your account" : "Sign in to your training log"}</p>
+
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 20 }}>
+          <div style={labelStyle}>Username</div>
+          <input style={fieldStyle} type="text" autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(ev) => setUsername(ev.target.value)} placeholder="yourname" />
+          <div style={Object.assign({}, labelStyle, { marginTop: 14 })}>Password</div>
+          <input style={fieldStyle} type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} value={pw} onChange={(ev) => setPw(ev.target.value)} placeholder="At least 6 characters" onKeyDown={(ev) => { if (ev.key === "Enter") submit(); }} />
+
+          {msg && <div style={{ marginTop: 14, fontSize: 13, fontWeight: 600, color: msg.type === "err" ? "#dc2626" : "#16a34a" }}>{msg.text}</div>}
+
+          <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 18, opacity: busy ? 0.8 : 1 }}>
+            {busy ? "..." : mode === "signup" ? "Create Account" : "Sign In"}
+          </button>
+        </div>
+
+        <button onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setMsg(null); }} style={{ width: "100%", background: "none", border: "none", color: "#1a73e8", fontSize: 14, fontWeight: 600, marginTop: 18, padding: 8 }}>
+          {mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── App ───
+function Main(props) {
+  const USER_ID = props.userId;
+  const onSignOut = props.onSignOut;
   const [tab, setTab] = useState("workout");
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
@@ -267,7 +364,7 @@ export default function App() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [USER_ID]);
 
   async function saveWorkout(workout) {
     try {
@@ -393,7 +490,7 @@ export default function App() {
         ))}
       </nav>
 
-      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} />}
+      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} />}
     </div>
   );
 }
@@ -1048,6 +1145,7 @@ function SettingsSheet(props) {
           </div>
         </div>
         <button onClick={save} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Save</button>
+        {props.onSignOut && <button onClick={props.onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 10 }}>Sign Out</button>}
       </div>
     </div>
   );
