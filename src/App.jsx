@@ -317,7 +317,7 @@ export default function App() {
 // ─── AUTH SCREEN (username + password) ───
 // Supabase auth keys on email, so each username maps to an internal synthetic
 // address. The user never sees it and no email is ever sent.
-const USERNAME_DOMAIN = "forwardfit.app";
+const USERNAME_DOMAIN = "callbirdai.com";
 function cleanUsername(u) { return (u || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, ""); }
 function emailForUsername(u) { return cleanUsername(u) + "@" + USERNAME_DOMAIN; }
 
