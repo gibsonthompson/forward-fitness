@@ -50,6 +50,71 @@ const MY_SPLIT = [
   { name: "Shoulders / Legs", exercises: ["db-shoulder-press", "leg-ext", "lateral-cable-raise", "leg-curl", "rear-delt-fly", "calf-raise"] },
 ];
 
+// Preset programs. Selecting one loads its days onto the home screen.
+const PLANS = [
+  {
+    id: "plan-classic", name: "3-Day Classic", days_per_week: "3 days",
+    desc: "The original Forward Fitness split. Balanced, simple, beginner-friendly.",
+    days: [
+      { name: "Chest / Back", exercises: ["incline-bench", "db-bench", "cable-fly"] },
+      { name: "Arms", exercises: ["tricep-bar-pushdown", "barbell-curl", "rope-pushdown", "rope-curl"] },
+      { name: "Shoulders / Legs", exercises: ["db-shoulder-press", "leg-ext", "lateral-cable-raise", "leg-curl", "rear-delt-fly", "calf-raise"] },
+    ],
+  },
+  {
+    id: "plan-ppl", name: "Push / Pull / Legs", days_per_week: "3 or 6 days",
+    desc: "Group movements by pattern. Scales from 3 to 6 days a week. The go-to for intermediate lifters.",
+    days: [
+      { name: "Push", exercises: ["bench", "incline-bench", "db-shoulder-press", "lateral-raise", "tricep-bar-pushdown", "rope-pushdown"] },
+      { name: "Pull", exercises: ["barbell-row", "lat-pulldown", "cable-row", "rear-delt-fly", "barbell-curl", "hammer-curl"] },
+      { name: "Legs", exercises: ["squat", "leg-press", "rdl", "leg-curl", "leg-ext", "calf-raise"] },
+    ],
+  },
+  {
+    id: "plan-ul", name: "Upper / Lower", days_per_week: "4 days",
+    desc: "Hit each muscle twice a week across four sessions. Great strength-to-recovery balance.",
+    days: [
+      { name: "Upper A", exercises: ["bench", "barbell-row", "db-shoulder-press", "lat-pulldown", "barbell-curl", "tricep-bar-pushdown"] },
+      { name: "Lower A", exercises: ["squat", "rdl", "leg-press", "leg-curl", "calf-raise"] },
+      { name: "Upper B", exercises: ["incline-bench", "cable-row", "lateral-raise", "pullup", "hammer-curl", "rope-pushdown"] },
+      { name: "Lower B", exercises: ["deadlift", "leg-press", "leg-ext", "hip-thrust", "calf-raise"] },
+    ],
+  },
+  {
+    id: "plan-fb", name: "Full Body", days_per_week: "3 days",
+    desc: "Three full-body sessions a week. Maximum frequency, ideal for busy schedules.",
+    days: [
+      { name: "Full Body A", exercises: ["squat", "bench", "cable-row", "lateral-raise", "hammer-curl"] },
+      { name: "Full Body B", exercises: ["deadlift", "ohp", "lat-pulldown", "leg-ext", "rope-pushdown"] },
+      { name: "Full Body C", exercises: ["leg-press", "incline-bench", "barbell-row", "rear-delt-fly", "barbell-curl"] },
+    ],
+  },
+  {
+    id: "plan-bro", name: "Bro Split", days_per_week: "5 days",
+    desc: "One muscle group per day, five days a week. High volume per session for advanced lifters.",
+    days: [
+      { name: "Chest", exercises: ["bench", "incline-bench", "db-bench", "cable-fly"] },
+      { name: "Back", exercises: ["barbell-row", "lat-pulldown", "cable-row", "db-row"] },
+      { name: "Shoulders", exercises: ["db-shoulder-press", "lateral-raise", "rear-delt-fly", "face-pull"] },
+      { name: "Arms", exercises: ["barbell-curl", "hammer-curl", "tricep-bar-pushdown", "rope-pushdown"] },
+      { name: "Legs", exercises: ["squat", "leg-press", "rdl", "leg-curl", "calf-raise"] },
+    ],
+  },
+  {
+    id: "plan-arnold", name: "Arnold Split", days_per_week: "6 days",
+    desc: "Chest/back, shoulders/arms, and legs, each twice a week. High frequency and volume.",
+    days: [
+      { name: "Chest & Back", exercises: ["bench", "incline-bench", "barbell-row", "lat-pulldown", "cable-fly"] },
+      { name: "Shoulders & Arms", exercises: ["db-shoulder-press", "lateral-raise", "barbell-curl", "tricep-bar-pushdown", "hammer-curl", "rope-pushdown"] },
+      { name: "Legs", exercises: ["squat", "leg-press", "rdl", "leg-curl", "calf-raise"] },
+    ],
+  },
+];
+
+let SPLIT_SEQ = 0;
+function newSplitId() { SPLIT_SEQ += 1; return "split-" + Date.now() + "-" + SPLIT_SEQ; }
+function withSplitIds(splits) { return (splits || []).map((s) => ({ id: s.id || newSplitId(), name: s.name, exercises: s.exercises || [] })); }
+
 const FOOD_PRESETS = [
   { name: "Chicken Breast (4oz)", p: 31, c: 130 },
   { name: "Chicken Thigh (4oz)", p: 26, c: 165 },
@@ -395,7 +460,7 @@ function Main(props) {
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
-  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, customExercises: [], customRecipes: [] });
+  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, customExercises: [], customRecipes: [], activeSplits: [] });
   const [toast, setToast] = useState(null);
   const [dbOk, setDbOk] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -457,6 +522,7 @@ function Main(props) {
             const s = row.settings || {};
             const customExercises = Array.isArray(s.customExercises) ? s.customExercises : [];
             const customRecipes = Array.isArray(s.customRecipes) ? s.customRecipes : [];
+            const activeSplits = Array.isArray(s.activeSplits) ? s.activeSplits : [];
             registerCustomExercises(customExercises);
             setProfile({
               id: row.id,
@@ -466,6 +532,7 @@ function Main(props) {
               restSeconds: Number(s.restSeconds) || 120,
               customExercises,
               customRecipes,
+              activeSplits,
             });
           }
         } catch (e) { /* profile table/column may not exist yet; use defaults */ }
@@ -542,6 +609,7 @@ function Main(props) {
       restSeconds: next.restSeconds,
       customExercises: next.customExercises || [],
       customRecipes: next.customRecipes || [],
+      activeSplits: next.activeSplits || [],
     };
     let id = profile.id;
     if (id) {
@@ -580,6 +648,29 @@ function Main(props) {
     catch (e) { flash("Could not save recipe: " + e.message, "err"); return false; }
   }
 
+  // The home screen shows activeSplits, falling back to the default until the user changes it.
+  const currentSplits = (profile.activeSplits && profile.activeSplits.length) ? profile.activeSplits : withSplitIds(MY_SPLIT);
+
+  async function saveSplits(nextSplits) {
+    const next = Object.assign({}, profile, { activeSplits: nextSplits });
+    try { await persistProfile(next); return true; }
+    catch (e) { flash("Could not save splits: " + e.message, "err"); return false; }
+  }
+  async function addSplit(split) {
+    const ok = await saveSplits(currentSplits.concat([Object.assign({ id: newSplitId() }, split)]));
+    if (ok) flash("Split added");
+    return ok;
+  }
+  async function removeSplit(id) {
+    await saveSplits(currentSplits.filter((s) => s.id !== id));
+    flash("Split removed");
+  }
+  async function applyPlan(plan) {
+    const ok = await saveSplits(withSplitIds(plan.days));
+    if (ok) flash(plan.name + " loaded");
+    return ok;
+  }
+
   const proteinTarget = profile.proteinTarget != null ? profile.proteinTarget : profile.weight;
   const calorieTarget = profile.calorieTarget != null ? profile.calorieTarget : Math.round(profile.weight * 16 + 300);
 
@@ -608,7 +699,7 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onApplyPlan={applyPlan} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} />}
         {tab === "learn" && <LearnTab />}
@@ -664,7 +755,7 @@ const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(25
 
 // ─── WORKOUT TAB ───
 function WorkoutTab(props) {
-  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise } = props;
+  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits, onAddSplit, onRemoveSplit, onApplyPlan } = props;
 
   const [workout, setWorkout] = useState(() => {
     try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
@@ -674,6 +765,9 @@ function WorkoutTab(props) {
   const [saving, setSaving] = useState(false);
   const [plates, setPlates] = useState(null); // weight number for plate modal
   const [editing, setEditing] = useState(null); // workout object being edited
+  const [building, setBuilding] = useState(false); // split builder open
+  const [planLib, setPlanLib] = useState(false); // plan library open
+  const [manage, setManage] = useState(false); // manage (remove) splits mode
 
   useEffect(() => {
     if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(workout));
@@ -687,9 +781,8 @@ function WorkoutTab(props) {
     return [{ weight: "", reps: "", rir: "", warmup: false, done: false }];
   }
 
-  function loadSplit(splitIndex) {
-    const split = MY_SPLIT[splitIndex];
-    const list = split.exercises.map((exId) => ({ exerciseId: exId, sets: prefillSets(exId) }));
+  function loadSplit(split) {
+    const list = (split.exercises || []).map((exId) => ({ exerciseId: exId, sets: prefillSets(exId) }));
     setWorkout({ date: today(), exercises: list });
   }
 
@@ -785,13 +878,35 @@ function WorkoutTab(props) {
     <div>
       {workout.exercises.length === 0 && (
         <div style={{ marginBottom: 20 }}>
-          <div style={labelStyle}>Start a Workout</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {MY_SPLIT.map((s, i) => (
-              <button key={i} onClick={() => loadSplit(i)} style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 8px", fontSize: 13, fontWeight: 600, color: "#374151" }}>{s.name}</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Start a Workout</div>
+            {splits.length > 0 && (
+              <button onClick={() => setManage(!manage)} style={{ background: "none", border: "none", color: manage ? "#dc2626" : "#1a73e8", fontSize: 13, fontWeight: 600, padding: 4 }}>{manage ? "Done" : "Manage"}</button>
+            )}
+          </div>
+
+          {splits.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, padding: "8px 0 12px" }}>No splits yet. Create one or pick a plan below.</p>}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {splits.map((s) => (
+              <div key={s.id || s.name} style={{ position: "relative" }}>
+                <button onClick={() => { if (!manage) loadSplit(s); }} style={{ width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", fontSize: 13, fontWeight: 600, color: "#374151", minHeight: 64, textAlign: "left", opacity: manage ? 0.7 : 1 }}>
+                  <div>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 4 }}>{(s.exercises || []).length} exercises</div>
+                </button>
+                {manage && onRemoveSplit && s.id && (
+                  <button onClick={() => onRemoveSplit(s.id)} aria-label="remove split" style={{ position: "absolute", top: -8, right: -8, width: 26, height: 26, borderRadius: "50%", background: "#dc2626", color: "#fff", border: "2px solid #fff", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>✕</button>
+                )}
+              </div>
             ))}
           </div>
-          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 10, lineHeight: 1.5 }}>Your last numbers load automatically. Beat them, check off each set, and save.</p>
+
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Split</button>
+            <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
+          </div>
+
+          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 12, lineHeight: 1.5 }}>Your last numbers load automatically. Beat them, check off each set, and save.</p>
         </div>
       )}
 
@@ -848,6 +963,8 @@ function WorkoutTab(props) {
       {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
       {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
+      {building && <SplitBuilder onSave={onAddSplit} onCreateExercise={onCreateExercise} onClose={() => setBuilding(false)} />}
+      {planLib && <PlanLibrary onApply={onApplyPlan} onClose={() => setPlanLib(false)} />}
     </div>
   );
 }
@@ -946,8 +1063,10 @@ function PlateModal(props) {
   );
 }
 
-// ─── EXERCISE PICKER (with search + create) ───
+// ─── EXERCISE PICKER (search + create, single or multi select) ───
 function Picker(props) {
+  const multi = !!props.multi;
+  const selected = new Set(props.selectedIds || []);
   const [filter, setFilter] = useState("All");
   const [q, setQ] = useState("");
   const [creating, setCreating] = useState(false);
@@ -963,6 +1082,11 @@ function Picker(props) {
     list = list.filter((e) => e.name.toLowerCase().includes(term) || e.group.toLowerCase().includes(term));
   }
 
+  function pick(id) {
+    if (multi) { if (props.onToggle) props.onToggle(id); }
+    else if (props.onSelect) props.onSelect(id);
+  }
+
   async function createExercise() {
     const name = newName.trim();
     if (!name) return;
@@ -974,16 +1098,19 @@ function Picker(props) {
     if (ok !== false) {
       setNewName("");
       setCreating(false);
-      props.onSelect(ex.id); // add the new exercise straight into the workout
+      pick(ex.id); // add or select the new exercise immediately
     }
   }
 
   return (
     <div style={overlay}>
       <div style={Object.assign({}, sheet, { maxHeight: "85vh" })}>
-        <div style={sheetHead}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{creating ? "New Exercise" : "Add Exercise"}</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+        <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{creating ? "New Exercise" : multi ? "Choose Exercises" : "Add Exercise"}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {multi && !creating && <button onClick={props.onDone} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 14, fontWeight: 700, minHeight: 40 }}>Done{selected.size ? " (" + selected.size + ")" : ""}</button>}
+            <button onClick={props.onClose} style={xBtn}>✕</button>
+          </div>
         </div>
 
         {creating ? (
@@ -999,31 +1126,149 @@ function Picker(props) {
             <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>{areaForGroup(newGroup) === "lower" ? "Lower body: weight jumps of 10 lbs when you progress." : "Upper body: weight jumps of 5 lbs when you progress."}</p>
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
               <button onClick={() => setCreating(false)} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Back</button>
-              <button onClick={createExercise} disabled={busy || !newName.trim()} style={{ flex: 1, background: busy || !newName.trim() ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : "Create & Add"}</button>
+              <button onClick={createExercise} disabled={busy || !newName.trim()} style={{ flex: 1, background: busy || !newName.trim() ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : multi ? "Create & Select" : "Create & Add"}</button>
             </div>
           </div>
         ) : (
           <>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search exercises" style={Object.assign({}, fieldStyle, { marginBottom: 12 })} />
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #f3f4f6", WebkitOverflowScrolling: "touch" }}>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search exercises" style={Object.assign({}, fieldStyle, { marginBottom: 12, flexShrink: 0 })} />
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", overflowY: "hidden", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #f3f4f6", WebkitOverflowScrolling: "touch", flexShrink: 0 }}>
               {["All"].concat(GROUPS).map((g) => (
                 <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#1a73e8" : "#fff", color: filter === g ? "#fff" : "#374151", border: filter === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
               ))}
             </div>
             {props.onCreate && (
-              <button onClick={() => setCreating(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48 }}>+ Create New Exercise</button>
+              <button onClick={() => setCreating(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48, flexShrink: 0 }}>+ Create New Exercise</button>
             )}
             <div style={{ flex: 1, overflowY: "auto" }}>
               {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No matches</p>}
-              {list.map((e) => (
-                <button key={e.id} onClick={() => props.onSelect(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
-                  <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}{e.custom && <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginLeft: 8 }}>custom</span>}{inSet.has(e.id) && <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 600, marginLeft: 8 }}>added</span>}</span>
-                  <span style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500 }}>{e.group}</span>
-                </button>
-              ))}
+              {list.map((e) => {
+                const sel = selected.has(e.id);
+                return (
+                  <button key={e.id} onClick={() => pick(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      {multi && (
+                        <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, border: "2px solid " + (sel ? "#1a73e8" : "#d1d5db"), background: sel ? "#1a73e8" : "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {sel && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                        </span>
+                      )}
+                      <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}{e.custom && <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginLeft: 8 }}>custom</span>}{!multi && inSet.has(e.id) && <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 600, marginLeft: 8 }}>added</span>}</span>
+                    </span>
+                    <span style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500, flexShrink: 0 }}>{e.group}</span>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SPLIT BUILDER (create a custom split) ───
+function SplitBuilder(props) {
+  const [name, setName] = useState("");
+  const [ids, setIds] = useState([]);
+  const [picking, setPicking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  function toggle(id) { setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : prev.concat([id]))); }
+  function remove(id) { setIds((prev) => prev.filter((x) => x !== id)); }
+  function move(idx, dir) {
+    setIds((prev) => {
+      const j = idx + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = prev.slice();
+      const t = next[idx]; next[idx] = next[j]; next[j] = t;
+      return next;
+    });
+  }
+
+  async function save() {
+    setErr("");
+    if (!name.trim()) { setErr("Name your split"); return; }
+    if (ids.length === 0) { setErr("Add at least one exercise"); return; }
+    setBusy(true);
+    let ok = true;
+    if (props.onSave) ok = await props.onSave({ name: name.trim(), exercises: ids });
+    setBusy(false);
+    if (ok !== false) props.onClose();
+  }
+
+  return (
+    <div style={overlay}>
+      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
+        <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>New Split</h2>
+          <button onClick={props.onClose} style={xBtn}>✕</button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={labelStyle}>Split Name</div>
+          <input style={Object.assign({}, fieldStyle, { marginBottom: 16 })} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Push Day" />
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Exercises ({ids.length})</div>
+            <button onClick={() => setPicking(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 600 }}>+ Add</button>
+          </div>
+
+          {ids.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, padding: "8px 0 16px" }}>No exercises yet. Tap Add to choose some.</p>}
+          {ids.map((id, i) => {
+            const ex = findEx(id);
+            return (
+              <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #f3f4f6" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", width: 20, textAlign: "center" }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: 15, fontWeight: 500, minWidth: 0 }}>{ex ? ex.name : id}</span>
+                <button onClick={() => move(i, -1)} disabled={i === 0} aria-label="up" style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 34, height: 34, fontSize: 16, color: i === 0 ? "#d1d5db" : "#6b7280" }}>↑</button>
+                <button onClick={() => move(i, 1)} disabled={i === ids.length - 1} aria-label="down" style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 34, height: 34, fontSize: 16, color: i === ids.length - 1 ? "#d1d5db" : "#6b7280" }}>↓</button>
+                <button onClick={() => remove(id)} aria-label="remove" style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, width: 30 }}>✕</button>
+              </div>
+            );
+          })}
+          {err && <div style={{ fontSize: 13, fontWeight: 600, color: "#dc2626", marginTop: 12 }}>{err}</div>}
+        </div>
+        <button onClick={save} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : "Save Split"}</button>
+      </div>
+      {picking && <Picker multi selectedIds={ids} onToggle={toggle} onCreate={props.onCreateExercise} onDone={() => setPicking(false)} onClose={() => setPicking(false)} />}
+    </div>
+  );
+}
+
+// ─── PLAN LIBRARY (preset programs) ───
+function PlanLibrary(props) {
+  const [busyId, setBusyId] = useState(null);
+  async function apply(plan) {
+    if (!confirm('Replace your home screen splits with "' + plan.name + '"? You can still add or remove splits after.')) return;
+    setBusyId(plan.id);
+    let ok = true;
+    if (props.onApply) ok = await props.onApply(plan);
+    setBusyId(null);
+    if (ok !== false) props.onClose();
+  }
+  return (
+    <div style={overlay}>
+      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
+        <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Workout Plans</h2>
+          <button onClick={props.onClose} style={xBtn}>✕</button>
+        </div>
+        <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 0, marginBottom: 16, flexShrink: 0 }}>Pick a program. Its sessions load onto your home screen.</p>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {PLANS.map((plan) => (
+            <div key={plan.id} style={Object.assign({}, cardStyle, { marginBottom: 12 })}>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{plan.name}</div>
+              <div style={{ fontSize: 12, color: "#1a73e8", fontWeight: 600, marginTop: 2 }}>{plan.days_per_week} · {plan.days.length} sessions</div>
+              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8, marginBottom: 10, lineHeight: 1.45 }}>{plan.desc}</p>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+                {plan.days.map((d, i) => (
+                  <span key={i} style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 8, padding: "5px 10px" }}>{d.name}</span>
+                ))}
+              </div>
+              <button onClick={() => apply(plan)} disabled={busyId === plan.id} style={{ width: "100%", background: busyId === plan.id ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>{busyId === plan.id ? "Loading..." : "Use This Plan"}</button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
