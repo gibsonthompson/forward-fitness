@@ -71,6 +71,109 @@ const FOOD_PRESETS = [
   { name: "Black Beans (1 cup)", p: 15, c: 227 },
 ];
 
+// High-protein recipe library. Macros are per single serving.
+const MEAL_CATS = ["Breakfast", "Lunch", "Dinner", "Snack"];
+const RECIPES = [
+  {
+    id: "greek-bowl", name: "Greek Yogurt Power Bowl", cat: "Breakfast", time: 5,
+    p: 42, c: 48, f: 11, cals: 450,
+    blurb: "Five-minute high-protein bowl to start the day strong.",
+    ingredients: ["1.5 cups nonfat Greek yogurt", "1 scoop vanilla whey", "1/2 cup mixed berries", "1/4 cup low-sugar granola", "1 tbsp honey", "1 tbsp chia seeds"],
+    steps: ["Stir the whey into the Greek yogurt until smooth.", "Top with berries, granola, and chia seeds.", "Drizzle honey over the top and eat."],
+  },
+  {
+    id: "egg-scramble", name: "Spinach Feta Egg Scramble", cat: "Breakfast", time: 10,
+    p: 34, c: 6, f: 18, cals: 330,
+    blurb: "Savory, low-carb, and ready before your coffee cools.",
+    ingredients: ["3 whole eggs", "4 egg whites", "2 cups fresh spinach", "1 oz feta cheese", "1 tsp olive oil", "Salt and pepper"],
+    steps: ["Heat olive oil in a nonstick pan over medium.", "Add spinach and cook until wilted, about 1 minute.", "Whisk eggs and whites, pour in, and stir gently.", "When almost set, fold in feta, season, and serve."],
+  },
+  {
+    id: "protein-oats", name: "Peanut Butter Protein Oats", cat: "Breakfast", time: 5,
+    p: 38, c: 56, f: 14, cals: 510,
+    blurb: "Make it the night before and grab it on the way out.",
+    ingredients: ["1/2 cup rolled oats", "1 scoop whey", "1 cup milk", "1 tbsp peanut butter", "1/2 banana, sliced", "Cinnamon to taste"],
+    steps: ["Combine oats, whey, and milk in a jar and stir.", "Swirl in peanut butter and add banana and cinnamon.", "Refrigerate overnight, or microwave 90 seconds to eat hot."],
+  },
+  {
+    id: "chicken-rice", name: "Grilled Chicken Rice Bowl", cat: "Lunch", time: 25,
+    p: 52, c: 58, f: 12, cals: 560,
+    blurb: "The classic muscle-building meal prep staple.",
+    ingredients: ["8 oz chicken breast", "1 cup cooked rice", "1.5 cups broccoli", "1 tbsp olive oil", "1 tbsp soy sauce", "Juice of half a lemon"],
+    steps: ["Season chicken and grill or pan-sear 6 to 7 minutes per side.", "Steam or microwave the broccoli until tender.", "Slice chicken and plate over rice with broccoli.", "Drizzle olive oil, soy sauce, and lemon over the top."],
+  },
+  {
+    id: "turkey-taco", name: "Turkey Taco Bowl", cat: "Lunch", time: 20,
+    p: 44, c: 42, f: 16, cals: 500,
+    blurb: "All the taco flavor, built into a high-protein bowl.",
+    ingredients: ["6 oz lean ground turkey (93%)", "1/2 cup black beans", "1/2 cup cooked rice", "1/4 cup salsa", "1 oz shredded cheese", "Taco seasoning"],
+    steps: ["Brown the turkey with taco seasoning over medium heat.", "Warm the black beans and rice.", "Layer rice, beans, and turkey in a bowl.", "Top with salsa and cheese."],
+  },
+  {
+    id: "tuna-bean", name: "Tuna White Bean Salad", cat: "Lunch", time: 10,
+    p: 40, c: 28, f: 15, cals: 410,
+    blurb: "No cooking, all protein. Great desk lunch.",
+    ingredients: ["2 cans tuna in water, drained", "1 cup cannellini beans", "2 cups arugula", "1 tbsp olive oil", "Juice of half a lemon", "Salt and pepper"],
+    steps: ["Flake the tuna into a bowl.", "Add beans and arugula.", "Dress with olive oil, lemon, salt, and pepper and toss."],
+  },
+  {
+    id: "salmon-sweet", name: "Salmon, Sweet Potato & Asparagus", cat: "Dinner", time: 30,
+    p: 40, c: 34, f: 22, cals: 520,
+    blurb: "A complete sheet-pan dinner with healthy fats.",
+    ingredients: ["6 oz salmon fillet", "1 medium sweet potato, cubed", "1 bunch asparagus", "1 tbsp olive oil", "Garlic powder, salt, pepper"],
+    steps: ["Heat oven to 425F.", "Toss sweet potato in half the oil and roast 15 minutes.", "Add salmon and asparagus, drizzle remaining oil, season.", "Roast 12 to 15 more minutes until salmon flakes."],
+  },
+  {
+    id: "beef-stir", name: "Lean Beef Stir-Fry", cat: "Dinner", time: 25,
+    p: 46, c: 46, f: 17, cals: 550,
+    blurb: "Fast, savory, and loaded with protein and veggies.",
+    ingredients: ["6 oz sirloin, thinly sliced", "2 cups mixed stir-fry vegetables", "1 cup cooked rice", "2 tbsp soy sauce", "1 tsp sesame oil", "1 clove garlic, minced", "1 tsp grated ginger"],
+    steps: ["Sear sliced sirloin in a hot pan 2 minutes, then set aside.", "Stir-fry vegetables with garlic and ginger until crisp-tender.", "Return beef, add soy sauce and sesame oil, toss 1 minute.", "Serve over rice."],
+  },
+  {
+    id: "chicken-fajita", name: "Chicken Fajita Skillet", cat: "Dinner", time: 25,
+    p: 48, c: 28, f: 14, cals: 430,
+    blurb: "One pan, big flavor, low effort cleanup.",
+    ingredients: ["8 oz chicken breast, sliced", "1 bell pepper, sliced", "1/2 onion, sliced", "1 tbsp olive oil", "Fajita seasoning", "Lime wedge"],
+    steps: ["Heat oil in a skillet over medium-high.", "Cook chicken with fajita seasoning 5 to 6 minutes.", "Add peppers and onion, cook until softened.", "Finish with a squeeze of lime."],
+  },
+  {
+    id: "baked-cod", name: "Baked Cod with Quinoa", cat: "Dinner", time: 30,
+    p: 42, c: 40, f: 9, cals: 400,
+    blurb: "Light, lean, and high in protein per calorie.",
+    ingredients: ["7 oz cod fillet", "3/4 cup cooked quinoa", "1 zucchini, sliced", "1 tsp olive oil", "Lemon, garlic, salt, pepper"],
+    steps: ["Heat oven to 400F.", "Place cod and zucchini on a lined tray, drizzle oil.", "Season with garlic, salt, pepper, and lemon.", "Bake 15 to 18 minutes and serve over quinoa."],
+  },
+  {
+    id: "pb-shake", name: "Banana PB Protein Shake", cat: "Snack", time: 3,
+    p: 36, c: 32, f: 10, cals: 360,
+    blurb: "Blend-and-go shake for post-workout or busy days.",
+    ingredients: ["1 scoop whey", "1 banana", "1 tbsp peanut butter", "1 cup milk", "Handful of ice"],
+    steps: ["Add everything to a blender.", "Blend until smooth and drink."],
+  },
+  {
+    id: "cottage-pineapple", name: "Cottage Cheese & Pineapple", cat: "Snack", time: 2,
+    p: 28, c: 22, f: 6, cals: 260,
+    blurb: "A two-minute casein-rich snack.",
+    ingredients: ["1 cup low-fat cottage cheese", "1/2 cup pineapple chunks", "1 tbsp sliced almonds"],
+    steps: ["Spoon cottage cheese into a bowl.", "Top with pineapple and almonds."],
+  },
+  {
+    id: "egg-hummus", name: "Eggs & Hummus Plate", cat: "Snack", time: 12,
+    p: 22, c: 18, f: 18, cals: 320,
+    blurb: "A balanced grazing plate that keeps you full.",
+    ingredients: ["3 hard-boiled eggs", "1/4 cup hummus", "1 cup carrot and cucumber sticks", "Pinch of paprika"],
+    steps: ["Halve the eggs and arrange on a plate.", "Add hummus and veggie sticks.", "Dust with paprika."],
+  },
+  {
+    id: "casein-pudding", name: "Chocolate PB Casein Pudding", cat: "Snack", time: 5,
+    p: 32, c: 14, f: 7, cals: 250,
+    blurb: "Slow-digesting protein for before bed.",
+    ingredients: ["1 scoop chocolate casein", "1/2 cup milk", "1 tsp cocoa powder", "1 tsp peanut butter"],
+    steps: ["Whisk casein, cocoa, and milk, adding milk slowly.", "Stir until it thickens into a pudding.", "Swirl in peanut butter and chill 5 minutes."],
+  },
+];
+
 const GROUPS = ["Chest", "Back", "Shoulders", "Quads", "Hamstrings", "Glutes", "Biceps", "Triceps", "Calves", "Abs", "Traps"];
 
 // ─── Helpers ───
@@ -85,7 +188,12 @@ function shiftDay(dateStr, delta) {
   d.setDate(d.getDate() + delta);
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
-function findEx(id) { return EXERCISES.find((e) => e.id === id); }
+// Custom exercises live in iron_profiles.settings and are merged in at runtime.
+let CUSTOM_EXERCISES = [];
+function registerCustomExercises(list) { CUSTOM_EXERCISES = Array.isArray(list) ? list : []; }
+function allExercises() { return EXERCISES.concat(CUSTOM_EXERCISES); }
+function areaForGroup(g) { return ["Quads", "Hamstrings", "Glutes", "Calves"].includes(g) ? "lower" : "upper"; }
+function findEx(id) { return allExercises().find((e) => e.id === id); }
 
 function e1rm(weight, reps) {
   const w = Number(weight) || 0;
@@ -287,7 +395,7 @@ function Main(props) {
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
-  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120 });
+  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, customExercises: [], customRecipes: [] });
   const [toast, setToast] = useState(null);
   const [dbOk, setDbOk] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -347,12 +455,17 @@ function Main(props) {
           if (!r3.error && r3.data && r3.data[0]) {
             const row = r3.data[0];
             const s = row.settings || {};
+            const customExercises = Array.isArray(s.customExercises) ? s.customExercises : [];
+            const customRecipes = Array.isArray(s.customRecipes) ? s.customRecipes : [];
+            registerCustomExercises(customExercises);
             setProfile({
               id: row.id,
               weight: Number(s.weight) || Number(row.weight) || DEFAULT_WEIGHT,
               proteinTarget: s.proteinTarget != null ? Number(s.proteinTarget) : null,
               calorieTarget: s.calorieTarget != null ? Number(s.calorieTarget) : null,
               restSeconds: Number(s.restSeconds) || 120,
+              customExercises,
+              customRecipes,
             });
           }
         } catch (e) { /* profile table/column may not exist yet; use defaults */ }
@@ -420,24 +533,51 @@ function Main(props) {
     catch (e) { flash("Save failed", "err"); }
   }
 
+  // Single source of truth: write the whole settings object so nothing is dropped.
+  async function persistProfile(next) {
+    const settings = {
+      weight: next.weight,
+      proteinTarget: next.proteinTarget,
+      calorieTarget: next.calorieTarget,
+      restSeconds: next.restSeconds,
+      customExercises: next.customExercises || [],
+      customRecipes: next.customRecipes || [],
+    };
+    let id = profile.id;
+    if (id) {
+      const res = await supabase.from("iron_profiles").update({ weight: next.weight, settings }).eq("id", id);
+      if (res.error) throw res.error;
+    } else {
+      const res = await supabase.from("iron_profiles").insert({ user_id: USER_ID, weight: next.weight, settings }).select().single();
+      if (res.error) throw res.error;
+      id = res.data.id;
+    }
+    setProfile(Object.assign({}, next, { id }));
+    return true;
+  }
+
   async function saveProfile(p) {
-    const settings = { weight: p.weight, proteinTarget: p.proteinTarget, calorieTarget: p.calorieTarget, restSeconds: p.restSeconds };
+    const next = Object.assign({}, profile, p); // keep custom arrays intact
     try {
-      let id = profile.id;
-      if (id) {
-        const res = await supabase.from("iron_profiles").update({ weight: p.weight, settings }).eq("id", id);
-        if (res.error) throw res.error;
-      } else {
-        const res = await supabase.from("iron_profiles").insert({ user_id: USER_ID, weight: p.weight, settings }).select().single();
-        if (res.error) throw res.error;
-        id = res.data.id;
-      }
-      setProfile(Object.assign({}, p, { id }));
+      await persistProfile(next);
       setShowSettings(false);
       flash("Settings saved");
     } catch (e) {
       flash("Could not save settings: " + e.message, "err");
     }
+  }
+
+  async function addCustomExercise(ex) {
+    const next = Object.assign({}, profile, { customExercises: (profile.customExercises || []).concat([ex]) });
+    registerCustomExercises(next.customExercises);
+    try { await persistProfile(next); flash("Exercise added"); return true; }
+    catch (e) { flash("Could not save exercise: " + e.message, "err"); return false; }
+  }
+
+  async function addCustomRecipe(r) {
+    const next = Object.assign({}, profile, { customRecipes: (profile.customRecipes || []).concat([r]) });
+    try { await persistProfile(next); flash("Recipe added"); return true; }
+    catch (e) { flash("Could not save recipe: " + e.message, "err"); return false; }
   }
 
   const proteinTarget = profile.proteinTarget != null ? profile.proteinTarget : profile.weight;
@@ -453,7 +593,7 @@ function Main(props) {
   return (
     <div style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif}input{font-family:inherit;font-size:16px!important}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}"}</style>
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif}input,textarea{font-family:inherit;font-size:16px!important}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}"}</style>
 
       {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: toast.type === "err" ? "#fef2f2" : "#f0fdf4", color: toast.type === "err" ? "#dc2626" : "#16a34a", border: "1px solid " + (toast.type === "err" ? "#fecaca" : "#bbf7d0"), borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, animation: "fadeIn .2s ease", boxShadow: "0 4px 12px rgba(0,0,0,.1)", maxWidth: "90%", textAlign: "center" }}>{toast.msg}</div>}
 
@@ -468,8 +608,8 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} />}
-        {tab === "nutrition" && <NutritionTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} />}
+        {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} />}
         {tab === "learn" && <LearnTab />}
       </div>
@@ -479,7 +619,7 @@ function Main(props) {
       <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "#fff", borderTop: "1px solid #edf0f3", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
           { id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },
-          { id: "nutrition", label: "Fuel", d: "M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" },
+          { id: "nutrition", label: "Food", d: "M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" },
           { id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" },
           { id: "learn", label: "Learn", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
         ].map((t) => (
@@ -524,7 +664,7 @@ const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(25
 
 // ─── WORKOUT TAB ───
 function WorkoutTab(props) {
-  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds } = props;
+  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise } = props;
 
   const [workout, setWorkout] = useState(() => {
     try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
@@ -705,9 +845,9 @@ function WorkoutTab(props) {
         </div>
       )}
 
-      {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onClose={() => setPicker(false)} />}
+      {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
-      {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onClose={() => setEditing(null)} />}
+      {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
     </div>
   );
 }
@@ -806,38 +946,84 @@ function PlateModal(props) {
   );
 }
 
-// ─── EXERCISE PICKER (with search) ───
+// ─── EXERCISE PICKER (with search + create) ───
 function Picker(props) {
   const [filter, setFilter] = useState("All");
   const [q, setQ] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newGroup, setNewGroup] = useState(GROUPS[0]);
+  const [busy, setBusy] = useState(false);
   const inSet = new Set(props.inWorkoutIds || []);
-  let list = filter === "All" ? EXERCISES : EXERCISES.filter((e) => e.group === filter);
+
+  const source = allExercises();
+  let list = filter === "All" ? source : source.filter((e) => e.group === filter);
   if (q.trim()) {
     const term = q.trim().toLowerCase();
     list = list.filter((e) => e.name.toLowerCase().includes(term) || e.group.toLowerCase().includes(term));
   }
+
+  async function createExercise() {
+    const name = newName.trim();
+    if (!name) return;
+    const ex = { id: "custom-ex-" + Date.now(), name, group: newGroup, area: areaForGroup(newGroup), custom: true };
+    setBusy(true);
+    let ok = true;
+    if (props.onCreate) ok = await props.onCreate(ex);
+    setBusy(false);
+    if (ok !== false) {
+      setNewName("");
+      setCreating(false);
+      props.onSelect(ex.id); // add the new exercise straight into the workout
+    }
+  }
+
   return (
     <div style={overlay}>
       <div style={Object.assign({}, sheet, { maxHeight: "85vh" })}>
         <div style={sheetHead}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Add Exercise</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{creating ? "New Exercise" : "Add Exercise"}</h2>
           <button onClick={props.onClose} style={xBtn}>✕</button>
         </div>
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search exercises" style={Object.assign({}, fieldStyle, { marginBottom: 12 })} />
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #f3f4f6", WebkitOverflowScrolling: "touch" }}>
-          {["All"].concat(GROUPS).map((g) => (
-            <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#1a73e8" : "#fff", color: filter === g ? "#fff" : "#374151", border: filter === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
-          ))}
-        </div>
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No matches</p>}
-          {list.map((e) => (
-            <button key={e.id} onClick={() => props.onSelect(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
-              <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}{inSet.has(e.id) && <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 600, marginLeft: 8 }}>added</span>}</span>
-              <span style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500 }}>{e.group}</span>
-            </button>
-          ))}
-        </div>
+
+        {creating ? (
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            <div style={labelStyle}>Exercise Name</div>
+            <input autoFocus value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Incline DB Curl" style={Object.assign({}, fieldStyle, { marginBottom: 16 })} onKeyDown={(e) => { if (e.key === "Enter") createExercise(); }} />
+            <div style={labelStyle}>Muscle Group</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              {GROUPS.map((g) => (
+                <button key={g} onClick={() => setNewGroup(g)} style={{ background: newGroup === g ? "#1a73e8" : "#fff", color: newGroup === g ? "#fff" : "#374151", border: newGroup === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 20, padding: "8px 14px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>{areaForGroup(newGroup) === "lower" ? "Lower body: weight jumps of 10 lbs when you progress." : "Upper body: weight jumps of 5 lbs when you progress."}</p>
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button onClick={() => setCreating(false)} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Back</button>
+              <button onClick={createExercise} disabled={busy || !newName.trim()} style={{ flex: 1, background: busy || !newName.trim() ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : "Create & Add"}</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search exercises" style={Object.assign({}, fieldStyle, { marginBottom: 12 })} />
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #f3f4f6", WebkitOverflowScrolling: "touch" }}>
+              {["All"].concat(GROUPS).map((g) => (
+                <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#1a73e8" : "#fff", color: filter === g ? "#fff" : "#374151", border: filter === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
+              ))}
+            </div>
+            {props.onCreate && (
+              <button onClick={() => setCreating(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48 }}>+ Create New Exercise</button>
+            )}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No matches</p>}
+              {list.map((e) => (
+                <button key={e.id} onClick={() => props.onSelect(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
+                  <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}{e.custom && <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginLeft: 8 }}>custom</span>}{inSet.has(e.id) && <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 600, marginLeft: 8 }}>added</span>}</span>
+                  <span style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500 }}>{e.group}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -911,30 +1097,45 @@ function EditWorkoutModal(props) {
           <button onClick={save} disabled={saving} style={{ flex: 1, background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48, opacity: saving ? 0.8 : 1 }}>{saving ? "Saving..." : "Save Changes"}</button>
         </div>
       </div>
-      {picker && <Picker inWorkoutIds={exercises.map((e) => e.exerciseId)} onSelect={addExercise} onClose={() => setPicker(false)} />}
+      {picker && <Picker inWorkoutIds={exercises.map((e) => e.exerciseId)} onSelect={addExercise} onCreate={props.onCreateExercise} onClose={() => setPicker(false)} />}
     </div>
   );
 }
 
-// ─── NUTRITION TAB ───
-function NutritionTab(props) {
+// ─── FOOD TAB (recipe library + daily log) ───
+function FoodTab(props) {
   const { meals, onAdd, onRemove, pt, ct } = props;
+  const [cat, setCat] = useState("All");
+  const [q, setQ] = useState("");
+  const [detail, setDetail] = useState(null); // recipe object
+  const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState(today());
   const [showPresets, setShowPresets] = useState(false);
   const [cust, setCust] = useState({ name: "", p: "", c: "" });
+
+  const library = RECIPES.concat(props.customRecipes || []);
+  let list = cat === "All" ? library : library.filter((r) => r.cat === cat);
+  if (q.trim()) {
+    const term = q.trim().toLowerCase();
+    list = list.filter((r) => r.name.toLowerCase().includes(term) || (r.ingredients || []).join(" ").toLowerCase().includes(term));
+  }
 
   const dm = meals[date] || [];
   const tp = dm.reduce((a, m) => a + (Number(m.protein) || 0), 0);
   const tc = dm.reduce((a, m) => a + (Number(m.cals) || 0), 0);
 
-  function addItem(item) {
+  function logMeal(item) {
     const entry = { name: item.name, protein: item.p, cals: item.c, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
-    onAdd(date, entry);
+    onAdd(today(), entry);
     setShowPresets(false);
+  }
+  function logRecipe(r) {
+    onAdd(today(), { name: r.name, protein: r.p, cals: r.cals, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+    setDetail(null);
   }
   function addCustom() {
     if (!cust.name.trim()) return;
-    addItem({ name: cust.name.trim(), p: Number(cust.p) || 0, c: Number(cust.c) || 0 });
+    logMeal({ name: cust.name.trim(), p: Number(cust.p) || 0, c: Number(cust.c) || 0 });
     setCust({ name: "", p: "", c: "" });
   }
 
@@ -947,74 +1148,108 @@ function NutritionTab(props) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 24 }}>
-        <button onClick={() => setDate(shiftDay(date, -1))} style={navBtnStyle}>‹</button>
-        <span style={{ fontSize: 15, fontWeight: 600, color: date === today() ? "#1a73e8" : "#6b7280" }}>{date === today() ? "Today" : date}</span>
-        <button onClick={() => setDate(shiftDay(date, 1))} style={navBtnStyle}>›</button>
-      </div>
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 4 }}>Meal Library</h2>
+      <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 4, marginBottom: 16 }}>High-protein meals built for muscle. Tap one to see how to make it.</p>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 28 }}>
-        <Ring label="Protein" val={tp} tgt={pt} unit="g" pct={Math.min((tp / pt) * 100, 100)} />
-        <Ring label="Calories" val={tc} tgt={ct} unit="" pct={Math.min((tc / ct) * 100, 100)} />
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: "#9ca3af", marginBottom: 10 }}>Meals</div>
-          <div style={{ width: 80, height: 80, border: "3px solid " + (dm.length >= 3 ? "#22c55e" : "#f59e0b"), borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 28, fontWeight: 700, color: dm.length >= 3 ? "#22c55e" : "#f59e0b" }}>{dm.length}</span>
-          </div>
-        </div>
-      </div>
+      {props.onAddRecipe && (
+        <button onClick={() => setShowForm(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48 }}>+ Add Your Own Recipe</button>
+      )}
 
-      <div style={{ marginBottom: 24 }}>
-        <div style={labelStyle}>7-Day Protein</div>
-        <div style={{ display: "flex", gap: 4, height: 48 }}>
-          {week.map((wk, i) => (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-              <div style={{ width: "100%", flex: 1, background: "#f3f4f6", borderRadius: 4, display: "flex", alignItems: "flex-end" }}>
-                <div style={{ width: "100%", height: Math.min((wk.p / pt) * 100, 100) + "%", background: wk.p >= pt ? "#22c55e" : "#1a73e8", borderRadius: 4, minHeight: 2 }} />
-              </div>
-              <span style={{ fontSize: 10, color: "#9ca3af" }}>{wk.day}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search meals or ingredients" style={Object.assign({}, fieldStyle, { marginBottom: 12 })} />
 
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Meals</div>
-          <button onClick={() => setShowPresets(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>+ Add</button>
-        </div>
-        {dm.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No meals logged yet</p>}
-        {dm.map((m, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f3f4f6" }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
-              <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{m.protein}g · {m.cals} cal{m.time ? " · " + m.time : ""}</div>
-            </div>
-            <button onClick={() => onRemove(date, i)} style={closeBtn}>✕</button>
-          </div>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 16, WebkitOverflowScrolling: "touch" }}>
+        {["All"].concat(MEAL_CATS).map((g) => (
+          <button key={g} onClick={() => setCat(g)} style={{ background: cat === g ? "#1a73e8" : "#fff", color: cat === g ? "#fff" : "#374151", border: cat === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 24, padding: "10px 18px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
         ))}
       </div>
 
-      <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
-        <div style={labelStyle}>Quick Add</div>
-        <input style={fieldStyle} placeholder="Food name" value={cust.name} onChange={(e) => setCust(Object.assign({}, cust, { name: e.target.value }))} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-          <input style={fieldStyle} placeholder="Protein (g)" type="number" inputMode="numeric" value={cust.p} onChange={(e) => setCust(Object.assign({}, cust, { p: e.target.value }))} />
-          <input style={fieldStyle} placeholder="Calories" type="number" inputMode="numeric" value={cust.c} onChange={(e) => setCust(Object.assign({}, cust, { c: e.target.value }))} />
+      {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No meals match that search</p>}
+      {list.map((r) => (
+        <button key={r.id} onClick={() => setDetail(r)} style={Object.assign({}, cardStyle, { width: "100%", textAlign: "left", display: "block" })}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{r.name}</div>
+              <div style={{ fontSize: 13, color: "#6b7280", marginTop: 3, lineHeight: 1.4 }}>{r.blurb}</div>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 20, padding: "5px 10px", whiteSpace: "nowrap" }}>{r.time} min</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+            <MacroPill label="P" val={r.p + "g"} strong />
+            <MacroPill label="C" val={r.c + "g"} />
+            <MacroPill label="F" val={r.f + "g"} />
+            <MacroPill label="" val={r.cals + " cal"} />
+          </div>
+        </button>
+      ))}
+
+      <div style={{ borderTop: "1px solid #e5e7eb", marginTop: 20, paddingTop: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 20 }}>
+          <button onClick={() => setDate(shiftDay(date, -1))} style={navBtnStyle}>‹</button>
+          <span style={{ fontSize: 15, fontWeight: 600, color: date === today() ? "#1a73e8" : "#6b7280" }}>{date === today() ? "Today" : date}</span>
+          <button onClick={() => setDate(shiftDay(date, 1))} style={navBtnStyle}>›</button>
         </div>
-        <button onClick={addCustom} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 600, marginTop: 10, minHeight: 48 }}>Log It</button>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: 36, marginBottom: 24 }}>
+          <Ring label="Protein" val={tp} tgt={pt} unit="g" pct={Math.min((tp / pt) * 100, 100)} />
+          <Ring label="Calories" val={tc} tgt={ct} unit="" pct={Math.min((tc / ct) * 100, 100)} />
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <div style={labelStyle}>7-Day Protein</div>
+          <div style={{ display: "flex", gap: 4, height: 48 }}>
+            {week.map((wk, i) => (
+              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <div style={{ width: "100%", flex: 1, background: "#f3f4f6", borderRadius: 4, display: "flex", alignItems: "flex-end" }}>
+                  <div style={{ width: "100%", height: Math.min((wk.p / pt) * 100, 100) + "%", background: wk.p >= pt ? "#22c55e" : "#1a73e8", borderRadius: 4, minHeight: 2 }} />
+                </div>
+                <span style={{ fontSize: 10, color: "#9ca3af" }}>{wk.day}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Logged Meals</div>
+            <button onClick={() => setShowPresets(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>+ Quick Food</button>
+          </div>
+          {dm.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>Nothing logged yet. Log a meal from the library above, or add one below.</p>}
+          {dm.map((m, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f3f4f6" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
+                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{m.protein}g · {m.cals} cal{m.time ? " · " + m.time : ""}</div>
+              </div>
+              <button onClick={() => onRemove(date, i)} style={closeBtn}>✕</button>
+            </div>
+          ))}
+        </div>
+
+        <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
+          <div style={labelStyle}>Custom Entry</div>
+          <input style={fieldStyle} placeholder="Food name" value={cust.name} onChange={(e) => setCust(Object.assign({}, cust, { name: e.target.value }))} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+            <input style={fieldStyle} placeholder="Protein (g)" type="number" inputMode="numeric" value={cust.p} onChange={(e) => setCust(Object.assign({}, cust, { p: e.target.value }))} />
+            <input style={fieldStyle} placeholder="Calories" type="number" inputMode="numeric" value={cust.c} onChange={(e) => setCust(Object.assign({}, cust, { c: e.target.value }))} />
+          </div>
+          <button onClick={addCustom} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 600, marginTop: 10, minHeight: 48 }}>Log It</button>
+        </div>
       </div>
+
+      {detail && <RecipeDetail recipe={detail} onLog={() => logRecipe(detail)} onClose={() => setDetail(null)} />}
+
+      {showForm && <RecipeForm onSubmit={props.onAddRecipe} onClose={() => setShowForm(false)} />}
 
       {showPresets && (
         <div style={overlay}>
           <div style={Object.assign({}, sheet, { maxHeight: "80vh" })}>
             <div style={sheetHead}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Food Presets</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Quick Foods</h2>
               <button onClick={() => setShowPresets(false)} style={xBtn}>✕</button>
             </div>
             <div style={{ flex: 1, overflowY: "auto" }}>
               {FOOD_PRESETS.map((p, i) => (
-                <button key={i} onClick={() => addItem(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
+                <button key={i} onClick={() => logMeal(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
                   <span style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</span>
                   <span style={{ fontSize: 13, color: "#9ca3af" }}>{p.p}g · {p.c}cal</span>
                 </button>
@@ -1023,6 +1258,157 @@ function NutritionTab(props) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MacroPill(props) {
+  return (
+    <span style={{ fontSize: 12, fontWeight: 600, color: props.strong ? "#1a73e8" : "#6b7280", background: props.strong ? "#1a73e810" : "#f3f4f6", borderRadius: 8, padding: "5px 10px" }}>
+      {props.label ? props.label + " " : ""}{props.val}
+    </span>
+  );
+}
+
+// ─── RECIPE DETAIL ───
+function RecipeDetail(props) {
+  const r = props.recipe;
+  return (
+    <div style={overlay}>
+      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
+        <div style={sheetHead}>
+          <div>
+            <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0 }}>{r.name}</h2>
+            <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{r.cat} · {r.time} min</div>
+          </div>
+          <button onClick={props.onClose} style={xBtn}>✕</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
+            {[{ l: "Protein", v: r.p + "g", strong: true }, { l: "Carbs", v: r.c + "g" }, { l: "Fat", v: r.f + "g" }, { l: "Calories", v: r.cals }].map((m, i) => (
+              <div key={i} style={{ background: m.strong ? "#1a73e810" : "#f9fafb", border: "1px solid " + (m.strong ? "#1a73e830" : "#e5e7eb"), borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: m.strong ? "#1a73e8" : "#1a2332" }}>{m.v}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 2 }}>{m.l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={labelStyle}>Ingredients</div>
+          <div style={{ marginBottom: 20 }}>
+            {r.ingredients.map((ing, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 0", borderBottom: i < r.ingredients.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                <span style={{ color: "#1a73e8", fontWeight: 700, lineHeight: 1.4 }}>·</span>
+                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.4 }}>{ing}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={labelStyle}>How to Make It</div>
+          <div style={{ marginBottom: 8 }}>
+            {r.steps.map((st, i) => (
+              <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
+                <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: "50%", background: "#1a73e8", color: "#fff", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.5, paddingTop: 2 }}>{st}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button onClick={props.onLog} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Log to Today ({r.p}g · {r.cals} cal)</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── RECIPE FORM (create your own) ───
+function RecipeForm(props) {
+  const [f, setF] = useState({ name: "", cat: "Lunch", time: "", p: "", c: "", fat: "", cals: "", blurb: "", ingredients: "", steps: "" });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  function set(k, v) { setF(Object.assign({}, f, { [k]: v })); }
+
+  async function submit() {
+    setErr("");
+    if (!f.name.trim()) { setErr("Give your recipe a name"); return; }
+    const ingredients = f.ingredients.split("\n").map((s) => s.trim()).filter(Boolean);
+    const steps = f.steps.split("\n").map((s) => s.trim()).filter(Boolean);
+    if (ingredients.length === 0) { setErr("Add at least one ingredient"); return; }
+    if (steps.length === 0) { setErr("Add at least one step"); return; }
+    const recipe = {
+      id: "custom-rec-" + Date.now(),
+      name: f.name.trim(),
+      cat: f.cat,
+      time: Number(f.time) || 0,
+      p: Number(f.p) || 0,
+      c: Number(f.c) || 0,
+      f: Number(f.fat) || 0,
+      cals: Number(f.cals) || 0,
+      blurb: f.blurb.trim() || "Your custom recipe.",
+      ingredients,
+      steps,
+      custom: true,
+    };
+    setBusy(true);
+    let ok = true;
+    if (props.onSubmit) ok = await props.onSubmit(recipe);
+    setBusy(false);
+    if (ok !== false) props.onClose();
+  }
+
+  return (
+    <div style={overlay}>
+      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
+        <div style={sheetHead}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>New Recipe</h2>
+          <button onClick={props.onClose} style={xBtn}>✕</button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          <div style={labelStyle}>Name</div>
+          <input style={Object.assign({}, fieldStyle, { marginBottom: 14 })} value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Buffalo Chicken Wrap" />
+
+          <div style={labelStyle}>Category</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+            {MEAL_CATS.map((g) => (
+              <button key={g} onClick={() => set("cat", g)} style={{ background: f.cat === g ? "#1a73e8" : "#fff", color: f.cat === g ? "#fff" : "#374151", border: f.cat === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
+            ))}
+          </div>
+
+          <div style={labelStyle}>Short Description</div>
+          <input style={Object.assign({}, fieldStyle, { marginBottom: 14 })} value={f.blurb} onChange={(e) => set("blurb", e.target.value)} placeholder="One line about the meal (optional)" />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+            <div>
+              <div style={labelStyle}>Protein (g)</div>
+              <input style={fieldStyle} type="number" inputMode="numeric" value={f.p} onChange={(e) => set("p", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <div style={labelStyle}>Calories</div>
+              <input style={fieldStyle} type="number" inputMode="numeric" value={f.cals} onChange={(e) => set("cals", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <div style={labelStyle}>Carbs (g)</div>
+              <input style={fieldStyle} type="number" inputMode="numeric" value={f.c} onChange={(e) => set("c", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <div style={labelStyle}>Fat (g)</div>
+              <input style={fieldStyle} type="number" inputMode="numeric" value={f.fat} onChange={(e) => set("fat", e.target.value)} placeholder="0" />
+            </div>
+          </div>
+
+          <div style={labelStyle}>Prep Time (minutes)</div>
+          <input style={Object.assign({}, fieldStyle, { marginBottom: 14 })} type="number" inputMode="numeric" value={f.time} onChange={(e) => set("time", e.target.value)} placeholder="0" />
+
+          <div style={labelStyle}>Ingredients (one per line)</div>
+          <textarea style={Object.assign({}, fieldStyle, { marginBottom: 14, minHeight: 100, resize: "vertical", lineHeight: 1.5 })} value={f.ingredients} onChange={(e) => set("ingredients", e.target.value)} placeholder={"8 oz chicken breast\n1 cup rice\n1 tbsp olive oil"} />
+
+          <div style={labelStyle}>Steps (one per line)</div>
+          <textarea style={Object.assign({}, fieldStyle, { marginBottom: 8, minHeight: 100, resize: "vertical", lineHeight: 1.5 })} value={f.steps} onChange={(e) => set("steps", e.target.value)} placeholder={"Season and grill the chicken\nCook the rice\nPlate and serve"} />
+
+          {err && <div style={{ fontSize: 13, fontWeight: 600, color: "#dc2626", marginBottom: 8 }}>{err}</div>}
+        </div>
+        <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : "Save Recipe"}</button>
+      </div>
     </div>
   );
 }
@@ -1050,7 +1436,6 @@ function ProgressTab(props) {
   const workouts = props.workouts;
   const ts = workouts.length;
   let tsets = 0;
-  let tvol = 0;
   const prs = {};
   for (const w of workouts) {
     for (const ex of w.exercises || []) {
@@ -1060,7 +1445,6 @@ function ProgressTab(props) {
       for (const s of ws) {
         const wt = Number(s.weight) || 0;
         const rp = Number(s.reps) || 0;
-        tvol += wt * rp;
         if (db && wt > 0 && rp > 0) {
           const est = e1rm(wt, rp);
           if (!prs[db.name] || est > prs[db.name].e1rm) prs[db.name] = { e1rm: est, w: wt, r: rp, d: w.date };
@@ -1072,8 +1456,8 @@ function ProgressTab(props) {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 28 }}>
-        {[{ v: ts, l: "Workouts" }, { v: tsets, l: "Work Sets" }, { v: (tvol / 1000).toFixed(0) + "k", l: "Lbs Moved" }].map((s, i) => (
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
+        {[{ v: ts, l: "Workouts" }, { v: tsets, l: "Work Sets" }].map((s, i) => (
           <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 12px", textAlign: "center", border: "1px solid #e5e7eb" }}>
             <div style={{ fontSize: 24, fontWeight: 700, color: "#1a73e8" }}>{s.v}</div>
             <div style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, marginTop: 4 }}>{s.l}</div>
