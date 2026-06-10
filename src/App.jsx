@@ -227,21 +227,22 @@ function WorkoutTab({ workouts, onSave, onDelete, flash }) {
 
   const loadSplit = (i) => {
     const exs = MY_SPLIT[i].exercises.map(id => {
-      const rec = getRec(getHist(workouts, id), id);
       const last = getLast(workouts, id);
-      const dw = rec?.w || (last?.sets?.[0]?.weight) || "";
-      const dr = rec?.r || (last?.sets?.[0]?.reps) || "";
-      return { exerciseId: id, sets: [{ weight: numVal(dw), reps: numVal(dr), rir: "" }] };
+      // Pre-fill with exactly what was done last time, blank if first time
+      const sets = last?.sets?.length
+        ? last.sets.map(s => ({ weight: numVal(s.weight), reps: numVal(s.reps), rir: "" }))
+        : [{ weight: "", reps: "", rir: "" }];
+      return { exerciseId: id, sets };
     });
     setWorkout({ date: today(), exercises: exs });
   };
 
   const addEx = (id) => {
-    const rec = getRec(getHist(workouts, id), id);
     const last = getLast(workouts, id);
-    const dw = rec?.w || (last?.sets?.[0]?.weight) || "";
-    const dr = rec?.r || (last?.sets?.[0]?.reps) || "";
-    setWorkout(w => ({ ...w, exercises: [...w.exercises, { exerciseId: id, sets: [{ weight: numVal(dw), reps: numVal(dr), rir: "" }] }] }));
+    const sets = last?.sets?.length
+      ? last.sets.map(s => ({ weight: numVal(s.weight), reps: numVal(s.reps), rir: "" }))
+      : [{ weight: "", reps: "", rir: "" }];
+    setWorkout(w => ({ ...w, exercises: [...w.exercises, { exerciseId: id, sets }] }));
     setPicker(false);
   };
 
@@ -394,13 +395,31 @@ function Picker({ onSelect, onClose }) {
       <div style={{ background: "#fff", borderRadius: "20px 20px 0 0", padding: "20px 20px max(20px,env(safe-area-inset-bottom))", width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp .25s ease" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Add Exercise</h2>
-          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: 50, width: 32, height: 32, fontSize: 16, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: 50, width: 36, height: 36, fontSize: 18, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
         </div>
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 8 }}>
-          {["All",...GROUPS].map(g => <button key={g} onClick={() => setF(g)} style={{ background: f===g?"#1a73e8":"#f3f4f6", color: f===g?"#fff":"#6b7280", border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 }}>{g}</button>)}
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, marginBottom: 12, WebkitOverflowScrolling: "touch", borderBottom: "1px solid #f3f4f6" }}>
+          {["All",...GROUPS].map(g => (
+            <button key={g} onClick={() => setF(g)} style={{
+              background: f===g ? "#1a73e8" : "#fff",
+              color: f===g ? "#fff" : "#374151",
+              border: f===g ? "2px solid #1a73e8" : "2px solid #e5e7eb",
+              borderRadius: 24,
+              padding: "10px 20px",
+              fontSize: 14,
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              minHeight: 44
+            }}>{g}</button>
+          ))}
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          {list.map(e => <button key={e.id} onClick={() => onSelect(e.id)} style={{ display: "flex", justifyContent: "space-between", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "14px 4px", width: "100%", textAlign: "left", minHeight: 48 }}><span style={{ fontSize: 15, fontWeight: 500 }}>{e.name}</span><span style={{ fontSize: 12, color: "#9ca3af" }}>{e.group}</span></button>)}
+          {list.map(e => (
+            <button key={e.id} onClick={() => onSelect(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
+              <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}</span>
+              <span style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500 }}>{e.group}</span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
