@@ -699,7 +699,7 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onApplyPlan={applyPlan} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} />}
         {tab === "learn" && <LearnTab />}
@@ -721,7 +721,7 @@ function Main(props) {
         ))}
       </nav>
 
-      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} />}
+      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onApplyPlan={applyPlan} onCreateExercise={addCustomExercise} />}
     </div>
   );
 }
@@ -755,7 +755,7 @@ const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(25
 
 // ─── WORKOUT TAB ───
 function WorkoutTab(props) {
-  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits, onAddSplit, onRemoveSplit, onApplyPlan } = props;
+  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits } = props;
 
   const [workout, setWorkout] = useState(() => {
     try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
@@ -765,9 +765,6 @@ function WorkoutTab(props) {
   const [saving, setSaving] = useState(false);
   const [plates, setPlates] = useState(null); // weight number for plate modal
   const [editing, setEditing] = useState(null); // workout object being edited
-  const [building, setBuilding] = useState(false); // split builder open
-  const [planLib, setPlanLib] = useState(false); // plan library open
-  const [manage, setManage] = useState(false); // manage (remove) splits mode
 
   useEffect(() => {
     if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(workout));
@@ -878,34 +875,19 @@ function WorkoutTab(props) {
     <div>
       {workout.exercises.length === 0 && (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Start a Workout</div>
-            {splits.length > 0 && (
-              <button onClick={() => setManage(!manage)} style={{ background: "none", border: "none", color: manage ? "#dc2626" : "#1a73e8", fontSize: 13, fontWeight: 600, padding: 4 }}>{manage ? "Done" : "Manage"}</button>
-            )}
-          </div>
-
-          {splits.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, padding: "8px 0 12px" }}>No splits yet. Create one or pick a plan below.</p>}
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {splits.map((s) => (
-              <div key={s.id || s.name} style={{ position: "relative" }}>
-                <button onClick={() => { if (!manage) loadSplit(s); }} style={{ width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", fontSize: 13, fontWeight: 600, color: "#374151", minHeight: 64, textAlign: "left", opacity: manage ? 0.7 : 1 }}>
+          <div style={labelStyle}>Start a Workout</div>
+          {splits.length === 0 ? (
+            <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5 }}>No splits yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {splits.map((s) => (
+                <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", fontSize: 13, fontWeight: 600, color: "#374151", minHeight: 64, textAlign: "left" }}>
                   <div>{s.name}</div>
                   <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 4 }}>{(s.exercises || []).length} exercises</div>
                 </button>
-                {manage && onRemoveSplit && s.id && (
-                  <button onClick={() => onRemoveSplit(s.id)} aria-label="remove split" style={{ position: "absolute", top: -8, right: -8, width: 26, height: 26, borderRadius: "50%", background: "#dc2626", color: "#fff", border: "2px solid #fff", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>✕</button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Split</button>
-            <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
-          </div>
-
+              ))}
+            </div>
+          )}
           <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 12, lineHeight: 1.5 }}>Your last numbers load automatically. Beat them, check off each set, and save.</p>
         </div>
       )}
@@ -963,8 +945,6 @@ function WorkoutTab(props) {
       {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
       {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
-      {building && <SplitBuilder onSave={onAddSplit} onCreateExercise={onCreateExercise} onClose={() => setBuilding(false)} />}
-      {planLib && <PlanLibrary onApply={onApplyPlan} onClose={() => setPlanLib(false)} />}
     </div>
   );
 }
@@ -1737,6 +1717,10 @@ function SettingsSheet(props) {
   const [protein, setProtein] = useState(p.proteinTarget != null ? String(p.proteinTarget) : "");
   const [calories, setCalories] = useState(p.calorieTarget != null ? String(p.calorieTarget) : "");
   const [rest, setRest] = useState(String(p.restSeconds || 120));
+  const [building, setBuilding] = useState(false);
+  const [planLib, setPlanLib] = useState(false);
+
+  const splits = props.splits || [];
 
   function save() {
     props.onSave({
@@ -1772,10 +1756,32 @@ function SettingsSheet(props) {
             <input style={fieldStyle} type="number" inputMode="numeric" value={rest} onChange={(e) => setRest(e.target.value)} placeholder="120" />
             <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>Set to 0 to turn the rest timer off.</p>
           </div>
+
+          {props.onAddSplit && (
+            <div style={{ marginBottom: 16, borderTop: "1px solid #f3f4f6", paddingTop: 16 }}>
+              <div style={labelStyle}>Your Splits</div>
+              {splits.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 0, marginBottom: 12 }}>No splits yet.</p>}
+              {splits.map((s) => (
+                <div key={s.id || s.name} style={{ display: "flex", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 500 }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{(s.exercises || []).length} exercises</div>
+                  </div>
+                  {props.onRemoveSplit && s.id && <button onClick={() => props.onRemoveSplit(s.id)} aria-label="remove split" style={closeBtn}>✕</button>}
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Split</button>
+                <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
+              </div>
+            </div>
+          )}
         </div>
         <button onClick={save} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Save</button>
         {props.onSignOut && <button onClick={props.onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 10 }}>Sign Out</button>}
       </div>
+      {building && <SplitBuilder onSave={props.onAddSplit} onCreateExercise={props.onCreateExercise} onClose={() => setBuilding(false)} />}
+      {planLib && <PlanLibrary onApply={props.onApplyPlan} onClose={() => setPlanLib(false)} />}
     </div>
   );
 }
