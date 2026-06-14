@@ -371,7 +371,7 @@ export default function App() {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f7fa" }}>
         <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#f5f7fa}"}</style>
-        <div style={{ width: 28, height: 28, border: "3px solid #e5e7eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+        <div style={{ width: 28, height: 28, border: "3px solid #eaeef3", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
       </div>
     );
   }
@@ -431,7 +431,7 @@ function AuthScreen() {
         <h1 style={{ fontSize: 28, fontWeight: 700, textAlign: "center", marginBottom: 4 }}>Forward<span style={{ color: "#1a73e8" }}>Fitness</span></h1>
         <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, marginBottom: 28 }}>{mode === "signup" ? "Create your account" : "Sign in to your training log"}</p>
 
-        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 20 }}>
+        <div style={{ background: "#fff", border: "1px solid #eaeef3", borderRadius: 16, padding: 20 }}>
           <div style={labelStyle}>Username</div>
           <input style={fieldStyle} type="text" autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(ev) => setUsername(ev.target.value)} placeholder="yourname" />
           <div style={Object.assign({}, labelStyle, { marginTop: 14 })}>Password</div>
@@ -677,18 +677,18 @@ function Main(props) {
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f7fa" }}>
       <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#f5f7fa}"}</style>
-      <div style={{ width: 28, height: 28, border: "3px solid #e5e7eb", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+      <div style={{ width: 28, height: 28, border: "3px solid #eaeef3", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
     </div>
   );
 
   return (
     <div style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif}input,textarea{font-family:inherit;font-size:16px!important}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}"}</style>
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
 
       {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: toast.type === "err" ? "#fef2f2" : "#f0fdf4", color: toast.type === "err" ? "#dc2626" : "#16a34a", border: "1px solid " + (toast.type === "err" ? "#fecaca" : "#bbf7d0"), borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, animation: "fadeIn .2s ease", boxShadow: "0 4px 12px rgba(0,0,0,.1)", maxWidth: "90%", textAlign: "center" }}>{toast.msg}</div>}
 
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "#fff", borderBottom: "1px solid #edf0f3" }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "#fff", borderBottom: "1px solid " + BORDER, boxShadow: "0 1px 3px rgba(16,24,40,.04)", position: "relative", zIndex: 10 }}>
         <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Forward<span style={{ color: "#1a73e8" }}>Fitness</span></h1>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {!dbOk && <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600 }}>Offline</span>}
@@ -707,7 +707,7 @@ function Main(props) {
 
       {rest.running && <RestBar rest={rest} onAdjust={adjustRest} onSkip={skipRest} />}
 
-      <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "#fff", borderTop: "1px solid #edf0f3", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
+      <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "rgba(255,255,255,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid " + BORDER, boxShadow: "0 -2px 16px rgba(16,24,40,.06)", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
           { id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },
           { id: "nutrition", label: "Food", d: "M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" },
@@ -751,7 +751,7 @@ function RestBar(props) {
     </div>
   );
 }
-const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.15)", color: "#e5e7eb", borderRadius: 10, padding: "10px 10px", fontSize: 13, fontWeight: 700, minWidth: 44, minHeight: 44 };
+const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.15)", color: "#eaeef3", borderRadius: 10, padding: "10px 10px", fontSize: 13, fontWeight: 700, minWidth: 44, minHeight: 44 };
 
 // ─── WORKOUT TAB ───
 function WorkoutTab(props) {
@@ -869,7 +869,19 @@ function WorkoutTab(props) {
     if (ok) setWorkout({ date: today(), exercises: [] });
   }
 
+  function discardWorkout() {
+    const touched = workout.exercises.some((ex) => ex.sets.some((s) => (Number(s.reps) || 0) > 0 || (Number(s.weight) || 0) > 0 || s.done));
+    if (touched && !confirm("Discard this workout? Sets you entered won't be saved.")) return;
+    localStorage.removeItem("ff-draft");
+    setWorkout({ date: today(), exercises: [] });
+  }
+
   const inWorkoutIds = workout.exercises.map((e) => e.exerciseId);
+  function splitGroups(s) {
+    const seen = [];
+    for (const id of s.exercises || []) { const ex = findEx(id); if (ex && seen.indexOf(ex.group) === -1) seen.push(ex.group); }
+    return seen;
+  }
 
   return (
     <div>
@@ -879,16 +891,41 @@ function WorkoutTab(props) {
           {splits.length === 0 ? (
             <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5 }}>No splits yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {splits.map((s) => (
-                <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", fontSize: 13, fontWeight: 600, color: "#374151", minHeight: 64, textAlign: "left" }}>
-                  <div>{s.name}</div>
-                  <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 4 }}>{(s.exercises || []).length} exercises</div>
-                </button>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {splits.map((s) => {
+                const groups = splitGroups(s);
+                return (
+                  <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
+                    <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 13, background: "linear-gradient(180deg,#eaf2fe,#dbe9fd)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
+                    </span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: "block", fontSize: 16, fontWeight: 700, color: "#1a2332" }}>{s.name}</span>
+                      <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6, alignItems: "center" }}>
+                        {groups.slice(0, 3).map((g) => (
+                          <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 6, padding: "3px 8px" }}>{g}</span>
+                        ))}
+                        <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
+                      </span>
+                    </span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
+                  </button>
+                );
+              })}
             </div>
           )}
-          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 12, lineHeight: 1.5 }}>Your last numbers load automatically. Beat them, check off each set, and save.</p>
+          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 14, lineHeight: 1.5 }}>Your last numbers load automatically. Beat them, check off each set, and save.</p>
+        </div>
+      )}
+
+      {workout.exercises.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <button onClick={discardWorkout} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#6b7280", fontSize: 14, fontWeight: 600, padding: "4px 0" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            Discard
+          </button>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#1a2332", letterSpacing: ".02em", textTransform: "uppercase" }}>Active Workout</span>
+          <span style={{ width: 64 }} />
         </div>
       )}
 
@@ -912,11 +949,11 @@ function WorkoutTab(props) {
       ))}
 
       {workout.exercises.length > 0 && (
-        <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "16px", color: "#1a73e8", fontSize: 15, fontWeight: 600, marginBottom: 12, minHeight: 52 }}>+ Add Exercise</button>
+        <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "16px", color: "#1a73e8", fontSize: 15, fontWeight: 700, marginBottom: 12, minHeight: 52, boxShadow: shadowSm }}>+ Add Exercise</button>
       )}
 
       {workout.exercises.length > 0 && (
-        <button onClick={finishWorkout} disabled={saving} style={{ width: "100%", background: saving ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, marginBottom: 24, opacity: saving ? 0.8 : 1 }}>{saving ? "Saving..." : "Save Workout"}</button>
+        <button onClick={finishWorkout} disabled={saving} style={Object.assign({}, primaryBtn, { marginBottom: 24, opacity: saving ? 0.75 : 1 })}>{saving ? "Saving..." : "Save Workout"}</button>
       )}
 
       {workouts.length > 0 && (
@@ -1010,7 +1047,7 @@ function ExerciseCard(props) {
 
       <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
         <button onClick={onAddSet} style={{ flex: 1, background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#9ca3af", fontSize: 13, fontWeight: 500, minHeight: 44 }}>+ Add Set</button>
-        {live && ex.sets.length > 1 && <button onClick={() => onRemoveSet(ex.sets.length - 1)} style={{ background: "none", border: "1px dashed #e5e7eb", borderRadius: 8, padding: "10px 16px", color: "#c7ccd4", fontSize: 13, fontWeight: 500, minHeight: 44 }}>− Set</button>}
+        {live && ex.sets.length > 1 && <button onClick={() => onRemoveSet(ex.sets.length - 1)} style={{ background: "none", border: "1px dashed #eaeef3", borderRadius: 8, padding: "10px 16px", color: "#c7ccd4", fontSize: 13, fontWeight: 500, minHeight: 44 }}>− Set</button>}
       </div>
     </div>
   );
@@ -1100,7 +1137,7 @@ function Picker(props) {
             <div style={labelStyle}>Muscle Group</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
               {GROUPS.map((g) => (
-                <button key={g} onClick={() => setNewGroup(g)} style={{ background: newGroup === g ? "#1a73e8" : "#fff", color: newGroup === g ? "#fff" : "#374151", border: newGroup === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 20, padding: "8px 14px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
+                <button key={g} onClick={() => setNewGroup(g)} style={{ background: newGroup === g ? "#1a73e8" : "#fff", color: newGroup === g ? "#fff" : "#374151", border: newGroup === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 20, padding: "8px 14px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
               ))}
             </div>
             <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>{areaForGroup(newGroup) === "lower" ? "Lower body: weight jumps of 10 lbs when you progress." : "Upper body: weight jumps of 5 lbs when you progress."}</p>
@@ -1114,7 +1151,7 @@ function Picker(props) {
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search exercises" style={Object.assign({}, fieldStyle, { marginBottom: 12, flexShrink: 0 })} />
             <div style={{ display: "flex", gap: 8, overflowX: "auto", overflowY: "hidden", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #f3f4f6", WebkitOverflowScrolling: "touch", flexShrink: 0 }}>
               {["All"].concat(GROUPS).map((g) => (
-                <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#1a73e8" : "#fff", color: filter === g ? "#fff" : "#374151", border: filter === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
+                <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#1a73e8" : "#fff", color: filter === g ? "#fff" : "#374151", border: filter === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
               ))}
             </div>
             {props.onCreate && (
@@ -1315,7 +1352,7 @@ function EditWorkoutModal(props) {
               onRemove={() => removeExercise(exIdx)}
             />
           ))}
-          <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 600, marginBottom: 12, minHeight: 48 }}>+ Add Exercise</button>
+          <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid #eaeef3", borderRadius: 14, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 600, marginBottom: 12, minHeight: 48 }}>+ Add Exercise</button>
         </div>
         <div style={{ display: "flex", gap: 8, paddingTop: 12 }}>
           <button onClick={del} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Delete</button>
@@ -1384,7 +1421,7 @@ function FoodTab(props) {
 
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 16, WebkitOverflowScrolling: "touch" }}>
         {["All"].concat(MEAL_CATS).map((g) => (
-          <button key={g} onClick={() => setCat(g)} style={{ background: cat === g ? "#1a73e8" : "#fff", color: cat === g ? "#fff" : "#374151", border: cat === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 24, padding: "10px 18px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
+          <button key={g} onClick={() => setCat(g)} style={{ background: cat === g ? "#1a73e8" : "#fff", color: cat === g ? "#fff" : "#374151", border: cat === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 24, padding: "10px 18px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
         ))}
       </div>
 
@@ -1407,7 +1444,7 @@ function FoodTab(props) {
         </button>
       ))}
 
-      <div style={{ borderTop: "1px solid #e5e7eb", marginTop: 20, paddingTop: 20 }}>
+      <div style={{ borderTop: "1px solid #eaeef3", marginTop: 20, paddingTop: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 20 }}>
           <button onClick={() => setDate(shiftDay(date, -1))} style={navBtnStyle}>‹</button>
           <span style={{ fontSize: 15, fontWeight: 600, color: date === today() ? "#1a73e8" : "#6b7280" }}>{date === today() ? "Today" : date}</span>
@@ -1512,7 +1549,7 @@ function RecipeDetail(props) {
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
             {[{ l: "Protein", v: r.p + "g", strong: true }, { l: "Carbs", v: r.c + "g" }, { l: "Fat", v: r.f + "g" }, { l: "Calories", v: r.cals }].map((m, i) => (
-              <div key={i} style={{ background: m.strong ? "#1a73e810" : "#f9fafb", border: "1px solid " + (m.strong ? "#1a73e830" : "#e5e7eb"), borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
+              <div key={i} style={{ background: m.strong ? "#1a73e810" : "#f9fafb", border: "1px solid " + (m.strong ? "#1a73e830" : "#eaeef3"), borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
                 <div style={{ fontSize: 17, fontWeight: 700, color: m.strong ? "#1a73e8" : "#1a2332" }}>{m.v}</div>
                 <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 2 }}>{m.l}</div>
               </div>
@@ -1595,7 +1632,7 @@ function RecipeForm(props) {
           <div style={labelStyle}>Category</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
             {MEAL_CATS.map((g) => (
-              <button key={g} onClick={() => set("cat", g)} style={{ background: f.cat === g ? "#1a73e8" : "#fff", color: f.cat === g ? "#fff" : "#374151", border: f.cat === g ? "2px solid #1a73e8" : "2px solid #e5e7eb", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
+              <button key={g} onClick={() => set("cat", g)} style={{ background: f.cat === g ? "#1a73e8" : "#fff", color: f.cat === g ? "#fff" : "#374151", border: f.cat === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
             ))}
           </div>
 
@@ -1683,7 +1720,7 @@ function ProgressTab(props) {
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
         {[{ v: ts, l: "Workouts" }, { v: tsets, l: "Work Sets" }].map((s, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 12px", textAlign: "center", border: "1px solid #e5e7eb" }}>
+          <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 12px", textAlign: "center", border: "1px solid #eaeef3" }}>
             <div style={{ fontSize: 24, fontWeight: 700, color: "#1a73e8" }}>{s.v}</div>
             <div style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, marginTop: 4 }}>{s.l}</div>
           </div>
@@ -1693,7 +1730,7 @@ function ProgressTab(props) {
       {prList.length > 0 && (
         <div>
           <div style={labelStyle}>Personal Records (Est. 1RM)</div>
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #eaeef3", overflow: "hidden" }}>
             {prList.map((entry, i) => (
               <div key={entry[0]} style={{ display: "flex", alignItems: "center", padding: "14px 16px", borderBottom: i < prList.length - 1 ? "1px solid #f3f4f6" : "none" }}>
                 <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{entry[0]}</span>
@@ -1772,7 +1809,7 @@ function SettingsSheet(props) {
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                 <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Split</button>
-                <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
+                <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
               </div>
             </div>
           )}
@@ -1804,7 +1841,7 @@ function LearnTab() {
       <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4, marginTop: 0 }}>Training Knowledge</h2>
       <p style={{ color: "#9ca3af", fontSize: 14, marginBottom: 20, marginTop: 4 }}>Evidence-based principles. Tap to expand.</p>
       {sections.map((s) => (
-        <div key={s.id} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
+        <div key={s.id} style={{ background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
           <button onClick={() => toggle(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: 16, width: "100%", textAlign: "left", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>
             {s.t}
             <span style={{ transform: open === s.id ? "rotate(180deg)" : "none", transition: "transform .2s", color: "#9ca3af", fontSize: 18 }}>{"\u25BE"}</span>
@@ -1817,14 +1854,22 @@ function LearnTab() {
 }
 
 // ─── SHARED STYLES ───
-const cardStyle = { background: "#fff", borderRadius: 14, padding: 16, marginBottom: 12, border: "1px solid #e5e7eb", overflow: "hidden" };
-const inputStyle = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 8, color: "#1a2332", padding: "10px 4px", fontSize: 16, fontWeight: 600, textAlign: "center", outline: "none", width: "100%", minWidth: 0, minHeight: 44 };
-const fieldStyle = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 10, color: "#1a2332", padding: "14px 16px", fontSize: 16, outline: "none", width: "100%", boxSizing: "border-box" };
-const labelStyle = { fontSize: 13, fontWeight: 600, color: "#9ca3af", marginBottom: 12 };
+// Elevation scale: tight ambient-occlusion shadow + softer ambient shadow, consistent downward light.
+const shadowSm = "0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05)";
+const shadowMd = "0 2px 4px rgba(16,24,40,.05), 0 10px 24px rgba(16,24,40,.09)";
+const shadowLg = "0 -2px 8px rgba(16,24,40,.04), 0 -16px 48px rgba(16,24,40,.18)";
+const shadowPrimary = "0 2px 6px rgba(26,115,232,.28), 0 8px 20px rgba(26,115,232,.22)";
+const BORDER = "#eaeef3";
+
+const cardStyle = { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, border: "1px solid " + BORDER, boxShadow: shadowSm, overflow: "hidden" };
+const inputStyle = { background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 10, color: "#1a2332", padding: "10px 4px", fontSize: 16, fontWeight: 600, textAlign: "center", outline: "none", width: "100%", minWidth: 0, minHeight: 44 };
+const fieldStyle = { background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 12, color: "#1a2332", padding: "14px 16px", fontSize: 16, outline: "none", width: "100%", boxSizing: "border-box" };
+const labelStyle = { fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 12, letterSpacing: ".02em", textTransform: "uppercase" };
 const colStyle = { fontSize: 11, fontWeight: 500, color: "#9ca3af", textAlign: "center" };
-const navBtnStyle = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, width: 40, height: 40, fontSize: 20, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" };
+const navBtnStyle = { background: "#fff", border: "1px solid " + BORDER, borderRadius: 12, width: 40, height: 40, fontSize: 20, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: shadowSm };
 const closeBtn = { background: "none", border: "none", color: "#d1d5db", fontSize: 20, padding: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" };
-const overlay = { position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" };
-const sheet = { background: "#fff", borderRadius: "20px 20px 0 0", padding: "20px 20px max(20px,env(safe-area-inset-bottom))", width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp .25s ease" };
+const overlay = { position: "fixed", inset: 0, background: "rgba(16,24,40,.42)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" };
+const sheet = { background: "#fff", borderRadius: "24px 24px 0 0", padding: "20px 20px max(20px,env(safe-area-inset-bottom))", width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: shadowLg, animation: "slideUp .28s cubic-bezier(.22,1,.36,1)" };
 const sheetHead = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 };
 const xBtn = { background: "#f3f4f6", border: "none", borderRadius: 50, width: 36, height: 36, fontSize: 18, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" };
+const primaryBtn = { width: "100%", background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, boxShadow: shadowPrimary };
