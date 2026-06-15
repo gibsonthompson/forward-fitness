@@ -260,6 +260,11 @@ function allExercises() { return EXERCISES.concat(CUSTOM_EXERCISES); }
 function areaForGroup(g) { return ["Quads", "Hamstrings", "Glutes", "Calves"].includes(g) ? "lower" : "upper"; }
 function findEx(id) { return allExercises().find((e) => e.id === id); }
 
+// Weekly schedule (Monday-first). weekSchedule[i] holds a split id, "rest", or null.
+const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_ABBR = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function todayIndex() { return (new Date().getDay() + 6) % 7; } // JS 0=Sun -> Mon-first index
+
 function e1rm(weight, reps) {
   const w = Number(weight) || 0;
   const r = Number(reps) || 0;
@@ -460,7 +465,7 @@ function Main(props) {
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
-  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, customExercises: [], customRecipes: [], activeSplits: [] });
+  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, customExercises: [], customRecipes: [], activeSplits: [], weekSchedule: [] });
   const [toast, setToast] = useState(null);
   const [dbOk, setDbOk] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -523,6 +528,7 @@ function Main(props) {
             const customExercises = Array.isArray(s.customExercises) ? s.customExercises : [];
             const customRecipes = Array.isArray(s.customRecipes) ? s.customRecipes : [];
             const activeSplits = Array.isArray(s.activeSplits) ? s.activeSplits : [];
+            const weekSchedule = Array.isArray(s.weekSchedule) ? s.weekSchedule : [];
             registerCustomExercises(customExercises);
             setProfile({
               id: row.id,
@@ -533,6 +539,7 @@ function Main(props) {
               customExercises,
               customRecipes,
               activeSplits,
+              weekSchedule,
             });
           }
         } catch (e) { /* profile table/column may not exist yet; use defaults */ }
@@ -610,6 +617,7 @@ function Main(props) {
       customExercises: next.customExercises || [],
       customRecipes: next.customRecipes || [],
       activeSplits: next.activeSplits || [],
+      weekSchedule: next.weekSchedule || [],
     };
     let id = profile.id;
     if (id) {
@@ -670,6 +678,11 @@ function Main(props) {
     if (ok) flash(plan.name + " loaded");
     return ok;
   }
+  async function saveSchedule(nextSchedule) {
+    const next = Object.assign({}, profile, { weekSchedule: nextSchedule });
+    try { await persistProfile(next); flash("Schedule saved"); return true; }
+    catch (e) { flash("Could not save schedule: " + e.message, "err"); return false; }
+  }
 
   const proteinTarget = profile.proteinTarget != null ? profile.proteinTarget : profile.weight;
   const calorieTarget = profile.calorieTarget != null ? profile.calorieTarget : Math.round(profile.weight * 16 + 300);
@@ -699,7 +712,7 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} />}
         {tab === "learn" && <LearnTab />}
@@ -755,7 +768,7 @@ const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(25
 
 // ─── WORKOUT TAB ───
 function WorkoutTab(props) {
-  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits } = props;
+  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits, weekSchedule, onSaveSchedule } = props;
 
   const [workout, setWorkout] = useState(() => {
     try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
@@ -765,6 +778,7 @@ function WorkoutTab(props) {
   const [saving, setSaving] = useState(false);
   const [plates, setPlates] = useState(null); // weight number for plate modal
   const [editing, setEditing] = useState(null); // workout object being edited
+  const [scheduleEditing, setScheduleEditing] = useState(false);
 
   useEffect(() => {
     if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(workout));
@@ -835,6 +849,15 @@ function WorkoutTab(props) {
       return { date: w.date, exercises };
     });
   }
+  function moveExercise(exIdx, dir) {
+    setWorkout((w) => {
+      const j = exIdx + dir;
+      if (j < 0 || j >= w.exercises.length) return w;
+      const exercises = w.exercises.slice();
+      const t = exercises[exIdx]; exercises[exIdx] = exercises[j]; exercises[j] = t;
+      return { date: w.date, exercises };
+    });
+  }
   function applyRec(exIdx, rec) {
     mutateExercise(exIdx, (ex) => ({
       exerciseId: ex.exerciseId,
@@ -885,6 +908,31 @@ function WorkoutTab(props) {
 
   return (
     <div>
+      {workout.exercises.length === 0 && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>This Week</div>
+            {onSaveSchedule && <button onClick={() => setScheduleEditing(true)} style={{ background: "none", border: "none", color: "#1a73e8", fontSize: 13, fontWeight: 600, padding: 4 }}>Edit</button>}
+          </div>
+          <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
+            {DAY_ABBR.map((d, i) => {
+              const val = (weekSchedule || [])[i];
+              const split = val && val !== "rest" ? splits.find((s) => s.id === val) : null;
+              const isToday = i === todayIndex();
+              const tappable = !!split;
+              return (
+                <button key={i} onClick={() => { if (tappable) loadSplit(split); }} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: isToday ? "#f0f5ff" : "#fff", border: "none", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", padding: "13px 16px", minHeight: 52, cursor: tappable ? "pointer" : "default" }}>
+                  <span style={{ flexShrink: 0, width: 38, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{d}</span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
+                  {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
+                  {tappable && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {workout.exercises.length === 0 && (
         <div style={{ marginBottom: 20 }}>
           <div style={labelStyle}>Start a Workout</div>
@@ -945,6 +993,9 @@ function WorkoutTab(props) {
           onRemove={() => removeExercise(exIdx)}
           onApplyRec={(rec) => applyRec(exIdx, rec)}
           onPlates={(wt) => setPlates(wt)}
+          onMove={(dir) => moveExercise(exIdx, dir)}
+          canMoveUp={exIdx > 0}
+          canMoveDown={exIdx < workout.exercises.length - 1}
         />
       ))}
 
@@ -982,22 +1033,32 @@ function WorkoutTab(props) {
       {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
       {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
+      {scheduleEditing && <ScheduleEditor schedule={weekSchedule} splits={splits} onSave={onSaveSchedule} onClose={() => setScheduleEditing(false)} />}
     </div>
   );
 }
 
 // ─── EXERCISE CARD (shared by live session + edit) ───
 function ExerciseCard(props) {
-  const { exercise: ex, dbEx, last, rec, live, onUpdateSet, onToggleDone, onToggleWarmup, onAddSet, onRemoveSet, onRemove, onApplyRec, onPlates } = props;
+  const { exercise: ex, dbEx, last, rec, live, onUpdateSet, onToggleDone, onToggleWarmup, onAddSet, onRemoveSet, onRemove, onApplyRec, onPlates, onMove, canMoveUp, canMoveDown } = props;
   const cols = live ? "26px 1fr 1fr 44px 40px" : "26px 1fr 1fr 44px 36px";
+  const moveBtn = { background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 15, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 };
   return (
     <div style={cardStyle}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+        <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 600 }}>{dbEx ? dbEx.name : ex.exerciseId}</div>
           <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{dbEx ? dbEx.group : ""}</div>
         </div>
-        <button onClick={onRemove} style={closeBtn}>✕</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {live && onMove && (
+            <>
+              <button onClick={() => onMove(-1)} disabled={!canMoveUp} aria-label="move up" style={Object.assign({}, moveBtn, { color: canMoveUp ? "#6b7280" : "#d1d5db" })}>↑</button>
+              <button onClick={() => onMove(1)} disabled={!canMoveDown} aria-label="move down" style={Object.assign({}, moveBtn, { color: canMoveDown ? "#6b7280" : "#d1d5db" })}>↓</button>
+            </>
+          )}
+          <button onClick={onRemove} style={closeBtn}>✕</button>
+        </div>
       </div>
 
       {live && last && (
@@ -1286,6 +1347,50 @@ function PlanLibrary(props) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SCHEDULE EDITOR (assign splits to weekdays) ───
+function ScheduleEditor(props) {
+  const known = new Set((props.splits || []).map((s) => s.id));
+  const [sched, setSched] = useState(() => {
+    const base = (props.schedule || []).slice();
+    while (base.length < 7) base.push("rest");
+    return base.slice(0, 7).map((v) => (v && v !== "rest" && known.has(v) ? v : "rest"));
+  });
+  const [busy, setBusy] = useState(false);
+  function setDay(i, val) { setSched((prev) => prev.map((v, idx) => (idx === i ? val : v))); }
+  async function save() {
+    setBusy(true);
+    let ok = true;
+    if (props.onSave) ok = await props.onSave(sched);
+    setBusy(false);
+    if (ok !== false) props.onClose();
+  }
+  const selectStyle = { flex: 1, minWidth: 0, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 10, color: "#1a2332", padding: "11px 12px", fontSize: 15, fontWeight: 500, outline: "none" };
+  return (
+    <div style={overlay}>
+      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
+        <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Weekly Schedule</h2>
+          <button onClick={props.onClose} style={xBtn}>✕</button>
+        </div>
+        <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 0, marginBottom: 16, flexShrink: 0 }}>Assign a split to each day, or leave it as rest.</p>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {DAY_FULL.map((d, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none" }}>
+              <span style={{ width: 92, flexShrink: 0, fontSize: 14, fontWeight: 600, color: i === todayIndex() ? "#1a73e8" : "#1a2332" }}>{d}</span>
+              <select value={sched[i]} onChange={(e) => setDay(i, e.target.value)} style={selectStyle}>
+                <option value="rest">Rest</option>
+                {(props.splits || []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+          ))}
+          {(props.splits || []).length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 12 }}>You have no splits yet. Create one first and it will show up here.</p>}
+        </div>
+        <button onClick={save} disabled={busy} style={Object.assign({}, primaryBtn, { borderRadius: 12, padding: "16px", fontSize: 15, minHeight: 52, marginTop: 8, opacity: busy ? 0.75 : 1 })}>{busy ? "Saving..." : "Save Schedule"}</button>
       </div>
     </div>
   );
