@@ -45,9 +45,9 @@ const EXERCISES = [
 ];
 
 const MY_SPLIT = [
-  { name: "Chest / Back", exercises: ["incline-bench", "db-bench", "cable-fly"] },
-  { name: "Arms", exercises: ["tricep-bar-pushdown", "barbell-curl", "rope-pushdown", "rope-curl"] },
-  { name: "Shoulders / Legs", exercises: ["db-shoulder-press", "leg-ext", "lateral-cable-raise", "leg-curl", "rear-delt-fly", "calf-raise"] },
+  { id: "default-chestback", name: "Chest / Back", exercises: ["incline-bench", "db-bench", "cable-fly"] },
+  { id: "default-arms", name: "Arms", exercises: ["tricep-bar-pushdown", "barbell-curl", "rope-pushdown", "rope-curl"] },
+  { id: "default-shoulderslegs", name: "Shoulders / Legs", exercises: ["db-shoulder-press", "leg-ext", "lateral-cable-raise", "leg-curl", "rear-delt-fly", "calf-raise"] },
 ];
 
 // Preset programs. Selecting one loads its days onto the home screen.
@@ -657,7 +657,7 @@ function Main(props) {
   }
 
   // The home screen shows activeSplits, falling back to the default until the user changes it.
-  const currentSplits = (profile.activeSplits && profile.activeSplits.length) ? profile.activeSplits : withSplitIds(MY_SPLIT);
+  const currentSplits = (profile.activeSplits && profile.activeSplits.length) ? profile.activeSplits : MY_SPLIT;
 
   async function saveSplits(nextSplits) {
     const next = Object.assign({}, profile, { activeSplits: nextSplits });
