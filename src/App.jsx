@@ -763,6 +763,17 @@ function Main(props) {
     await saveSplits(currentSplits.filter((s) => s.id !== id));
     flash("Split removed");
   }
+  async function syncSplitFromWorkout(splitId, exIds) {
+    if (!splitId || !exIds || !exIds.length) return;
+    const target = currentSplits.find((s) => s.id === splitId);
+    if (!target) return; // split was deleted; nothing to update
+    const cur = target.exercises || [];
+    const same = cur.length === exIds.length && cur.every((id, i) => id === exIds[i]);
+    if (same) return; // structure unchanged, no write
+    const updated = currentSplits.map((s) => (s.id === splitId ? Object.assign({}, s, { exercises: exIds }) : s));
+    const ok = await saveSplits(updated);
+    if (ok) flash((target.name || "Workout") + " updated");
+  }
   async function applyPlan(plan) {
     const ok = await saveSplits(withSplitIds(plan.days));
     if (ok) flash(plan.name + " loaded");
@@ -802,7 +813,7 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} />}
         {tab === "learn" && <LearnTab />}
@@ -858,11 +869,15 @@ const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(25
 
 // ─── WORKOUT TAB ───
 function WorkoutTab(props) {
-  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits, weekSchedule, onSaveSchedule } = props;
+  const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits, weekSchedule, onSaveSchedule, onSyncSplit } = props;
 
   const [workout, setWorkout] = useState(() => {
     try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
     catch (e) { return { date: today(), exercises: [] }; }
+  });
+  const [activeSplitId, setActiveSplitId] = useState(() => {
+    try { const d = JSON.parse(localStorage.getItem("ff-draft") || "null"); return d && d.splitId ? d.splitId : null; }
+    catch (e) { return null; }
   });
   const [picker, setPicker] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -873,8 +888,8 @@ function WorkoutTab(props) {
   const [splitsOpen, setSplitsOpen] = useState(false);
 
   useEffect(() => {
-    if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(workout));
-  }, [workout]);
+    if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId })));
+  }, [workout, activeSplitId]);
 
   function prefillSets(exId) {
     const last = getLast(workouts, exId);
@@ -886,6 +901,7 @@ function WorkoutTab(props) {
 
   function loadSplit(split) {
     const list = (split.exercises || []).map((exId) => ({ exerciseId: exId, sets: prefillSets(exId) }));
+    setActiveSplitId(split.id || null);
     setWorkout({ date: today(), exercises: list });
   }
 
@@ -981,13 +997,22 @@ function WorkoutTab(props) {
     const cleaned = { date: workout.date, exercises: cleanExercises(workout.exercises) };
     const ok = await onSave(cleaned);
     setSaving(false);
-    if (ok) setWorkout({ date: today(), exercises: [] });
+    if (ok) {
+      if (activeSplitId && onSyncSplit) {
+        const seen = [];
+        for (const ex of cleaned.exercises) { if (seen.indexOf(ex.exerciseId) === -1) seen.push(ex.exerciseId); }
+        onSyncSplit(activeSplitId, seen);
+      }
+      setActiveSplitId(null);
+      setWorkout({ date: today(), exercises: [] });
+    }
   }
 
   function discardWorkout() {
     const touched = workout.exercises.some((ex) => ex.sets.some((s) => (Number(s.reps) || 0) > 0 || (Number(s.weight) || 0) > 0 || s.done));
     if (touched && !confirm("Discard this workout? Sets you entered won't be saved.")) return;
     localStorage.removeItem("ff-draft");
+    setActiveSplitId(null);
     setWorkout({ date: today(), exercises: [] });
   }
 
@@ -1029,7 +1054,7 @@ function WorkoutTab(props) {
                   <span style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "#9ca3af" }}>TODAY · {todayName.toUpperCase()}</span>
                   <span style={{ display: "block", fontSize: 24, fontWeight: 800, marginTop: 6, color: "#1a2332" }}>{isRest ? "Rest Day" : "No Workout Scheduled"}</span>
                   <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8, marginBottom: 14, lineHeight: 1.5 }}>{isRest ? "Recovery is where the growth happens. Take it easy today." : "Pick a split to train, or set up your week."}</p>
-                  <button onClick={() => setSplitsOpen(true)} style={{ background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, padding: "11px 18px", color: "#1a73e8", fontSize: 14, fontWeight: 700, minHeight: 44 }}>{isRest ? "Train anyway" : "Choose a split"}</button>
+                  <button onClick={() => setSplitsOpen(true)} style={{ background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, padding: "11px 18px", color: "#1a73e8", fontSize: 14, fontWeight: 700, minHeight: 44 }}>{isRest ? "Train anyway" : "Choose a workout"}</button>
                 </div>
               )}
             </div>
@@ -1062,36 +1087,42 @@ function WorkoutTab(props) {
               )}
             </div>
 
-            {/* Start another split (collapsible) */}
-            <div style={{ marginBottom: 20 }}>
-              <button onClick={() => setSplitsOpen(!splitsOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
-                Start Another Split
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: splitsOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
-              </button>
-              {splitsOpen && (
-                splits.length === 0 ? (
-                  <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>No splits yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-                    {splits.map((s) => (
-                      <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
-                        <span style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 12, background: "linear-gradient(180deg,#eaf2fe,#dbe9fd)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
-                        </span>
-                        <span style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{s.name}</span>
-                          <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 5, alignItems: "center" }}>
-                            {splitGroups(s).slice(0, 3).map((g) => <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 6, padding: "3px 8px" }}>{g}</span>)}
-                            <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
-                          </span>
-                        </span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
-                      </button>
-                    ))}
-                  </div>
-                )
-              )}
-            </div>
+            {/* Other workouts (collapsible) */}
+            {(() => {
+              const otherSplits = todaySplit ? splits.filter((s) => s.id !== todaySplit.id) : splits;
+              if (todaySplit && otherSplits.length === 0) return null; // today's split is the only one
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <button onClick={() => setSplitsOpen(!splitsOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
+                    Other Workouts
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: splitsOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {splitsOpen && (
+                    splits.length === 0 ? (
+                      <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>No workouts yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+                        {otherSplits.map((s) => (
+                          <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
+                            <span style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 12, background: "linear-gradient(180deg,#eaf2fe,#dbe9fd)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
+                            </span>
+                            <span style={{ flex: 1, minWidth: 0 }}>
+                              <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{s.name}</span>
+                              <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 5, alignItems: "center" }}>
+                                {splitGroups(s).slice(0, 3).map((g) => <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 6, padding: "3px 8px" }}>{g}</span>)}
+                                <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
+                              </span>
+                            </span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+              );
+            })()}
           </>
         );
       })()}
