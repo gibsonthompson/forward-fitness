@@ -264,6 +264,96 @@ function findEx(id) { return allExercises().find((e) => e.id === id); }
 const DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_ABBR = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 function todayIndex() { return (new Date().getDay() + 6) % 7; } // JS 0=Sun -> Mon-first index
+function weekdayLabel(dateStr) {
+  if (dateStr === today()) return "Today";
+  const parts = dateStr.split("-").map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  const t = new Date(); t.setDate(t.getDate() - 1);
+  const y = t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+  if (dateStr === y) return "Yesterday";
+  return dt.toLocaleDateString("en", { weekday: "long" });
+}
+function workoutGroups(w) {
+  const seen = [];
+  for (const ex of w.exercises || []) { const e = findEx(ex.exerciseId); if (e && seen.indexOf(e.group) === -1) seen.push(e.group); }
+  return seen;
+}
+
+// ─── Progress / gamification math ───
+function dateKey(dt) { return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0"); }
+function addDaysDate(dt, n) { const x = new Date(dt); x.setDate(x.getDate() + n); return x; }
+function mondayOf(dateStr) {
+  const parts = dateStr.split("-").map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  dt.setDate(dt.getDate() - ((dt.getDay() + 6) % 7));
+  return dt;
+}
+
+function computeGameStats(workouts, weekSchedule) {
+  const workoutDays = new Set((workouts || []).map((w) => w.date));
+  const total = (workouts || []).length;
+  let sets = 0;
+  for (const w of workouts || []) for (const ex of w.exercises || []) sets += workSets(ex.sets).length;
+
+  const sched = weekSchedule || [];
+  const scheduledDays = [];
+  for (let i = 0; i < 7; i++) { const v = sched[i]; if (v && v !== "rest") scheduledDays.push(i); }
+
+  const curMon = mondayOf(today());
+  let startMon = curMon;
+  if (workoutDays.size) startMon = mondayOf(Array.from(workoutDays).sort()[0]);
+
+  const weeks = [];
+  for (let m = new Date(startMon); m <= curMon; m = addDaysDate(m, 7)) weeks.push(new Date(m));
+
+  const weekPerfect = weeks.map((mon) => {
+    if (scheduledDays.length === 0) return false;
+    for (const di of scheduledDays) { if (!workoutDays.has(dateKey(addDaysDate(mon, di)))) return false; }
+    return true;
+  });
+  const perfectWeeks = weekPerfect.filter(Boolean).length;
+
+  let streak = 0;
+  for (let i = weeks.length - 1; i >= 0; i--) {
+    if (i === weeks.length - 1 && !weekPerfect[i]) continue; // current week still in progress
+    if (weekPerfect[i]) streak++; else break;
+  }
+
+  let thisWeekDone = 0;
+  for (const di of scheduledDays) { if (workoutDays.has(dateKey(addDaysDate(curMon, di)))) thisWeekDone++; }
+
+  return { total, sets, perfectWeeks, streak, thisWeekScheduled: scheduledDays.length, thisWeekDone, level: Math.floor(total / 10) + 1, intoLevel: total % 10, workoutDays };
+}
+
+function buildHabitGrid(workoutDays, weeksBack) {
+  const curMon = mondayOf(today());
+  const todayStr = today();
+  const rows = [];
+  for (let wIdx = weeksBack - 1; wIdx >= 0; wIdx--) {
+    const mon = addDaysDate(curMon, -7 * wIdx);
+    const cells = [];
+    for (let d = 0; d < 7; d++) {
+      const k = dateKey(addDaysDate(mon, d));
+      cells.push({ key: k, done: workoutDays.has(k), isToday: k === todayStr, future: k > todayStr });
+    }
+    rows.push(cells);
+  }
+  return rows;
+}
+
+function achievementsFor(stats) {
+  return [
+    { id: "first", label: "First Workout", req: "Log 1 workout", earned: stats.total >= 1 },
+    { id: "five", label: "Getting Started", req: "5 workouts", earned: stats.total >= 5 },
+    { id: "ten", label: "Committed", req: "10 workouts", earned: stats.total >= 10 },
+    { id: "perfect1", label: "Perfect Week", req: "Hit every scheduled day", earned: stats.perfectWeeks >= 1 },
+    { id: "streak4", label: "On Fire", req: "4-week streak", earned: stats.streak >= 4 },
+    { id: "twentyfive", label: "Dedicated", req: "25 workouts", earned: stats.total >= 25 },
+    { id: "sets500", label: "Volume King", req: "500 sets", earned: stats.sets >= 500 },
+    { id: "fifty", label: "Beast Mode", req: "50 workouts", earned: stats.total >= 50 },
+    { id: "hundred", label: "Centurion", req: "100 workouts", earned: stats.total >= 100 },
+  ];
+}
 
 function e1rm(weight, reps) {
   const w = Number(weight) || 0;
@@ -697,7 +787,7 @@ function Main(props) {
   return (
     <div style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes coachdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
 
       {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: toast.type === "err" ? "#fef2f2" : "#f0fdf4", color: toast.type === "err" ? "#dc2626" : "#16a34a", border: "1px solid " + (toast.type === "err" ? "#fecaca" : "#bbf7d0"), borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, animation: "fadeIn .2s ease", boxShadow: "0 4px 12px rgba(0,0,0,.1)", maxWidth: "90%", textAlign: "center" }}>{toast.msg}</div>}
 
@@ -714,7 +804,7 @@ function Main(props) {
       <div style={{ padding: "16px 20px" }}>
         {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
-        {tab === "progress" && <ProgressTab workouts={workouts} />}
+        {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} />}
         {tab === "learn" && <LearnTab />}
       </div>
 
@@ -779,6 +869,8 @@ function WorkoutTab(props) {
   const [plates, setPlates] = useState(null); // weight number for plate modal
   const [editing, setEditing] = useState(null); // workout object being edited
   const [scheduleEditing, setScheduleEditing] = useState(false);
+  const [weekOpen, setWeekOpen] = useState(false);
+  const [splitsOpen, setSplitsOpen] = useState(false);
 
   useEffect(() => {
     if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(workout));
@@ -908,63 +1000,101 @@ function WorkoutTab(props) {
 
   return (
     <div>
-      {workout.exercises.length === 0 && (
-        <div style={{ marginBottom: 22 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>This Week</div>
-            {onSaveSchedule && <button onClick={() => setScheduleEditing(true)} style={{ background: "none", border: "none", color: "#1a73e8", fontSize: 13, fontWeight: 600, padding: 4 }}>Edit</button>}
-          </div>
-          <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
-            {DAY_ABBR.map((d, i) => {
-              const val = (weekSchedule || [])[i];
-              const split = val && val !== "rest" ? splits.find((s) => s.id === val) : null;
-              const isToday = i === todayIndex();
-              const tappable = !!split;
-              return (
-                <button key={i} onClick={() => { if (tappable) loadSplit(split); }} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: isToday ? "#f0f5ff" : "#fff", border: "none", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", padding: "13px 16px", minHeight: 52, cursor: tappable ? "pointer" : "default" }}>
-                  <span style={{ flexShrink: 0, width: 38, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{d}</span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
-                  {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
-                  {tappable && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>}
+      {workout.exercises.length === 0 && (() => {
+        const tIdx = todayIndex();
+        const todayVal = (weekSchedule || [])[tIdx];
+        const todaySplit = todayVal && todayVal !== "rest" ? splits.find((s) => s.id === todayVal) : null;
+        const isRest = todayVal === "rest";
+        const todayName = DAY_FULL[tIdx];
+        return (
+          <>
+            {/* Today hero */}
+            <div style={{ marginBottom: 18 }}>
+              {todaySplit ? (
+                <button onClick={() => loadSplit(todaySplit)} style={{ width: "100%", textAlign: "left", border: "none", borderRadius: 20, padding: 22, color: "#fff", background: "linear-gradient(135deg,#1a73e8,#0c47b7)", boxShadow: shadowPrimary, display: "flex", alignItems: "center", gap: 16 }}>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", opacity: 0.85 }}>TODAY · {todayName.toUpperCase()}</span>
+                    <span style={{ display: "block", fontSize: 26, fontWeight: 800, marginTop: 6 }}>{todaySplit.name}</span>
+                    <span style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>
+                      {splitGroups(todaySplit).slice(0, 3).map((g) => <span key={g} style={{ fontSize: 11, fontWeight: 600, background: "rgba(255,255,255,.2)", borderRadius: 6, padding: "3px 9px" }}>{g}</span>)}
+                      <span style={{ fontSize: 12, opacity: 0.85, fontWeight: 500 }}>{(todaySplit.exercises || []).length} exercises</span>
+                    </span>
+                  </span>
+                  <span style={{ flexShrink: 0, width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,.22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
                 </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {workout.exercises.length === 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={labelStyle}>Start a Workout</div>
-          {splits.length === 0 ? (
-            <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5 }}>No splits yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {splits.map((s) => {
-                const groups = splitGroups(s);
-                return (
-                  <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
-                    <span style={{ flexShrink: 0, width: 46, height: 46, borderRadius: 13, background: "linear-gradient(180deg,#eaf2fe,#dbe9fd)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
-                    </span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: "block", fontSize: 16, fontWeight: 700, color: "#1a2332" }}>{s.name}</span>
-                      <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6, alignItems: "center" }}>
-                        {groups.slice(0, 3).map((g) => (
-                          <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 6, padding: "3px 8px" }}>{g}</span>
-                        ))}
-                        <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
-                      </span>
-                    </span>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
-                  </button>
-                );
-              })}
+              ) : (
+                <div style={{ borderRadius: 20, padding: 22, background: "#fff", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+                  <span style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "#9ca3af" }}>TODAY · {todayName.toUpperCase()}</span>
+                  <span style={{ display: "block", fontSize: 24, fontWeight: 800, marginTop: 6, color: "#1a2332" }}>{isRest ? "Rest Day" : "No Workout Scheduled"}</span>
+                  <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8, marginBottom: 14, lineHeight: 1.5 }}>{isRest ? "Recovery is where the growth happens. Take it easy today." : "Pick a split to train, or set up your week."}</p>
+                  <button onClick={() => setSplitsOpen(true)} style={{ background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, padding: "11px 18px", color: "#1a73e8", fontSize: 14, fontWeight: 700, minHeight: 44 }}>{isRest ? "Train anyway" : "Choose a split"}</button>
+                </div>
+              )}
             </div>
-          )}
-          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 14, lineHeight: 1.5 }}>Your last numbers load automatically. Beat them, check off each set, and save.</p>
-        </div>
-      )}
+
+            {/* This Week (collapsible) */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <button onClick={() => setWeekOpen(!weekOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
+                  This Week
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: weekOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                {onSaveSchedule && <button onClick={() => setScheduleEditing(true)} style={{ background: "none", border: "none", color: "#1a73e8", fontSize: 13, fontWeight: 600, padding: 4 }}>Edit</button>}
+              </div>
+              {weekOpen && (
+                <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden", marginTop: 8 }}>
+                  {DAY_ABBR.map((d, i) => {
+                    const val = (weekSchedule || [])[i];
+                    const split = val && val !== "rest" ? splits.find((s) => s.id === val) : null;
+                    const isToday = i === tIdx;
+                    return (
+                      <button key={i} onClick={() => { if (split) loadSplit(split); }} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: isToday ? "#f0f5ff" : "#fff", border: "none", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", padding: "13px 16px", minHeight: 52, cursor: split ? "pointer" : "default" }}>
+                        <span style={{ flexShrink: 0, width: 38, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{d}</span>
+                        <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
+                        {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
+                        {split && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Start another split (collapsible) */}
+            <div style={{ marginBottom: 20 }}>
+              <button onClick={() => setSplitsOpen(!splitsOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
+                Start Another Split
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: splitsOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              {splitsOpen && (
+                splits.length === 0 ? (
+                  <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>No splits yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+                    {splits.map((s) => (
+                      <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
+                        <span style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 12, background: "linear-gradient(180deg,#eaf2fe,#dbe9fd)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{s.name}</span>
+                          <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 5, alignItems: "center" }}>
+                            {splitGroups(s).slice(0, 3).map((g) => <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 6, padding: "3px 8px" }}>{g}</span>)}
+                            <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
+                          </span>
+                        </span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
+                      </button>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       {workout.exercises.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -1010,23 +1140,27 @@ function WorkoutTab(props) {
       {workouts.length > 0 && (
         <div style={{ marginTop: 12 }}>
           <div style={labelStyle}>Recent Workouts</div>
-          {workouts.slice().reverse().slice(0, 10).map((w, i) => (
-            <button key={w.id || i} onClick={() => setEditing(w)} style={Object.assign({}, cardStyle, { padding: 14, width: "100%", textAlign: "left", display: "block" })}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>{w.date}</span>
-                <span style={{ fontSize: 12, color: "#9ca3af" }}>{(w.exercises || []).length} exercises · tap to edit</span>
-              </div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {(w.exercises || []).map((e, j) => {
-                  const d = findEx(e.exerciseId);
-                  const ws = workSets(e.sets);
-                  let best = ws[0] || { weight: 0, reps: 0 };
-                  for (const s of ws) if ((Number(s.weight) || 0) > (Number(best.weight) || 0)) best = s;
-                  return <span key={j} style={{ fontSize: 12, background: "#f3f4f6", padding: "4px 10px", borderRadius: 6, color: "#6b7280", fontWeight: 500 }}>{d ? d.name : "?"} {best.weight}×{best.reps}</span>;
-                })}
-              </div>
-            </button>
-          ))}
+          {workouts.slice().reverse().slice(0, 10).map((w, i) => {
+            const groups = workoutGroups(w);
+            const parts = w.date.split("-");
+            const setCount = (w.exercises || []).reduce((a, ex) => a + workSets(ex.sets).length, 0);
+            return (
+              <button key={w.id || i} onClick={() => setEditing(w)} style={Object.assign({}, cardStyle, { padding: 14, width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 14 })}>
+                <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 12, background: "#f0f5ff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: "#1a73e8" }}>{Number(parts[2])}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: "#7aa7ee", textTransform: "uppercase", marginTop: 2 }}>{new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString("en", { month: "short" })}</span>
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{weekdayLabel(w.date)}</span>
+                  <span style={{ display: "block", fontSize: 13, color: "#6b7280", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{groups.length ? groups.join(" · ") : (w.exercises || []).length + " exercises"}</span>
+                </span>
+                <span style={{ flexShrink: 0, textAlign: "right" }}>
+                  <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#1a2332" }}>{setCount}</span>
+                  <span style={{ display: "block", fontSize: 10, color: "#9ca3af", fontWeight: 600 }}>SETS</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -1800,54 +1934,100 @@ function Ring(props) {
 
 // ─── PROGRESS TAB ───
 function ProgressTab(props) {
-  const workouts = props.workouts;
-  const ts = workouts.length;
-  let tsets = 0;
-  const prs = {};
-  for (const w of workouts) {
-    for (const ex of w.exercises || []) {
-      const ws = workSets(ex.sets);
-      tsets += ws.length;
-      const db = findEx(ex.exerciseId);
-      for (const s of ws) {
-        const wt = Number(s.weight) || 0;
-        const rp = Number(s.reps) || 0;
-        if (db && wt > 0 && rp > 0) {
-          const est = e1rm(wt, rp);
-          if (!prs[db.name] || est > prs[db.name].e1rm) prs[db.name] = { e1rm: est, w: wt, r: rp, d: w.date };
-        }
-      }
-    }
-  }
-  const prList = Object.entries(prs).sort((a, b) => b[1].e1rm - a[1].e1rm);
+  const stats = computeGameStats(props.workouts, props.weekSchedule);
+  const grid = buildHabitGrid(stats.workoutDays, 10);
+  const badges = achievementsFor(stats);
+  const earnedCount = badges.filter((b) => b.earned).length;
+  const weekPct = stats.thisWeekScheduled > 0 ? (stats.thisWeekDone / stats.thisWeekScheduled) * 100 : 0;
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
-        {[{ v: ts, l: "Workouts" }, { v: tsets, l: "Work Sets" }].map((s, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "18px 12px", textAlign: "center", border: "1px solid #eaeef3" }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "#1a73e8" }}>{s.v}</div>
-            <div style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, marginTop: 4 }}>{s.l}</div>
+      {/* Level hero */}
+      <div style={{ background: "linear-gradient(135deg,#1a73e8,#0c47b7)", borderRadius: 20, padding: 20, color: "#fff", marginBottom: 16, boxShadow: shadowPrimary }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, letterSpacing: ".04em" }}>LEVEL {stats.level}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>{stats.total} workouts</span>
+        </div>
+        <div style={{ height: 10, background: "rgba(255,255,255,.22)", borderRadius: 6, marginTop: 12, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: (stats.intoLevel * 10) + "%", background: "#fff", borderRadius: 6 }} />
+        </div>
+        <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.9, marginTop: 10 }}>{10 - stats.intoLevel} more {10 - stats.intoLevel === 1 ? "workout" : "workouts"} to Level {stats.level + 1}</div>
+      </div>
+
+      {/* Stat tiles */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+        {[
+          { v: stats.streak, l: stats.streak === 1 ? "Week Streak" : "Week Streak", accent: "#f59e0b" },
+          { v: stats.perfectWeeks, l: "Perfect Weeks", accent: "#22c55e" },
+          { v: stats.sets, l: "Total Sets", accent: "#1a73e8" },
+        ].map((s, i) => (
+          <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "18px 8px", textAlign: "center", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: s.accent }}>{s.v}</div>
+            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
           </div>
         ))}
       </div>
 
-      {prList.length > 0 && (
-        <div>
-          <div style={labelStyle}>Personal Records (Est. 1RM)</div>
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #eaeef3", overflow: "hidden" }}>
-            {prList.map((entry, i) => (
-              <div key={entry[0]} style={{ display: "flex", alignItems: "center", padding: "14px 16px", borderBottom: i < prList.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{entry[0]}</span>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#1a73e8", marginRight: 12 }}>{entry[1].e1rm} lbs</span>
-                <span style={{ fontSize: 12, color: "#9ca3af" }}>{entry[1].w}×{entry[1].r}</span>
-              </div>
-            ))}
-          </div>
+      {/* This week */}
+      <div style={Object.assign({}, cardStyle, { marginBottom: 20, padding: 18 })}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>This Week</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: stats.thisWeekScheduled && stats.thisWeekDone >= stats.thisWeekScheduled ? "#22c55e" : "#9ca3af" }}>
+            {stats.thisWeekScheduled > 0 ? stats.thisWeekDone + " / " + stats.thisWeekScheduled : "No schedule set"}
+          </span>
         </div>
-      )}
+        {stats.thisWeekScheduled > 0 ? (
+          <div style={{ height: 8, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: weekPct + "%", background: weekPct >= 100 ? "#22c55e" : "#1a73e8", borderRadius: 5, transition: "width .3s ease" }} />
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Set a weekly schedule on the Train tab to track perfect weeks and streaks.</p>
+        )}
+      </div>
 
-      {ts === 0 && <p style={{ color: "#9ca3af", fontSize: 15, textAlign: "center", padding: 40 }}>Complete your first workout to see stats</p>}
+      {/* Consistency grid */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={labelStyle}>Last 10 Weeks</div>
+        <div style={Object.assign({}, cardStyle, { padding: 16 })}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 7, marginBottom: 8 }}>
+            {DAY_ABBR.map((d, i) => <span key={i} style={{ fontSize: 10, fontWeight: 600, color: "#c7ccd4", textAlign: "center" }}>{d[0]}</span>)}
+          </div>
+          {grid.map((row, ri) => (
+            <div key={ri} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 7, marginBottom: ri < grid.length - 1 ? 7 : 0 }}>
+              {row.map((c, ci) => (
+                <div key={ci} style={{ aspectRatio: "1", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", background: c.done ? "#22c55e" : c.future ? "transparent" : "#f1f3f6", border: c.isToday ? "2px solid #1a73e8" : c.future ? "1px dashed #e3e8ef" : "none" }}>
+                  {c.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Achievements */}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Achievements</div>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af" }}>{earnedCount} / {badges.length}</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          {badges.map((b) => (
+            <div key={b.id} style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "14px 8px", textAlign: "center", boxShadow: b.earned ? shadowSm : "none", opacity: b.earned ? 1 : 0.55 }}>
+              <div style={{ width: 40, height: 40, margin: "0 auto 8px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: b.earned ? "linear-gradient(135deg,#f6c453,#e69a17)" : "#eef1f5" }}>
+                {b.earned ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 4H5a2 2 0 0 0 0 4h.5M17 4h2a2 2 0 0 1 0 4h-.5" /></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                )}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a2332", lineHeight: 1.2 }}>{b.label}</div>
+              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3, lineHeight: 1.2 }}>{b.req}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {stats.total === 0 && <p style={{ color: "#9ca3af", fontSize: 14, textAlign: "center", padding: "24px 20px 0" }}>Log your first workout to start leveling up.</p>}
     </div>
   );
 }
@@ -1929,6 +2109,109 @@ function SettingsSheet(props) {
 }
 
 // ─── LEARN TAB ───
+const COACH_SUGGESTIONS = [
+  "How much protein should I eat to build muscle?",
+  "How do I break through a plateau?",
+  "Is my training volume enough for growth?",
+  "What should I eat after a workout?",
+];
+
+function ChatCoach() {
+  const [messages, setMessages] = useState(() => {
+    try { const d = localStorage.getItem("ff-chat"); return d ? JSON.parse(d) : []; } catch (e) { return []; }
+  });
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    try { localStorage.setItem("ff-chat", JSON.stringify(messages.slice(-50))); } catch (e) {}
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  async function send(text) {
+    const content = (text != null ? text : input).trim();
+    if (!content || loading) return;
+    setInput("");
+    const next = messages.concat([{ role: "user", content }]);
+    setMessages(next);
+    setLoading(true);
+    try {
+      const sess = await supabase.auth.getSession();
+      const token = sess && sess.data && sess.data.session ? sess.data.session.access_token : "";
+      const resp = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ messages: next.map((m) => ({ role: m.role, content: m.content })) }),
+      });
+      if (!resp.ok) throw new Error("coach " + resp.status);
+      const data = await resp.json();
+      const reply = data && data.reply ? String(data.reply) : "Sorry, I couldn't come up with an answer. Try rephrasing?";
+      setMessages((cur) => cur.concat([{ role: "assistant", content: reply }]));
+    } catch (e) {
+      setMessages((cur) => cur.concat([{ role: "assistant", content: "I'm having trouble reaching the coach right now. Please try again in a moment." }]));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function onKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }
+  function clearChat() { setMessages([]); try { localStorage.removeItem("ff-chat"); } catch (e) {} }
+
+  const userBubble = { background: "linear-gradient(135deg,#1a73e8,#1565d8)", color: "#fff", borderBottomRightRadius: 5 };
+  const botBubble = { background: "#f3f4f6", color: "#1a2332", borderBottomLeftRadius: 5 };
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#1a2332", lineHeight: 1.1 }}>Coach</div>
+            <div style={{ fontSize: 12, color: "#9ca3af" }}>Ask anything about training & nutrition</div>
+          </div>
+        </div>
+        {messages.length > 0 && <button onClick={clearChat} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, fontWeight: 600, padding: 4 }}>Clear</button>}
+      </div>
+
+      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 18, boxShadow: shadowSm, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div ref={scrollRef} style={{ padding: 16, maxHeight: "46vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+          {messages.length === 0 && !loading && (
+            <div style={{ padding: "4px 0" }}>
+              <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, marginTop: 0, marginBottom: 14 }}>I can help with form, programming, nutrition, and recovery. I stick to fitness, so for medical concerns please see a professional.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {COACH_SUGGESTIONS.map((q, i) => (
+                  <button key={i} onClick={() => send(q)} style={{ textAlign: "left", background: "#f7f9fc", border: "1px solid " + BORDER, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: "#1a2332", fontWeight: 500 }}>{q}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+              <div style={Object.assign({ maxWidth: "85%", padding: "11px 14px", borderRadius: 16, fontSize: 14, lineHeight: 1.55, whiteSpace: "pre-wrap" }, m.role === "user" ? userBubble : botBubble)}>{m.content}</div>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ display: "flex", justifyContent: "flex-start" }}>
+              <div style={{ background: "#f3f4f6", borderRadius: 16, borderBottomLeftRadius: 5, padding: "14px 16px", display: "flex", gap: 5 }}>
+                {[0, 1, 2].map((i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#9ca3af", display: "inline-block", animation: "coachdot 1s " + (i * 0.15) + "s infinite ease-in-out" }} />)}
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{ borderTop: "1px solid " + BORDER, padding: 10, display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} rows={1} placeholder="Ask the coach..." style={{ flex: 1, resize: "none", border: "none", outline: "none", background: "transparent", fontSize: 15, color: "#1a2332", padding: "9px 6px", maxHeight: 120, fontFamily: "inherit" }} />
+          <button onClick={() => send()} disabled={loading || !input.trim()} aria-label="send" style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "none", background: loading || !input.trim() ? "#c7d6f0" : "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LearnTab() {
   const [open, setOpen] = useState(null);
   function toggle(id) { setOpen(open === id ? null : id); }
@@ -1943,8 +2226,8 @@ function LearnTab() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4, marginTop: 0 }}>Training Knowledge</h2>
-      <p style={{ color: "#9ca3af", fontSize: 14, marginBottom: 20, marginTop: 4 }}>Evidence-based principles. Tap to expand.</p>
+      <ChatCoach />
+      <div style={labelStyle}>Training Knowledge</div>
       {sections.map((s) => (
         <div key={s.id} style={{ background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
           <button onClick={() => toggle(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: 16, width: "100%", textAlign: "left", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>
