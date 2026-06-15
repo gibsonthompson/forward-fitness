@@ -451,6 +451,34 @@ function getRec(workouts, exId) {
   return rec;
 }
 
+// ─── CUSTOM CONFIRM DIALOG (replaces native confirm) ───
+let _confirm = null;
+function appConfirm(opts) {
+  if (_confirm) return _confirm(opts || {});
+  return Promise.resolve(typeof window !== "undefined" ? window.confirm((opts && opts.message) || "") : false);
+}
+function ConfirmHost() {
+  const [state, setState] = useState(null);
+  useEffect(() => {
+    _confirm = (opts) => new Promise((resolve) => setState(Object.assign({}, opts, { resolve })));
+    return () => { _confirm = null; };
+  }, []);
+  if (!state) return null;
+  function close(val) { const r = state.resolve; setState(null); if (r) r(val); }
+  return (
+    <div style={Object.assign({}, overlay, { alignItems: "center", padding: 24, zIndex: 300 })} onClick={() => close(false)}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, padding: 24, width: "100%", maxWidth: 360, boxShadow: shadowLg, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" }}>
+        {state.title && <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2332", marginBottom: 8 }}>{state.title}</div>}
+        {state.message && <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, marginBottom: 22 }}>{state.message}</div>}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => close(false)} style={{ flex: 1, background: "#f3f4f6", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 600, color: "#374151", minHeight: 48 }}>{state.cancelLabel || "Cancel"}</button>
+          <button onClick={() => close(true)} style={{ flex: 1, background: state.danger ? "#dc2626" : "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, minHeight: 48, boxShadow: state.danger ? "none" : shadowPrimary }}>{state.confirmLabel || "Confirm"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── AUTH GATE ───
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = still checking
@@ -763,6 +791,13 @@ function Main(props) {
     await saveSplits(currentSplits.filter((s) => s.id !== id));
     flash("Split removed");
   }
+  async function updateSplit(split) {
+    if (!split || !split.id) return false;
+    const updated = currentSplits.map((s) => (s.id === split.id ? { id: split.id, name: split.name, exercises: split.exercises } : s));
+    const ok = await saveSplits(updated);
+    if (ok) flash("Workout updated");
+    return ok;
+  }
   async function syncSplitFromWorkout(splitId, exIds) {
     if (!splitId || !exIds || !exIds.length) return;
     const target = currentSplits.find((s) => s.id === splitId);
@@ -797,8 +832,9 @@ function Main(props) {
 
   return (
     <div style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
+      <ConfirmHost />
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes coachdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes coachdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}@keyframes popIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
 
       {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: toast.type === "err" ? "#fef2f2" : "#f0fdf4", color: toast.type === "err" ? "#dc2626" : "#16a34a", border: "1px solid " + (toast.type === "err" ? "#fecaca" : "#bbf7d0"), borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, animation: "fadeIn .2s ease", boxShadow: "0 4px 12px rgba(0,0,0,.1)", maxWidth: "90%", textAlign: "center" }}>{toast.msg}</div>}
 
@@ -835,7 +871,7 @@ function Main(props) {
         ))}
       </nav>
 
-      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onApplyPlan={applyPlan} onCreateExercise={addCustomExercise} />}
+      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onUpdateSplit={updateSplit} onApplyPlan={applyPlan} onCreateExercise={addCustomExercise} />}
     </div>
   );
 }
@@ -997,20 +1033,31 @@ function WorkoutTab(props) {
     const cleaned = { date: workout.date, exercises: cleanExercises(workout.exercises) };
     const ok = await onSave(cleaned);
     setSaving(false);
-    if (ok) {
-      if (activeSplitId && onSyncSplit) {
+    if (!ok) return;
+
+    if (activeSplitId && onSyncSplit) {
+      const split = splits.find((s) => s.id === activeSplitId);
+      if (split) {
         const seen = [];
         for (const ex of cleaned.exercises) { if (seen.indexOf(ex.exerciseId) === -1) seen.push(ex.exerciseId); }
-        onSyncSplit(activeSplitId, seen);
+        const cur = split.exercises || [];
+        const changed = cur.length !== seen.length || cur.some((id, i) => id !== seen[i]);
+        if (changed) {
+          const yes = await appConfirm({ title: "Save these changes?", message: 'You changed the exercises or their order. Update "' + split.name + '" so it loads this way next time?', confirmLabel: "Update it", cancelLabel: "Just this once" });
+          if (yes) onSyncSplit(activeSplitId, seen);
+        }
       }
-      setActiveSplitId(null);
-      setWorkout({ date: today(), exercises: [] });
     }
+    setActiveSplitId(null);
+    setWorkout({ date: today(), exercises: [] });
   }
 
-  function discardWorkout() {
+  async function discardWorkout() {
     const touched = workout.exercises.some((ex) => ex.sets.some((s) => (Number(s.reps) || 0) > 0 || (Number(s.weight) || 0) > 0 || s.done));
-    if (touched && !confirm("Discard this workout? Sets you entered won't be saved.")) return;
+    if (touched) {
+      const yes = await appConfirm({ title: "Discard workout?", message: "Sets you entered won't be saved.", confirmLabel: "Discard", cancelLabel: "Keep going", danger: true });
+      if (!yes) return;
+    }
     localStorage.removeItem("ff-draft");
     setActiveSplitId(null);
     setWorkout({ date: today(), exercises: [] });
@@ -1411,8 +1458,9 @@ function Picker(props) {
 
 // ─── SPLIT BUILDER (create a custom split) ───
 function SplitBuilder(props) {
-  const [name, setName] = useState("");
-  const [ids, setIds] = useState([]);
+  const editing = !!(props.initial && props.initial.id);
+  const [name, setName] = useState(props.initial ? props.initial.name || "" : "");
+  const [ids, setIds] = useState(props.initial && props.initial.exercises ? props.initial.exercises.slice() : []);
   const [picking, setPicking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -1435,7 +1483,9 @@ function SplitBuilder(props) {
     if (ids.length === 0) { setErr("Add at least one exercise"); return; }
     setBusy(true);
     let ok = true;
-    if (props.onSave) ok = await props.onSave({ name: name.trim(), exercises: ids });
+    const payload = { name: name.trim(), exercises: ids };
+    if (editing) payload.id = props.initial.id;
+    if (props.onSave) ok = await props.onSave(payload);
     setBusy(false);
     if (ok !== false) props.onClose();
   }
@@ -1444,11 +1494,11 @@ function SplitBuilder(props) {
     <div style={overlay}>
       <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
         <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>New Split</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{editing ? "Edit Workout" : "New Workout"}</h2>
           <button onClick={props.onClose} style={xBtn}>✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={labelStyle}>Split Name</div>
+          <div style={labelStyle}>Name</div>
           <input style={Object.assign({}, fieldStyle, { marginBottom: 16 })} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Push Day" />
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -1471,7 +1521,7 @@ function SplitBuilder(props) {
           })}
           {err && <div style={{ fontSize: 13, fontWeight: 600, color: "#dc2626", marginTop: 12 }}>{err}</div>}
         </div>
-        <button onClick={save} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : "Save Split"}</button>
+        <button onClick={save} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : editing ? "Save Changes" : "Save Workout"}</button>
       </div>
       {picking && <Picker multi selectedIds={ids} onToggle={toggle} onCreate={props.onCreateExercise} onDone={() => setPicking(false)} onClose={() => setPicking(false)} />}
     </div>
@@ -1482,7 +1532,8 @@ function SplitBuilder(props) {
 function PlanLibrary(props) {
   const [busyId, setBusyId] = useState(null);
   async function apply(plan) {
-    if (!confirm('Replace your home screen splits with "' + plan.name + '"? You can still add or remove splits after.')) return;
+    const yes = await appConfirm({ title: "Load this plan?", message: 'This replaces your home screen workouts with "' + plan.name + '". You can still add or remove workouts after.', confirmLabel: "Load plan", cancelLabel: "Cancel" });
+    if (!yes) return;
     setBusyId(plan.id);
     let ok = true;
     if (props.onApply) ok = await props.onApply(plan);
@@ -1593,8 +1644,9 @@ function EditWorkoutModal(props) {
     setSaving(false);
     if (ok) props.onClose();
   }
-  function del() {
-    if (confirm("Delete this workout permanently?")) { props.onDelete(w.id); props.onClose(); }
+  async function del() {
+    const yes = await appConfirm({ title: "Delete workout?", message: "This permanently removes this logged workout.", confirmLabel: "Delete", cancelLabel: "Cancel", danger: true });
+    if (yes) { props.onDelete(w.id); props.onClose(); }
   }
 
   return (
@@ -2072,8 +2124,14 @@ function SettingsSheet(props) {
   const [rest, setRest] = useState(String(p.restSeconds || 120));
   const [building, setBuilding] = useState(false);
   const [planLib, setPlanLib] = useState(false);
+  const [editingSplit, setEditingSplit] = useState(null);
 
   const splits = props.splits || [];
+
+  async function confirmRemoveSplit(s) {
+    const yes = await appConfirm({ title: "Delete workout?", message: '"' + s.name + '" will be removed from your splits. This cannot be undone.', confirmLabel: "Delete", danger: true });
+    if (yes && props.onRemoveSplit) props.onRemoveSplit(s.id);
+  }
 
   function save() {
     props.onSave({
@@ -2112,19 +2170,20 @@ function SettingsSheet(props) {
 
           {props.onAddSplit && (
             <div style={{ marginBottom: 16, borderTop: "1px solid #f3f4f6", paddingTop: 16 }}>
-              <div style={labelStyle}>Your Splits</div>
-              {splits.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 0, marginBottom: 12 }}>No splits yet.</p>}
+              <div style={labelStyle}>Your Workouts</div>
+              {splits.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 0, marginBottom: 12 }}>No workouts yet.</p>}
               {splits.map((s) => (
-                <div key={s.id || s.name} style={{ display: "flex", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
+                <div key={s.id || s.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 500 }}>{s.name}</div>
                     <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{(s.exercises || []).length} exercises</div>
                   </div>
-                  {props.onRemoveSplit && s.id && <button onClick={() => props.onRemoveSplit(s.id)} aria-label="remove split" style={closeBtn}>✕</button>}
+                  {props.onUpdateSplit && s.id && <button onClick={() => setEditingSplit(s)} style={{ background: "#f0f5ff", border: "none", borderRadius: 9, color: "#1a73e8", fontSize: 13, fontWeight: 700, padding: "8px 14px", minHeight: 38, flexShrink: 0 }}>Edit</button>}
+                  {props.onRemoveSplit && s.id && <button onClick={() => confirmRemoveSplit(s)} aria-label="remove workout" style={closeBtn}>✕</button>}
                 </div>
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Split</button>
+                <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Workout</button>
                 <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
               </div>
             </div>
@@ -2134,6 +2193,7 @@ function SettingsSheet(props) {
         {props.onSignOut && <button onClick={props.onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 10 }}>Sign Out</button>}
       </div>
       {building && <SplitBuilder onSave={props.onAddSplit} onCreateExercise={props.onCreateExercise} onClose={() => setBuilding(false)} />}
+      {editingSplit && <SplitBuilder initial={editingSplit} onSave={props.onUpdateSplit} onCreateExercise={props.onCreateExercise} onClose={() => setEditingSplit(null)} />}
       {planLib && <PlanLibrary onApply={props.onApplyPlan} onClose={() => setPlanLib(false)} />}
     </div>
   );
