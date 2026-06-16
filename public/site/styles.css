@@ -172,12 +172,12 @@ p { text-wrap: pretty; }
 .today .tags span { font-size: 10px; font-weight: 600; background: rgba(255,255,255,.2); border-radius: 6px; padding: 3px 8px; }
 .today .play { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; flex-shrink: 0; }
 
-.week-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-sm); }
-.week-row .d { width: 30px; font-weight: 700; color: var(--faint); font-size: 12px; }
+.week-row { display: flex; align-items: center; gap: 8px; padding: 11px 12px; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-sm); }
+.week-row .d { width: 28px; flex-shrink: 0; font-weight: 700; color: var(--faint); font-size: 12px; }
 .week-row.on { background: var(--blue-tint); }
 .week-row.on .d { color: var(--blue); }
-.week-row .w { flex: 1; font-weight: 600; }
-.week-row .badge { font-size: 9px; font-weight: 700; color: var(--blue); background: var(--blue-tint2); border-radius: 6px; padding: 3px 6px; letter-spacing: .03em; }
+.week-row .w { flex: 1; min-width: 0; font-weight: 600; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.week-row .badge { flex-shrink: 0; font-size: 8px; font-weight: 700; color: var(--blue); background: var(--blue-tint2); border-radius: 6px; padding: 3px 6px; letter-spacing: .03em; }
 
 /* exercise / set logging card */
 .ex { background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); padding: 14px; }
