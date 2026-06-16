@@ -457,6 +457,17 @@ function appConfirm(opts) {
   if (_confirm) return _confirm(opts || {});
   return Promise.resolve(typeof window !== "undefined" ? window.confirm((opts && opts.message) || "") : false);
 }
+// Disable pinch / double-tap zoom while a modal editor is open (native-app feel).
+function useNoZoom() {
+  useEffect(() => {
+    const vp = document.querySelector('meta[name="viewport"]');
+    if (!vp) return;
+    const prev = vp.getAttribute("content");
+    vp.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
+    return () => { if (prev != null) vp.setAttribute("content", prev); };
+  }, []);
+}
+
 function ConfirmHost() {
   const [state, setState] = useState(null);
   useEffect(() => {
@@ -930,9 +941,9 @@ function WorkoutTab(props) {
   function prefillSets(exId) {
     const last = getLast(workouts, exId);
     if (last && last.sets && last.sets.length > 0) {
-      return last.sets.map((s) => ({ weight: String(s.weight || ""), reps: String(s.reps || ""), rir: "", warmup: !!s.warmup, done: false }));
+      return last.sets.map((s) => ({ weight: String(s.weight || ""), reps: String(s.reps || ""), rir: "", warmup: !!s.warmup, done: false, note: "" }));
     }
-    return [{ weight: "", reps: "", rir: "", warmup: false, done: false }];
+    return [{ weight: "", reps: "", rir: "", warmup: false, done: false, note: "" }];
   }
 
   function loadSplit(split) {
@@ -977,7 +988,7 @@ function WorkoutTab(props) {
   function addSet(exIdx) {
     mutateExercise(exIdx, (ex) => {
       const lastSet = ex.sets[ex.sets.length - 1] || { weight: "", reps: "", warmup: false };
-      return { exerciseId: ex.exerciseId, sets: ex.sets.concat([{ weight: lastSet.weight, reps: lastSet.reps, rir: "", warmup: false, done: false }]) };
+      return { exerciseId: ex.exerciseId, sets: ex.sets.concat([{ weight: lastSet.weight, reps: lastSet.reps, rir: "", warmup: false, done: false, note: "" }]) };
     });
   }
   function removeSet(exIdx, setIdx) {
@@ -1012,12 +1023,16 @@ function WorkoutTab(props) {
   function cleanExercises(exercises) {
     return exercises.map((ex) => ({
       exerciseId: ex.exerciseId,
-      sets: ex.sets.map((s) => ({
-        weight: Number(s.weight) || 0,
-        reps: Number(s.reps) || 0,
-        rir: s.rir === "" || s.rir === null || s.rir === undefined ? null : Number(s.rir),
-        warmup: !!s.warmup,
-      })),
+      sets: ex.sets.map((s) => {
+        const out = {
+          weight: Number(s.weight) || 0,
+          reps: Number(s.reps) || 0,
+          rir: s.rir === "" || s.rir === null || s.rir === undefined ? null : Number(s.rir),
+          warmup: !!s.warmup,
+        };
+        if (s.note && String(s.note).trim()) out.note = String(s.note).trim();
+        return out;
+      }),
     }));
   }
   function hasRealData(exercises) {
@@ -1253,6 +1268,7 @@ function WorkoutTab(props) {
 // ─── EXERCISE CARD (shared by live session + edit) ───
 function ExerciseCard(props) {
   const { exercise: ex, dbEx, last, rec, live, onUpdateSet, onToggleDone, onToggleWarmup, onAddSet, onRemoveSet, onRemove, onApplyRec, onPlates, onMove, canMoveUp, canMoveDown } = props;
+  const [noteOpen, setNoteOpen] = useState(null);
   const cols = live ? "26px 1fr 1fr 44px 40px" : "26px 1fr 1fr 44px 36px";
   const moveBtn = { background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 15, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 };
   return (
@@ -1300,21 +1316,28 @@ function ExerciseCard(props) {
       </div>
 
       {ex.sets.map((s, si) => (
-        <div key={si} style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center", marginBottom: 6 }}>
-          <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#fef3c7" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#d97706" : "#9ca3af", padding: 0, minHeight: 40 }}>{s.warmup ? "W" : si + 1}</button>
-          <div style={{ position: "relative" }}>
-            <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, s.done ? doneInput : null)} placeholder="lbs" />
-            {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
+        <div key={si} style={{ marginBottom: 6 }}>
+          <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center" }}>
+            <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#e8f0fe" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#1a73e8" : "#9ca3af", padding: 0, minHeight: 40 }}>{s.warmup ? "W" : si + 1}</button>
+            <div style={{ position: "relative" }}>
+              <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, s.warmup ? warmupInput : null, s.done ? doneInput : null)} placeholder="lbs" />
+              {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
+            </div>
+            <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, s.warmup ? warmupInput : null, s.done ? doneInput : null)} placeholder="reps" />
+            <input type="number" inputMode="numeric" value={s.rir} onChange={(e) => onUpdateSet(si, "rir", e.target.value)} style={Object.assign({}, inputStyle, { color: "#9ca3af" }, s.warmup ? warmupInput : null, s.done ? doneInput : null)} placeholder="—" />
+            {live ? (
+              <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              </button>
+            ) : (
+              <button onClick={() => onRemoveSet(si)} style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, padding: 0, minHeight: 40 }}>−</button>
+            )}
           </div>
-          <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, s.done ? doneInput : null)} placeholder="reps" />
-          <input type="number" inputMode="numeric" value={s.rir} onChange={(e) => onUpdateSet(si, "rir", e.target.value)} style={Object.assign({}, inputStyle, { color: "#9ca3af" }, s.done ? doneInput : null)} placeholder="—" />
-          {live ? (
-            <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-            </button>
+          {live && ((noteOpen === si || (s.note && s.note.length)) ? (
+            <input value={s.note || ""} onChange={(e) => onUpdateSet(si, "note", e.target.value)} onBlur={() => { if (!s.note) setNoteOpen(null); }} autoFocus={noteOpen === si} placeholder="Add a note" style={noteInput} />
           ) : (
-            <button onClick={() => onRemoveSet(si)} style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, padding: 0, minHeight: 40 }}>−</button>
-          )}
+            <button onClick={() => setNoteOpen(si)} style={noteAddBtn}>+ note</button>
+          ))}
         </div>
       ))}
 
@@ -1326,6 +1349,9 @@ function ExerciseCard(props) {
   );
 }
 const doneInput = { background: "#f0fdf4", borderColor: "#bbf7d0" };
+const warmupInput = { background: "#eff5ff", borderColor: "#cfe0fb" };
+const noteInput = { width: "100%", boxSizing: "border-box", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, padding: "8px 10px", fontSize: 16, color: "#475467", outline: "none" };
+const noteAddBtn = { background: "none", border: "none", color: "#c7ccd4", fontSize: 12, fontWeight: 500, padding: "4px 2px 0", marginTop: 2 };
 
 // ─── PLATE MODAL ───
 function PlateModal(props) {
@@ -1458,6 +1484,7 @@ function Picker(props) {
 
 // ─── SPLIT BUILDER (create a custom split) ───
 function SplitBuilder(props) {
+  useNoZoom();
   const editing = !!(props.initial && props.initial.id);
   const [name, setName] = useState(props.initial ? props.initial.name || "" : "");
   const [ids, setIds] = useState(props.initial && props.initial.exercises ? props.initial.exercises.slice() : []);
@@ -1614,12 +1641,13 @@ function ScheduleEditor(props) {
 
 // ─── EDIT WORKOUT MODAL ───
 function EditWorkoutModal(props) {
+  useNoZoom();
   const w = props.workout;
   const [date, setDate] = useState(w.date);
   const [exercises, setExercises] = useState(() =>
     (w.exercises || []).map((ex) => ({
       exerciseId: ex.exerciseId,
-      sets: (ex.sets || []).map((s) => ({ weight: String(s.weight ?? ""), reps: String(s.reps ?? ""), rir: s.rir === null || s.rir === undefined ? "" : String(s.rir), warmup: !!s.warmup })),
+      sets: (ex.sets || []).map((s) => ({ weight: String(s.weight ?? ""), reps: String(s.reps ?? ""), rir: s.rir === null || s.rir === undefined ? "" : String(s.rir), warmup: !!s.warmup, note: s.note || "" })),
     }))
   );
   const [picker, setPicker] = useState(false);
@@ -1638,7 +1666,7 @@ function EditWorkoutModal(props) {
     setSaving(true);
     const cleaned = exercises.map((ex) => ({
       exerciseId: ex.exerciseId,
-      sets: ex.sets.map((s) => ({ weight: Number(s.weight) || 0, reps: Number(s.reps) || 0, rir: s.rir === "" ? null : Number(s.rir), warmup: !!s.warmup })),
+      sets: ex.sets.map((s) => { const out = { weight: Number(s.weight) || 0, reps: Number(s.reps) || 0, rir: s.rir === "" ? null : Number(s.rir), warmup: !!s.warmup }; if (s.note && String(s.note).trim()) out.note = String(s.note).trim(); return out; }),
     }));
     const ok = await props.onSave(w.id, { date, exercises: cleaned });
     setSaving(false);
