@@ -1,4 +1,4 @@
-// Forward Fitness site — scroll reveals, sticky nav, mobile menu
+// Forward Fitness site , scroll reveals, sticky nav, mobile menu
 
 (function () {
   // Year

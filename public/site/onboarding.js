@@ -60,9 +60,9 @@ var APP_URL = "/";
   });
 
   function finish() {
-    document.getElementById("s-goal").textContent = labels.goal[answers.goal] || "—";
-    document.getElementById("s-level").textContent = labels.level[answers.level] || "—";
-    document.getElementById("s-days").textContent = labels.days[answers.days] || "—";
+    document.getElementById("s-goal").textContent = labels.goal[answers.goal] || "Not set";
+    document.getElementById("s-level").textContent = labels.level[answers.level] || "Not set";
+    document.getElementById("s-days").textContent = labels.days[answers.days] || "Not set";
     try { localStorage.setItem("ff-onboarding", JSON.stringify(answers)); } catch (e) {}
   }
 
