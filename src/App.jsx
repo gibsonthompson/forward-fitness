@@ -458,13 +458,28 @@ function appConfirm(opts) {
   return Promise.resolve(typeof window !== "undefined" ? window.confirm((opts && opts.message) || "") : false);
 }
 // Disable pinch / double-tap zoom while a modal editor is open (native-app feel).
+// iOS Safari ignores viewport user-scalable=no, so we also block the gesture events directly.
 function useNoZoom() {
   useEffect(() => {
     const vp = document.querySelector('meta[name="viewport"]');
-    if (!vp) return;
-    const prev = vp.getAttribute("content");
-    vp.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
-    return () => { if (prev != null) vp.setAttribute("content", prev); };
+    const prev = vp ? vp.getAttribute("content") : null;
+    if (vp) vp.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
+
+    const stop = (e) => { e.preventDefault(); };
+    const onTouchMove = (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); };
+
+    document.addEventListener("gesturestart", stop, { passive: false });
+    document.addEventListener("gesturechange", stop, { passive: false });
+    document.addEventListener("gestureend", stop, { passive: false });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    return () => {
+      if (vp && prev != null) vp.setAttribute("content", prev);
+      document.removeEventListener("gesturestart", stop);
+      document.removeEventListener("gesturechange", stop);
+      document.removeEventListener("gestureend", stop);
+      document.removeEventListener("touchmove", onTouchMove);
+    };
   }, []);
 }
 
