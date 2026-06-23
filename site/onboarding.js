@@ -1,6 +1,6 @@
 // Forward Fitness onboarding flow.
 // Change APP_URL to wherever the actual app is served (e.g. "/app" or the app's domain).
-var APP_URL = "/";
+var APP_URL = "/train/";
 
 (function () {
   var steps = Array.prototype.slice.call(document.querySelectorAll(".ob-step"));

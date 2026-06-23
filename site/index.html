@@ -440,7 +440,7 @@
         </div>
         <div class="footer-col">
           <h5>App</h5>
-          <a href="/train">Open the app</a>
+          <a href="/train/">Open the app</a>
           <a href="#how">How it works</a>
         </div>
       </div>
@@ -452,6 +452,17 @@
   </div>
 </footer>
 
+<script>
+  // Remove any leftover root-scoped service worker from before the app moved to /train,
+  // so it can't intercept this marketing site. The /train worker is left untouched.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      regs.forEach(function (r) {
+        try { if (new URL(r.scope).pathname === '/') r.unregister(); } catch (e) {}
+      });
+    });
+  }
+</script>
 <script src="script.js"></script>
 </body>
 </html>

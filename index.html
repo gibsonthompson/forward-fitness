@@ -9,9 +9,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="ForwardFit" />
     <meta name="description" content="Progressive overload workout tracker" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/train/manifest.json" />
+    <link rel="icon" type="image/png" href="/train/favicon.png" />
+    <link rel="apple-touch-icon" href="/train/icons/icon-192.png" />
     <title>Forward Fitness</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,9 +22,10 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
+      // Worker is pinned to /train so it can never touch the marketing site at the root.
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js');
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/train/sw.js', { scope: '/train/' });
         });
       }
     </script>

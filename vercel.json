@@ -1,11 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/site/index.html" },
-    { "source": "/onboarding.html", "destination": "/site/onboarding.html" },
-    { "source": "/onboarding.js", "destination": "/site/onboarding.js" },
-    { "source": "/styles.css", "destination": "/site/styles.css" },
-    { "source": "/script.js", "destination": "/site/script.js" },
-    { "source": "/train", "destination": "/index.html" },
-    { "source": "/train/", "destination": "/index.html" }
+  "buildCommand": "vite build && cp -r site/. dist/",
+  "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/train", "destination": "/train/", "permanent": false }
   ]
 }
