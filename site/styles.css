@@ -368,3 +368,7 @@ p { text-wrap: pretty; }
   .chip-pr { left: 2px; }
   .chip-streak { right: 2px; }
 }
+
+/* keep the nav CTA button text white (override .nav-links a color) */
+.nav-links a.nav-cta { color: #fff; }
+.nav-links.open a.nav-cta { color: #fff; }
