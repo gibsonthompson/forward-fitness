@@ -1350,7 +1350,6 @@ function ExerciseCard(props) {
       ))}
 
       <button onClick={onAddSet} style={{ width: "100%", background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#9ca3af", fontSize: 13, fontWeight: 500, minHeight: 44, marginTop: 4 }}>+ Add Set</button>
-      {ex.sets.length > 1 && <p style={{ fontSize: 11, color: "#c7ccd4", textAlign: "center", margin: "6px 0 0", fontWeight: 500 }}>Swipe a set left to delete it</p>}
     </div>
   );
 }
@@ -1358,60 +1357,68 @@ function ExerciseCard(props) {
 // One set row with swipe-left-to-reveal-delete (pointer events, works on touch + mouse)
 function SwipeSetRow(props) {
   const { s, si, live, cols, onUpdateSet, onToggleWarmup, onToggleDone, onPlates, onRemoveSet, noteOpen, onOpenNote, onCloseNote } = props;
-  const REVEAL = 84;
-  const [dx, setDx] = useState(0);
+  const REVEAL = 76;
   const [open, setOpen] = useState(false);
+  const frontRef = useRef(null);
   const drag = useRef(null);
 
-  function down(e) { drag.current = { x: e.clientX, base: open ? -REVEAL : 0, moved: false }; }
+  function setX(x, animate) {
+    const el = frontRef.current; if (!el) return;
+    el.style.transition = animate ? "transform .16s cubic-bezier(.22,1,.36,1)" : "none";
+    el.style.transform = "translateX(" + x + "px)";
+  }
+  function down(e) { drag.current = { x: e.clientX, base: open ? -REVEAL : 0, moved: false, cur: open ? -REVEAL : 0 }; }
   function move(e) {
-    const d = drag.current;
-    if (!d) return;
+    const d = drag.current; if (!d) return;
     const delta = e.clientX - d.x;
     if (!d.moved && Math.abs(delta) < 6) return;
     d.moved = true;
-    setDx(Math.max(-REVEAL, Math.min(0, d.base + delta)));
+    const nx = Math.max(-REVEAL, Math.min(0, d.base + delta));
+    d.cur = nx;
+    setX(nx, false); // drive the DOM directly, no re-render per move
   }
   function up() {
     const d = drag.current; drag.current = null;
     if (!d) return;
-    if (!d.moved) { if (open) { setOpen(false); setDx(0); } return; }
-    if (dx < -REVEAL / 2) { setOpen(true); setDx(-REVEAL); } else { setOpen(false); setDx(0); }
+    if (!d.moved) { if (open) { setOpen(false); setX(0, true); } return; }
+    if (d.cur < -REVEAL / 2) { setOpen(true); setX(-REVEAL, true); } else { setOpen(false); setX(0, true); }
   }
-  function del() { setOpen(false); setDx(0); onRemoveSet(si); }
+  function del() { setOpen(false); setX(0, false); onRemoveSet(si); }
 
-  const dragging = drag.current && drag.current.moved;
   const inputExtras = Object.assign({}, s.warmup ? warmupInput : null, s.done ? doneInput : null);
 
   return (
-    <div style={{ marginBottom: 6, position: "relative", borderRadius: 10, overflow: "hidden" }}>
-      <button onClick={del} aria-label="delete set" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: REVEAL, background: "#dc2626", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
-        Delete
-      </button>
-      <div
-        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-        style={{ transform: "translateX(" + dx + "px)", transition: dragging ? "none" : "transform .18s cubic-bezier(.22,1,.36,1)", background: "#fff", position: "relative", touchAction: "pan-y" }}
-      >
-        <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center", padding: "1px 0" }}>
-          <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#e8f0fe" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#1a73e8" : "#9ca3af", padding: 0, minHeight: 40 }}>{s.warmup ? "W" : si + 1}</button>
-          <div style={{ position: "relative" }}>
-            <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="lbs" />
-            {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ position: "relative", borderRadius: 10, overflow: "hidden" }}>
+        <button onClick={del} aria-label="delete set" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: REVEAL, background: "#dc2626", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+          Delete
+        </button>
+        <div
+          ref={frontRef}
+          onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+          style={{ transform: "translateX(" + (open ? -REVEAL : 0) + "px)", background: "#fff", position: "relative", touchAction: "pan-y" }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center" }}>
+            <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#e8f0fe" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#1a73e8" : "#9ca3af", padding: 0, minHeight: 44 }}>{s.warmup ? "W" : si + 1}</button>
+            <div style={{ position: "relative" }}>
+              <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="lbs" />
+              {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
+            </div>
+            <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="reps" />
+            {live && (
+              <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              </button>
+            )}
           </div>
-          <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="reps" />
-          {live && (
-            <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-            </button>
-          )}
         </div>
-        {live && ((noteOpen || (s.note && s.note.length)) ? (
-          <input value={s.note || ""} onChange={(e) => onUpdateSet(si, "note", e.target.value)} onBlur={() => { if (!s.note) onCloseNote(); }} autoFocus={noteOpen} placeholder="Add a note" style={noteInput} />
-        ) : (
-          <button onClick={onOpenNote} style={noteAddBtn}>+ note</button>
-        ))}
       </div>
+      {live && ((noteOpen || (s.note && s.note.length)) ? (
+        <input value={s.note || ""} onChange={(e) => onUpdateSet(si, "note", e.target.value)} onBlur={() => { if (!s.note) onCloseNote(); }} autoFocus={noteOpen} placeholder="Add a note" style={noteInput} />
+      ) : (
+        <button onClick={onOpenNote} style={noteAddBtn}>+ note</button>
+      ))}
     </div>
   );
 }
@@ -2561,47 +2568,54 @@ function ProfileTab(props) {
   }
   async function saveName() { setBusy(true); await onSave({ username: (username || "").trim() }, "Profile saved"); setBusy(false); }
 
-  const tiles = [
-    { v: stats.total, l: "Workouts", accent: "#1a73e8" },
-    { v: stats.streak, l: "Week Streak", accent: "#f59e0b" },
-    { v: stats.sets, l: "Total Sets", accent: "#22c55e" },
-  ];
   const initial = (profile.username || "").trim().charAt(0).toUpperCase() || "?";
+  const stat = [
+    { v: stats.total, l: "Workouts" },
+    { v: stats.streak, l: "Week Streak" },
+    { v: stats.sets, l: "Total Sets" },
+  ];
 
   return (
     <div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
-        <button onClick={pickPhoto} style={{ position: "relative", width: 96, height: 96, borderRadius: "50%", border: "none", padding: 0, background: "#eaf2fe", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: shadowSm }}>
-          {profile.avatar ? <img src={profile.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 40, fontWeight: 800, color: "#1a73e8" }}>{initial}</span>}
-          <span style={{ position: "absolute", right: 2, bottom: 2, width: 30, height: 30, borderRadius: "50%", background: "#1a73e8", border: "3px solid #f5f7fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+      {/* Header */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 24px" }}>
+        <button onClick={pickPhoto} aria-label="Change photo" style={{ position: "relative", width: 104, height: 104, borderRadius: "50%", border: "none", padding: 0, background: "#1a2332", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: "0 6px 20px rgba(16,24,40,.18)" }}>
+          {profile.avatar ? <img src={profile.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 42, fontWeight: 800, color: "#fff" }}>{initial}</span>}
+          <span style={{ position: "absolute", right: 4, bottom: 4, width: 30, height: 30, borderRadius: "50%", background: "#1a73e8", border: "3px solid #f5f7fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
           </span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
-        <div style={{ fontSize: 20, fontWeight: 800, marginTop: 12 }}>{profile.username ? "@" + profile.username : "Set a username"}</div>
-        <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>Tap the photo to change it</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginTop: 14, color: "#1a2332" }}>{profile.username ? "@" + profile.username : "Add a username"}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", marginTop: 3 }}>Level {stats.level}</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
-        {tiles.map((s, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "18px 8px", textAlign: "center", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: s.accent }}>{s.v}</div>
-            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
+      {/* Stats strip (no colored boxes) */}
+      <div style={{ display: "flex", background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: "18px 0", marginBottom: 24 }}>
+        {stat.map((s, i) => (
+          <div key={i} style={{ flex: 1, textAlign: "center", borderLeft: i > 0 ? "1px solid #f0f2f5" : "none" }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#1a2332" }}>{s.v}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af", marginTop: 4, letterSpacing: ".02em" }}>{s.l}</div>
           </div>
         ))}
       </div>
 
-      <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
+      {/* Username */}
+      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: 18, marginBottom: 16 }}>
         <div style={labelStyle}>Username</div>
-        <input style={fieldStyle} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="yourname" autoCapitalize="none" autoCorrect="off" />
-        <p style={{ fontSize: 12, color: "#9ca3af", margin: "8px 0 12px" }}>Shown on the workouts you share. You choose what to include each time you share.</p>
-        <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : "Save Profile"}</button>
+        <div style={{ position: "relative" }}>
+          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 600, color: "#9ca3af" }}>@</span>
+          <input style={Object.assign({}, fieldStyle, { paddingLeft: 30 })} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" autoCapitalize="none" autoCorrect="off" />
+        </div>
+        <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 0 14px", lineHeight: 1.45 }}>This is the name shown on the workouts you share. You choose what to include each time you post.</p>
+        <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "15px", fontSize: 15, fontWeight: 700, minHeight: 50 }}>{busy ? "Saving..." : "Save Profile"}</button>
       </div>
 
-      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 4 }}>Sign Out</button>}
+      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "#fff", color: "#dc2626", border: "1px solid " + BORDER, borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 54, boxShadow: shadowSm }}>Sign Out</button>}
     </div>
   );
 }
+
 
 // ─── WORKOUT SHARE STUDIO (post-workout, configurable) ───
 function prettyDate(dateStr) {
@@ -2632,21 +2646,43 @@ function WorkoutShareModal(props) {
     if (!navigator.geolocation) return;
     setGeoBusy(true);
     navigator.geolocation.getCurrentPosition(async (pos) => {
+      const la = pos.coords.latitude, lo = pos.coords.longitude;
+      let name = "";
+      // 1) nearest gym / fitness venue by name (so Life Time reads "Life Time", not the city)
       try {
-        const la = pos.coords.latitude, lo = pos.coords.longitude;
-        const r = await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + la + "&longitude=" + lo + "&localityLanguage=en");
+        const q = "[out:json][timeout:8];(nwr(around:180," + la + "," + lo + ")[leisure=fitness_centre];nwr(around:180," + la + "," + lo + ")[amenity=gym];nwr(around:180," + la + "," + lo + ")[sport=fitness];);out center tags 30;";
+        const r = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(q) });
         const j = await r.json();
-        const parts = [j.city || j.locality, j.principalSubdivision].filter(Boolean);
-        setLocationText(parts.join(", "));
-      } catch (e) { /* leave manual */ }
+        let best = "", bestD = 1e9;
+        (j.elements || []).forEach((el) => {
+          const nm = el.tags && el.tags.name; if (!nm) return;
+          const ela = el.lat != null ? el.lat : (el.center && el.center.lat);
+          const elo = el.lon != null ? el.lon : (el.center && el.center.lon);
+          if (ela == null || elo == null) return;
+          const d = (ela - la) * (ela - la) + (elo - lo) * (elo - lo);
+          if (d < bestD) { bestD = d; best = nm; }
+        });
+        if (best) name = best;
+      } catch (e) { /* fall through to city */ }
+      // 2) fall back to city, state
+      if (!name) {
+        try {
+          const r2 = await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + la + "&longitude=" + lo + "&localityLanguage=en");
+          const j2 = await r2.json();
+          name = [j2.city || j2.locality, j2.principalSubdivision].filter(Boolean).join(", ");
+        } catch (e) {}
+      }
+      if (name) setLocationText(name);
       setGeoBusy(false);
-    }, () => { setGeoBusy(false); }, { timeout: 8000, maximumAge: 600000 });
+    }, () => { setGeoBusy(false); }, { timeout: 9000, maximumAge: 600000 });
   }
 
   const bigVal = cfg.volume && data.vol > 0 ? data.vol.toLocaleString() : (pctText || (data.groups[0] || "Done"));
   const bigLbl = cfg.volume && data.vol > 0 ? "LBS VOLUME" : (pctText ? "VS LAST TIME" : "TRAINED");
 
   function draw() {
+    const LOGO = "/train/icons/icon-192.png";
+    function loadImg(src) { return new Promise((res) => { if (!src) { res(null); return; } const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; }); }
     return new Promise((resolve) => {
       const W = 1080, H = 1350, PAD = 90;
       const c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -2655,17 +2691,22 @@ function WorkoutShareModal(props) {
       g.addColorStop(0, "#1a73e8"); g.addColorStop(1, "#0c3aa0");
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
       function text(str, x, y, size, weight, color, align) { ctx.fillStyle = color; ctx.textAlign = align || "left"; ctx.font = weight + " " + size + "px Inter, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.fillText(str, x, y); }
-      function go() {
-        const nameX = PAD + (profile.avatar ? 120 : 0);
-        text(profile.username ? "@" + profile.username : "Forward Fitness", nameX, 236, 40, "700", "#fff", "left");
-        text("FORWARD FITNESS", PAD, 130, 34, "800", "rgba(255,255,255,.9)", "left");
+      function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+      Promise.all([loadImg(LOGO), loadImg(profile.avatar)]).then(function (imgs) {
+        const logo = imgs[0], avatar = imgs[1];
+        const ls = 60;
+        if (logo) { ctx.save(); rrect(PAD, 76, ls, ls, 15); ctx.clip(); ctx.drawImage(logo, PAD, 76, ls, ls); ctx.restore(); }
+        text("FORWARD FITNESS", PAD + (logo ? ls + 22 : 0), 120, 34, "800", "#fff", "left");
+        const avY = 192, av = 88;
+        if (avatar) { ctx.save(); ctx.beginPath(); ctx.arc(PAD + av / 2, avY + av / 2, av / 2, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(avatar, PAD, avY, av, av); ctx.restore(); }
+        text(profile.username ? "@" + profile.username : "Forward Fitness", PAD + (avatar ? av + 22 : 0), avY + av / 2 + 14, 40, "700", "#fff", "left");
         text(data.name.toUpperCase(), PAD, 470, 92, "800", "#fff", "left");
         let sub = prettyDate(data.date);
         if (cfg.duration && durText) sub += "   ·   " + durText;
         text(sub, PAD, 540, 38, "500", "rgba(255,255,255,.85)", "left");
-        if (cfg.location && locationText) text(locationText, PAD, 590, 36, "500", "rgba(255,255,255,.7)", "left");
+        if (cfg.location && locationText) text(locationText, PAD, 590, 36, "500", "rgba(255,255,255,.72)", "left");
         const boxY = 640, boxH = 210, gap = 30, boxW = (W - PAD * 2 - gap) / 2;
-        function box(x, big, small) { ctx.fillStyle = "rgba(255,255,255,.14)"; if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, boxY, boxW, boxH, 28); ctx.fill(); } else ctx.fillRect(x, boxY, boxW, boxH); text(big, x + boxW / 2, boxY + 118, 88, "800", "#fff", "center"); text(small, x + boxW / 2, boxY + 165, 32, "600", "rgba(255,255,255,.8)", "center"); }
+        function box(x, big, small) { ctx.fillStyle = "rgba(255,255,255,.14)"; rrect(x, boxY, boxW, boxH, 28); ctx.fill(); text(big, x + boxW / 2, boxY + 118, 84, "800", "#fff", "center"); text(small, x + boxW / 2, boxY + 165, 32, "600", "rgba(255,255,255,.8)", "center"); }
         box(PAD, String(data.sets), "SETS");
         box(PAD + boxW + gap, bigVal, bigLbl);
         let ly = 960;
@@ -2680,12 +2721,7 @@ function WorkoutShareModal(props) {
         }
         text("forwardfitness.app", W / 2, H - 70, 34, "600", "rgba(255,255,255,.7)", "center");
         resolve(c);
-      }
-      if (profile.avatar) {
-        const img = new Image();
-        img.onload = () => { ctx.save(); ctx.beginPath(); ctx.arc(PAD + 46, 200, 46, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(img, PAD, 154, 92, 92); ctx.restore(); go(); };
-        img.onerror = go; img.src = profile.avatar;
-      } else go();
+      });
     });
   }
   function toBlob(canvas) { return new Promise((res) => canvas.toBlob(res, "image/png")); }
@@ -2727,7 +2763,10 @@ function WorkoutShareModal(props) {
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "6px 2px" }}>
           <div style={{ borderRadius: 20, padding: 22, color: "#fff", background: "linear-gradient(135deg,#1a73e8,#0c3aa0)", boxShadow: shadowPrimary }}>
-            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", opacity: 0.9 }}>FORWARD FITNESS</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <img src="/train/icons/icon-192.png" alt="" style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0 }} />
+              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", opacity: 0.9 }}>FORWARD FITNESS</div>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
               {profile.avatar && <img src={profile.avatar} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />}
               <span style={{ fontSize: 15, fontWeight: 700 }}>{profile.username ? "@" + profile.username : "Forward Fitness"}</span>
