@@ -2628,54 +2628,71 @@ function fmtDur(sec) {
   if (m < 60) return m + " min";
   return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m";
 }
-const SHARE_DEFAULT = { duration: true, location: false, volume: true, topSets: true, weights: true };
+const SHARE_DEFAULT = { duration: true, location: false, address: false, volume: true, topSets: true, weights: true };
 
 function WorkoutShareModal(props) {
   const { data, profile } = props;
   const [cfg, setCfg] = useState(Object.assign({}, SHARE_DEFAULT, profile.shareConfig || {}));
   const [locationText, setLocationText] = useState("");
+  const [addressText, setAddressText] = useState("");
+  const [places, setPlaces] = useState([]);
   const [geoBusy, setGeoBusy] = useState(false);
   const [working, setWorking] = useState(false);
   const durText = fmtDur(data.durationSec);
   const pctText = data.pct != null && data.pct > 0 ? "+" + data.pct + "%" : (data.pct != null ? data.pct + "%" : null);
 
   function persist(next) { if (props.onSaveProfile) props.onSaveProfile({ shareConfig: next }); }
-  function toggle(key) { setCfg((c) => { const n = Object.assign({}, c, { [key]: !c[key] }); persist(n); if (key === "location" && !c.location && !locationText) fetchLocation(); return n; }); }
+  function toggle(key) { setCfg((c) => { const n = Object.assign({}, c, { [key]: !c[key] }); persist(n); if (key === "location" && !c.location && !places.length) fetchPlaces(); return n; }); }
 
-  function fetchLocation() {
+  function osmAddr(t) {
+    if (!t) return "";
+    const l1 = [t["addr:housenumber"], t["addr:street"]].filter(Boolean).join(" ");
+    return [l1, t["addr:city"]].filter(Boolean).join(", ");
+  }
+  function fetchPlaces() {
     if (!navigator.geolocation) return;
     setGeoBusy(true);
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const la = pos.coords.latitude, lo = pos.coords.longitude;
-      let name = "";
-      // 1) nearest gym / fitness venue by name (so Life Time reads "Life Time", not the city)
+      let pointAddr = "";
       try {
-        const q = "[out:json][timeout:8];(nwr(around:180," + la + "," + lo + ")[leisure=fitness_centre];nwr(around:180," + la + "," + lo + ")[amenity=gym];nwr(around:180," + la + "," + lo + ")[sport=fitness];);out center tags 30;";
+        const rn = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + la + "&lon=" + lo + "&zoom=18&addressdetails=1");
+        const jn = await rn.json();
+        const a = jn.address || {};
+        pointAddr = [[a.house_number, a.road].filter(Boolean).join(" "), a.city || a.town || a.village, a.state].filter(Boolean).join(", ");
+      } catch (e) {}
+      let list = [];
+      try {
+        const q = "[out:json][timeout:8];(nwr(around:170," + la + "," + lo + ")[name];);out center tags 60;";
         const r = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(q) });
         const j = await r.json();
-        let best = "", bestD = 1e9;
         (j.elements || []).forEach((el) => {
           const nm = el.tags && el.tags.name; if (!nm) return;
           const ela = el.lat != null ? el.lat : (el.center && el.center.lat);
           const elo = el.lon != null ? el.lon : (el.center && el.center.lon);
           if (ela == null || elo == null) return;
-          const d = (ela - la) * (ela - la) + (elo - lo) * (elo - lo);
-          if (d < bestD) { bestD = d; best = nm; }
+          const fit = !!(el.tags.leisure === "fitness_centre" || el.tags.amenity === "gym" || el.tags.sport === "fitness");
+          list.push({ name: nm, address: osmAddr(el.tags) || pointAddr, fit: fit, d: (ela - la) * (ela - la) + (elo - lo) * (elo - lo) });
         });
-        if (best) name = best;
-      } catch (e) { /* fall through to city */ }
-      // 2) fall back to city, state
-      if (!name) {
+      } catch (e) {}
+      list.sort((a, b) => (b.fit - a.fit) || (a.d - b.d));
+      const seen = {}; const top = [];
+      for (const pl of list) { if (seen[pl.name]) continue; seen[pl.name] = 1; top.push(pl); if (top.length >= 6) break; }
+      if (top.length === 0) {
         try {
           const r2 = await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + la + "&longitude=" + lo + "&localityLanguage=en");
           const j2 = await r2.json();
-          name = [j2.city || j2.locality, j2.principalSubdivision].filter(Boolean).join(", ");
+          const city = [j2.city || j2.locality, j2.principalSubdivision].filter(Boolean).join(", ");
+          if (city) top.push({ name: city, address: pointAddr });
         } catch (e) {}
       }
-      if (name) setLocationText(name);
+      setPlaces(top);
+      if (top.length) { setLocationText(top[0].name); setAddressText(top[0].address || pointAddr); }
+      else if (pointAddr) { setLocationText(pointAddr); }
       setGeoBusy(false);
     }, () => { setGeoBusy(false); }, { timeout: 9000, maximumAge: 600000 });
   }
+
 
   const bigVal = cfg.volume && data.vol > 0 ? data.vol.toLocaleString() : (pctText || (data.groups[0] || "Done"));
   const bigLbl = cfg.volume && data.vol > 0 ? "LBS VOLUME" : (pctText ? "VS LAST TIME" : "TRAINED");
@@ -2704,12 +2721,14 @@ function WorkoutShareModal(props) {
         let sub = prettyDate(data.date);
         if (cfg.duration && durText) sub += "   ·   " + durText;
         text(sub, PAD, 540, 38, "500", "rgba(255,255,255,.85)", "left");
-        if (cfg.location && locationText) text(locationText, PAD, 590, 36, "500", "rgba(255,255,255,.72)", "left");
-        const boxY = 640, boxH = 210, gap = 30, boxW = (W - PAD * 2 - gap) / 2;
+        let yy = 592;
+        if (cfg.location && locationText) { text(locationText, PAD, yy, 38, "600", "#fff", "left"); yy += 44; }
+        if (cfg.location && cfg.address && addressText) { text(addressText, PAD, yy, 30, "500", "rgba(255,255,255,.7)", "left"); yy += 40; }
+        const boxY = Math.max(650, yy + 8), boxH = 210, gap = 30, boxW = (W - PAD * 2 - gap) / 2;
         function box(x, big, small) { ctx.fillStyle = "rgba(255,255,255,.14)"; rrect(x, boxY, boxW, boxH, 28); ctx.fill(); text(big, x + boxW / 2, boxY + 118, 84, "800", "#fff", "center"); text(small, x + boxW / 2, boxY + 165, 32, "600", "rgba(255,255,255,.8)", "center"); }
         box(PAD, String(data.sets), "SETS");
         box(PAD + boxW + gap, bigVal, bigLbl);
-        let ly = 960;
+        let ly = boxY + boxH + 110;
         if (cfg.topSets && (data.topLifts || []).length) {
           text("TOP SETS", PAD, ly, 30, "700", "rgba(255,255,255,.6)", "left"); ly += 46;
           data.topLifts.slice(0, 5).forEach((l) => {
@@ -2773,7 +2792,8 @@ function WorkoutShareModal(props) {
             </div>
             <div style={{ fontSize: 30, fontWeight: 800, marginTop: 16, lineHeight: 1.05 }}>{data.name}</div>
             <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>{prettyDate(data.date)}{cfg.duration && durText ? "   ·   " + durText : ""}</div>
-            {cfg.location && locationText && <div style={{ fontSize: 13, opacity: 0.75, marginTop: 2 }}>{locationText}</div>}
+            {cfg.location && locationText && <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4, fontWeight: 600 }}>{locationText}</div>}
+            {cfg.location && cfg.address && addressText && <div style={{ fontSize: 12, opacity: 0.72, marginTop: 1 }}>{addressText}</div>}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
               <div style={{ background: "rgba(255,255,255,.15)", borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{data.sets}</div>
@@ -2802,11 +2822,35 @@ function WorkoutShareModal(props) {
             ))}
           </div>
           {cfg.location && (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder={geoBusy ? "Finding your location..." : "Add a location"} style={Object.assign({}, fieldStyle, { flex: 1 })} />
-                <button onClick={fetchLocation} disabled={geoBusy} aria-label="use my location" style={{ flexShrink: 0, background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, width: 52, color: "#1a73e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 0 1 12 0c0 4.314-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg>
+            <div style={{ marginTop: 12 }}>
+              {geoBusy && <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 8 }}>Finding nearby places...</div>}
+              {places.length > 0 && (
+                <div style={{ border: "1px solid " + BORDER, borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
+                  {places.map((pl, i) => {
+                    const sel = pl.name === locationText;
+                    return (
+                      <button key={i} onClick={() => { setLocationText(pl.name); setAddressText(pl.address || addressText); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: sel ? "#f0f5ff" : "#fff", border: "none", borderBottom: i < places.length - 1 ? "1px solid #f3f4f6" : "none", padding: "12px 14px", minHeight: 50 }}>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: sel ? "#1a73e8" : "#1a2332", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pl.name}</span>
+                          {pl.address && <span style={{ display: "block", fontSize: 12.5, color: "#9ca3af", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pl.address}</span>}
+                        </span>
+                        {sel && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M20 6L9 17l-5-5" /></svg>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder="Location name" style={Object.assign({}, fieldStyle, { marginBottom: 8 })} />
+              <input value={addressText} onChange={(e) => setAddressText(e.target.value)} placeholder="Address (optional)" style={fieldStyle} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+                <button onClick={() => setCfg((c) => { const n = Object.assign({}, c, { address: !c.address }); persist(n); return n; })} style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, background: "none", border: "none", padding: 0, textAlign: "left" }}>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "#1a2332" }}>Show address on card</span>
+                  <span style={{ flexShrink: 0, width: 44, height: 26, borderRadius: 13, background: cfg.address ? "#1a73e8" : "#d1d5db", position: "relative", transition: "background .2s" }}>
+                    <span style={{ position: "absolute", top: 3, left: cfg.address ? 21 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} />
+                  </span>
+                </button>
+                <button onClick={fetchPlaces} disabled={geoBusy} aria-label="find nearby" style={{ flexShrink: 0, background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, width: 46, height: 40, color: "#1a73e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 0 1 12 0c0 4.314-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg>
                 </button>
               </div>
             </div>
