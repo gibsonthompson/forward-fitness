@@ -307,7 +307,7 @@ function volumeDelta(workouts, index) {
 }
 // Build the recap object used by the post-workout share card.
 // `workouts` is oldest-first and does NOT yet include the just-finished session.
-function buildShareSummary(cleaned, workouts, splits, activeSplitId) {
+function buildShareSummary(cleaned, workouts, splits, activeSplitId, durationSec) {
   const groups = workoutGroups(cleaned);
   const split = activeSplitId ? (splits || []).find((s) => s.id === activeSplitId) : null;
   const name = split ? split.name : (groups.length ? groups.join(" / ") : "Workout");
@@ -324,7 +324,7 @@ function buildShareSummary(cleaned, workouts, splits, activeSplitId) {
     for (const s of workSets(ex.sets)) { const wv = Number(s.weight) || 0; if (wv >= best) { best = wv; bestReps = Number(s.reps) || 0; } }
     return { name: dbEx ? dbEx.name : ex.exerciseId, weight: best, reps: bestReps, sets: workSets(ex.sets).length };
   }).filter((l) => l.sets > 0).slice(0, 6);
-  return { name, date: cleaned.date, groups, vol, sets, pct, topLifts };
+  return { name, date: cleaned.date, groups, vol, sets, pct, topLifts, durationSec: durationSec || null };
 }
 
 // Booleans for Mon..Sun of the current week: did a workout get logged that day?
@@ -617,7 +617,7 @@ function Main(props) {
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
-  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, username: "", avatar: "", shareShowVolume: true, customExercises: [], customRecipes: [], activeSplits: [], weekSchedule: [] });
+  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, username: "", avatar: "", shareConfig: { duration: true, location: false, volume: true, topSets: true, weights: true }, customExercises: [], customRecipes: [], activeSplits: [], weekSchedule: [] });
   const [toast, setToast] = useState(null);
   const [dbOk, setDbOk] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -690,7 +690,7 @@ function Main(props) {
               restSeconds: Number(s.restSeconds) || 120,
               username: typeof s.username === "string" ? s.username : "",
               avatar: typeof s.avatar === "string" ? s.avatar : "",
-              shareShowVolume: s.shareShowVolume !== false,
+              shareConfig: (s.shareConfig && typeof s.shareConfig === "object") ? s.shareConfig : { duration: true, location: false, volume: true, topSets: true, weights: true },
               customExercises,
               customRecipes,
               activeSplits,
@@ -771,7 +771,7 @@ function Main(props) {
       restSeconds: next.restSeconds,
       username: next.username || "",
       avatar: next.avatar || "",
-      shareShowVolume: next.shareShowVolume !== false,
+      shareConfig: next.shareConfig || { duration: true, location: false, volume: true, topSets: true, weights: true },
       customExercises: next.customExercises || [],
       customRecipes: next.customRecipes || [],
       activeSplits: next.activeSplits || [],
@@ -896,7 +896,7 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} onSaveProfile={updateProfile} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} />}
         {tab === "learn" && <LearnTab />}
@@ -971,10 +971,11 @@ function WorkoutTab(props) {
   const [splitsOpen, setSplitsOpen] = useState(false);
   const [shareData, setShareData] = useState(null); // finished-workout summary to share
   const [showAllRecent, setShowAllRecent] = useState(false);
+  const [startedAt, setStartedAt] = useState(() => { try { const d = JSON.parse(localStorage.getItem("ff-draft") || "null"); return d && d.startedAt ? d.startedAt : null; } catch (e) { return null; } });
 
   useEffect(() => {
-    if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId })));
-  }, [workout, activeSplitId]);
+    if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId, startedAt })));
+  }, [workout, activeSplitId, startedAt]);
 
   function prefillSets(exId) {
     const last = getLast(workouts, exId);
@@ -987,11 +988,13 @@ function WorkoutTab(props) {
   function loadSplit(split) {
     const list = (split.exercises || []).map((exId) => ({ exerciseId: exId, sets: prefillSets(exId) }));
     setActiveSplitId(split.id || null);
+    setStartedAt(Date.now());
     setWorkout({ date: today(), exercises: list });
   }
 
   function addExercise(exId) {
-    setWorkout((w) => ({ date: w.date, exercises: w.exercises.concat([{ exerciseId: exId, sets: prefillSets(exId) }]) }));
+    setStartedAt((prev) => prev || Date.now());
+    setWorkout((w) => ({ date: w.date, startedAt: w.startedAt, exercises: w.exercises.concat([{ exerciseId: exId, sets: prefillSets(exId) }]) }));
     setPicker(false);
   }
 
@@ -1094,8 +1097,10 @@ function WorkoutTab(props) {
         }
       }
     }
-    const summary = buildShareSummary(cleaned, workouts, splits, activeSplitId);
+    const durationSec = startedAt ? Math.round((Date.now() - startedAt) / 1000) : null;
+    const summary = buildShareSummary(cleaned, workouts, splits, activeSplitId, durationSec);
     setActiveSplitId(null);
+    setStartedAt(null);
     setWorkout({ date: today(), exercises: [] });
     setShareData(summary);
   }
@@ -1108,6 +1113,7 @@ function WorkoutTab(props) {
     }
     localStorage.removeItem("ff-draft");
     setActiveSplitId(null);
+    setStartedAt(null);
     setWorkout({ date: today(), exercises: [] });
   }
 
@@ -1285,7 +1291,7 @@ function WorkoutTab(props) {
       {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
       {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
-      {shareData && <WorkoutShareModal data={shareData} profile={props.profile || {}} flash={flash} onClose={() => setShareData(null)} />}
+      {shareData && <WorkoutShareModal data={shareData} profile={props.profile || {}} onSaveProfile={props.onSaveProfile} flash={flash} onClose={() => setShareData(null)} />}
     </div>
   );
 }
@@ -2382,7 +2388,8 @@ function LearnTab() {
   );
 }
 
-// ─── WEEK BOARD (always open, drag a workout onto a day; shows completion checks) ───
+// ─── WEEK BOARD (hold a day to lift + reorder; tap a day to assign; shows checks) ───
+const ROW_H = 54;
 function WeekBoard(props) {
   const { splits, workouts, tIdx, onSaveSchedule, onLoadSplit } = props;
   const known = new Set((splits || []).map((s) => s.id));
@@ -2391,96 +2398,144 @@ function WeekBoard(props) {
     while (b.length < 7) b.push("rest");
     return b.slice(0, 7).map((v) => (v && v !== "rest" && known.has(v) ? v : "rest"));
   });
-  const [floating, setFloating] = useState(null);
-  const [hoverDay, setHoverDay] = useState(null);
-  const dragRef = useRef(null);
-  const hoverRef = useRef(null);
+  const [dragIdx, setDragIdx] = useState(null);
+  const [dy, setDy] = useState(0);
+  const [assignDay, setAssignDay] = useState(null);
+  const containerRef = useRef(null);
+  const startRef = useRef(null);
+  const holdRef = useRef(null);
+  const tmRef = useRef(null);
   const done = weekDoneFlags(workouts);
   const splitById = (id) => (splits || []).find((s) => s.id === id);
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const overIdx = dragIdx == null ? null : clamp(dragIdx + Math.round(dy / ROW_H), 0, 6);
 
-  function startDrag(val, label, e) {
-    e.preventDefault();
-    dragRef.current = { val, label };
-    setFloating({ label, x: e.clientX, y: e.clientY });
-    function onMove(ev) {
-      if (!dragRef.current) return;
-      setFloating({ label: dragRef.current.label, x: ev.clientX, y: ev.clientY });
-      const el = document.elementFromPoint(ev.clientX, ev.clientY);
-      const row = el && el.closest ? el.closest("[data-weekday]") : null;
-      const idx = row ? Number(row.getAttribute("data-weekday")) : null;
-      hoverRef.current = idx; setHoverDay(idx);
-    }
-    function onUp() {
-      window.removeEventListener("pointermove", onMove);
-      const idx = hoverRef.current;
-      const d = dragRef.current;
-      dragRef.current = null; hoverRef.current = null; setFloating(null); setHoverDay(null);
-      if (d && idx != null) setSched((prev) => { const next = prev.slice(); next[idx] = d.val; onSaveSchedule(next); return next; });
-    }
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
+  function rowShift(i) {
+    if (dragIdx == null || i === dragIdx) return 0;
+    if (dragIdx < overIdx && i > dragIdx && i <= overIdx) return -ROW_H;
+    if (dragIdx > overIdx && i >= overIdx && i < dragIdx) return ROW_H;
+    return 0;
   }
 
-  const chip = { flexShrink: 0, border: "none", borderRadius: 20, padding: "9px 14px", fontSize: 13, fontWeight: 700, touchAction: "none", cursor: "grab", display: "flex", alignItems: "center", gap: 6 };
+  function beginDrag(i) {
+    if (containerRef.current && startRef.current && containerRef.current.setPointerCapture) { try { containerRef.current.setPointerCapture(startRef.current.pid); } catch (x) {} }
+    setDragIdx(i); setDy(0);
+    if (navigator.vibrate) navigator.vibrate(12);
+    tmRef.current = (ev) => ev.preventDefault();
+    window.addEventListener("touchmove", tmRef.current, { passive: false });
+  }
+  function endDrag() {
+    if (tmRef.current) { window.removeEventListener("touchmove", tmRef.current); tmRef.current = null; }
+    setDragIdx((from) => {
+      if (from != null) {
+        const to = clamp(from + Math.round(dy / ROW_H), 0, 6);
+        if (to !== from) setSched((prev) => { const next = prev.slice(); const m = next.splice(from, 1)[0]; next.splice(to, 0, m); onSaveSchedule(next); return next; });
+      }
+      return null;
+    });
+    setDy(0);
+  }
+
+  function onDown(e) {
+    const rowEl = e.target && e.target.closest ? e.target.closest("[data-row]") : null;
+    if (!rowEl) return;
+    const i = Number(rowEl.getAttribute("data-row"));
+    startRef.current = { y: e.clientY, i: i, moved: false, t: Date.now(), pid: e.pointerId };
+    holdRef.current = setTimeout(() => beginDrag(i), 170);
+  }
+  function onMove(e) {
+    const st = startRef.current; if (!st) return;
+    const d = e.clientY - st.y;
+    if (dragIdx == null) {
+      if (!st.moved && Math.abs(d) > 10) { st.moved = true; clearTimeout(holdRef.current); } // a scroll, not a hold
+      return;
+    }
+    setDy(clamp(d, -(dragIdx) * ROW_H - 10, (6 - dragIdx) * ROW_H + 10));
+  }
+  function onUp() {
+    const st = startRef.current; startRef.current = null;
+    clearTimeout(holdRef.current);
+    if (dragIdx != null) { endDrag(); return; }
+    if (st && !st.moved && Date.now() - st.t < 400) setAssignDay(st.i);
+  }
+
+  function assign(dayIdx, val) {
+    setSched((prev) => { const next = prev.slice(); next[dayIdx] = val; onSaveSchedule(next); return next; });
+    setAssignDay(null);
+  }
 
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={Object.assign({}, labelStyle, { marginBottom: 8 })}>This Week</div>
-      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
-        {DAY_ABBR.map((d, i) => {
-          const val = sched[i];
+      <div ref={containerRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ position: "relative", background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
+        {sched.map((val, i) => {
           const split = val && val !== "rest" ? splitById(val) : null;
           const isToday = i === tIdx;
-          const hovered = hoverDay === i;
+          const lifted = i === dragIdx;
+          const shift = lifted ? dy : rowShift(i);
           return (
             <div
               key={i}
-              data-weekday={i}
-              onClick={() => { if (split) onLoadSplit(split); }}
-              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: hovered ? "#e8f0fe" : isToday ? "#f0f5ff" : "#fff", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", boxShadow: hovered ? "inset 0 0 0 2px #1a73e8" : "none", padding: "13px 16px", minHeight: 52, cursor: split ? "pointer" : "default" }}
+              data-row={i}
+              style={{ display: "flex", alignItems: "center", gap: 10, height: ROW_H, padding: "0 12px 0 14px", boxSizing: "border-box", background: isToday ? "#f0f5ff" : "#fff", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", transform: "translateY(" + shift + "px)" + (lifted ? " scale(1.02)" : ""), transition: lifted ? "none" : "transform .16s cubic-bezier(.22,1,.36,1)", boxShadow: lifted ? "0 10px 24px rgba(16,24,40,.18)" : "none", zIndex: lifted ? 5 : 1, position: "relative", touchAction: "pan-y", cursor: "grab" }}
             >
-              <span style={{ flexShrink: 0, width: 38, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{d}</span>
+              <span style={{ flexShrink: 0, color: "#c7ccd4", display: "flex", flexDirection: "column", gap: 2, lineHeight: 0 }} aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M4 8h16M4 16h16" /></svg>
+              </span>
+              <span style={{ flexShrink: 0, width: 34, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{DAY_ABBR[i]}</span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
               {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
-              {done[i] ? (
+              {done[i] && (
                 <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="completed">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                 </span>
-              ) : split ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
-              ) : <span style={{ width: 18, flexShrink: 0 }} />}
+              )}
             </div>
           );
         })}
       </div>
+      <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 2px 0", lineHeight: 1.4 }}>Press and hold a day to lift it, then drag to reorder. Tap a day to set its workout. Green checks mark days you trained.</p>
+      {(splits || []).length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 6 }}>Create a workout first (Settings, top right) and it will show up here.</p>}
 
-      <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 2px 8px", lineHeight: 1.4 }}>Drag a workout onto a day to schedule it. Drop <b style={{ color: "#6b7280" }}>Rest</b> on a day to clear it. Green checks mark days you trained.</p>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
-        {(splits || []).map((s) => (
-          <button key={s.id} onPointerDown={(e) => startDrag(s.id, s.name, e)} style={Object.assign({}, chip, { background: "#eaf2fe", color: "#1a73e8" })}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="5" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="19" r="1" /></svg>
-            {s.name}
-          </button>
-        ))}
-        <button onPointerDown={(e) => startDrag("rest", "Rest", e)} style={Object.assign({}, chip, { background: "#f3f4f6", color: "#6b7280" })}>Rest</button>
-      </div>
-      {(splits || []).length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 6 }}>Create a workout first (Settings, top right) and it will show up here to drag.</p>}
-
-      {floating && (
-        <div style={{ position: "fixed", left: floating.x, top: floating.y, transform: "translate(-50%,-140%)", zIndex: 400, pointerEvents: "none", background: "#1a73e8", color: "#fff", borderRadius: 20, padding: "9px 16px", fontSize: 13, fontWeight: 700, boxShadow: "0 10px 24px rgba(26,115,232,.4)" }}>{floating.label}</div>
+      {assignDay != null && (
+        <div style={overlay} onClick={() => setAssignDay(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={Object.assign({}, sheet, { maxWidth: 380 })}>
+            <div style={sheetHead}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{DAY_FULL[assignDay]}</h2>
+              <button onClick={() => setAssignDay(null)} style={xBtn}>✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {(splits || []).map((s) => {
+                const active = sched[assignDay] === s.id;
+                return (
+                  <button key={s.id} onClick={() => assign(assignDay, s.id)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: active ? "#f0f5ff" : "none", border: "none", borderBottom: "1px solid #f3f4f6", padding: "15px 6px", minHeight: 52, fontSize: 16, fontWeight: active ? 700 : 500, color: active ? "#1a73e8" : "#1a2332" }}>
+                    {s.name}
+                    {active && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                  </button>
+                );
+              })}
+              <button onClick={() => assign(assignDay, "rest")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: sched[assignDay] === "rest" ? "#f0f5ff" : "none", border: "none", padding: "15px 6px", minHeight: 52, fontSize: 16, fontWeight: sched[assignDay] === "rest" ? 700 : 500, color: sched[assignDay] === "rest" ? "#1a73e8" : "#6b7280" }}>
+                Rest
+                {sched[assignDay] === "rest" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+              </button>
+            </div>
+            {sched[assignDay] !== "rest" && splitById(sched[assignDay]) && (
+              <button onClick={() => { const sp = splitById(sched[assignDay]); setAssignDay(null); if (sp) onLoadSplit(sp); }} style={Object.assign({}, primaryBtn, { borderRadius: 12, minHeight: 50, marginTop: 10 })}>Start this workout</button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-// ─── PROFILE TAB (avatar + username + share settings) ───
+// ─── PROFILE TAB (avatar + username + stats) ───
 function ProfileTab(props) {
   const { profile, workouts, weekSchedule, onSave, onSignOut } = props;
   const [username, setUsername] = useState(profile.username || "");
   const [busy, setBusy] = useState(false);
   const fileRef = useRef(null);
   const stats = computeGameStats(workouts, weekSchedule);
-  const showVolume = profile.shareShowVolume !== false;
 
   function pickPhoto() { if (fileRef.current) fileRef.current.click(); }
   function onFile(e) {
@@ -2504,13 +2559,7 @@ function ProfileTab(props) {
     reader.readAsDataURL(file);
     e.target.value = "";
   }
-
-  async function saveName() {
-    const u = (username || "").trim();
-    setBusy(true);
-    await onSave({ username: u }, "Profile saved");
-    setBusy(false);
-  }
+  async function saveName() { setBusy(true); await onSave({ username: (username || "").trim() }, "Profile saved"); setBusy(false); }
 
   const tiles = [
     { v: stats.total, l: "Workouts", accent: "#1a73e8" },
@@ -2523,11 +2572,7 @@ function ProfileTab(props) {
     <div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
         <button onClick={pickPhoto} style={{ position: "relative", width: 96, height: 96, borderRadius: "50%", border: "none", padding: 0, background: "#eaf2fe", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: shadowSm }}>
-          {profile.avatar ? (
-            <img src={profile.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <span style={{ fontSize: 40, fontWeight: 800, color: "#1a73e8" }}>{initial}</span>
-          )}
+          {profile.avatar ? <img src={profile.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 40, fontWeight: 800, color: "#1a73e8" }}>{initial}</span>}
           <span style={{ position: "absolute", right: 2, bottom: 2, width: 30, height: 30, borderRadius: "50%", background: "#1a73e8", border: "3px solid #f5f7fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
           </span>
@@ -2549,21 +2594,8 @@ function ProfileTab(props) {
       <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
         <div style={labelStyle}>Username</div>
         <input style={fieldStyle} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="yourname" autoCapitalize="none" autoCorrect="off" />
-        <p style={{ fontSize: 12, color: "#9ca3af", margin: "8px 0 12px" }}>Shown on the workouts you share.</p>
+        <p style={{ fontSize: 12, color: "#9ca3af", margin: "8px 0 12px" }}>Shown on the workouts you share. You choose what to include each time you share.</p>
         <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : "Save Profile"}</button>
-      </div>
-
-      <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
-        <div style={labelStyle}>Sharing</div>
-        <button onClick={() => onSave({ shareShowVolume: !showVolume }, "Saved")} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", background: "none", border: "none", padding: "6px 0", textAlign: "left" }}>
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>Show weight on shared posts</span>
-            <span style={{ display: "block", fontSize: 13, color: "#9ca3af", marginTop: 2, lineHeight: 1.4 }}>{showVolume ? "Posts show total volume and top-set weights." : "Posts hide weights and show sets plus percent better instead."}</span>
-          </span>
-          <span style={{ flexShrink: 0, width: 46, height: 28, borderRadius: 14, background: showVolume ? "#1a73e8" : "#d1d5db", position: "relative", transition: "background .2s" }}>
-            <span style={{ position: "absolute", top: 3, left: showVolume ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} />
-          </span>
-        </button>
       </div>
 
       {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 4 }}>Sign Out</button>}
@@ -2571,131 +2603,129 @@ function ProfileTab(props) {
   );
 }
 
-// ─── WORKOUT SHARE CARD (post-workout, Strava style) ───
+// ─── WORKOUT SHARE STUDIO (post-workout, configurable) ───
 function prettyDate(dateStr) {
   const p = dateStr.split("-").map(Number);
   return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" });
 }
+function fmtDur(sec) {
+  if (!sec || sec < 1) return "";
+  const m = Math.round(sec / 60);
+  if (m < 60) return m + " min";
+  return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m";
+}
+const SHARE_DEFAULT = { duration: true, location: false, volume: true, topSets: true, weights: true };
 
 function WorkoutShareModal(props) {
   const { data, profile } = props;
-  const showVolume = profile.shareShowVolume !== false;
+  const [cfg, setCfg] = useState(Object.assign({}, SHARE_DEFAULT, profile.shareConfig || {}));
+  const [locationText, setLocationText] = useState("");
+  const [geoBusy, setGeoBusy] = useState(false);
   const [working, setWorking] = useState(false);
+  const durText = fmtDur(data.durationSec);
   const pctText = data.pct != null && data.pct > 0 ? "+" + data.pct + "%" : (data.pct != null ? data.pct + "%" : null);
 
-  // Draw the shareable image (1080x1350) on an offscreen canvas.
+  function persist(next) { if (props.onSaveProfile) props.onSaveProfile({ shareConfig: next }); }
+  function toggle(key) { setCfg((c) => { const n = Object.assign({}, c, { [key]: !c[key] }); persist(n); if (key === "location" && !c.location && !locationText) fetchLocation(); return n; }); }
+
+  function fetchLocation() {
+    if (!navigator.geolocation) return;
+    setGeoBusy(true);
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const la = pos.coords.latitude, lo = pos.coords.longitude;
+        const r = await fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + la + "&longitude=" + lo + "&localityLanguage=en");
+        const j = await r.json();
+        const parts = [j.city || j.locality, j.principalSubdivision].filter(Boolean);
+        setLocationText(parts.join(", "));
+      } catch (e) { /* leave manual */ }
+      setGeoBusy(false);
+    }, () => { setGeoBusy(false); }, { timeout: 8000, maximumAge: 600000 });
+  }
+
+  const bigVal = cfg.volume && data.vol > 0 ? data.vol.toLocaleString() : (pctText || (data.groups[0] || "Done"));
+  const bigLbl = cfg.volume && data.vol > 0 ? "LBS VOLUME" : (pctText ? "VS LAST TIME" : "TRAINED");
+
   function draw() {
     return new Promise((resolve) => {
-      const W = 1080, H = 1350;
+      const W = 1080, H = 1350, PAD = 90;
       const c = document.createElement("canvas"); c.width = W; c.height = H;
       const ctx = c.getContext("2d");
       const g = ctx.createLinearGradient(0, 0, W, H);
       g.addColorStop(0, "#1a73e8"); g.addColorStop(1, "#0c3aa0");
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      const PAD = 90;
-      ctx.textBaseline = "alphabetic";
-
-      function text(str, x, y, size, weight, color, align) {
-        ctx.fillStyle = color; ctx.textAlign = align || "left";
-        ctx.font = weight + " " + size + "px Inter, -apple-system, Segoe UI, Roboto, sans-serif";
-        ctx.fillText(str, x, y);
-      }
-
-      // brand
-      text("FORWARD FITNESS", PAD, 130, 34, "800", "rgba(255,255,255,.9)", "left");
-      // avatar + username
-      const avY = 210, avR = 46;
-      function afterAvatar() {
-        const nameX = PAD + (profile.avatar ? avR * 2 + 28 : 0);
-        text(profile.username ? "@" + profile.username : "Forward Fitness", nameX, avY + avR + 16, 40, "700", "#fff", "left");
-        // workout name
-        text(data.name.toUpperCase(), PAD, 470, 96, "800", "#fff", "left");
-        text(prettyDate(data.date), PAD, 540, 40, "500", "rgba(255,255,255,.8)", "left");
-        // stat blocks
-        const boxY = 610, boxH = 220, gap = 30;
-        const boxW = (W - PAD * 2 - gap) / 2;
-        function statBox(x, big, small) {
-          ctx.fillStyle = "rgba(255,255,255,.14)";
-          if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, boxY, boxW, boxH, 28); ctx.fill(); }
-          else ctx.fillRect(x, boxY, boxW, boxH);
-          text(big, x + boxW / 2, boxY + 120, 92, "800", "#fff", "center");
-          text(small, x + boxW / 2, boxY + 170, 34, "600", "rgba(255,255,255,.8)", "center");
+      function text(str, x, y, size, weight, color, align) { ctx.fillStyle = color; ctx.textAlign = align || "left"; ctx.font = weight + " " + size + "px Inter, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.fillText(str, x, y); }
+      function go() {
+        const nameX = PAD + (profile.avatar ? 120 : 0);
+        text(profile.username ? "@" + profile.username : "Forward Fitness", nameX, 236, 40, "700", "#fff", "left");
+        text("FORWARD FITNESS", PAD, 130, 34, "800", "rgba(255,255,255,.9)", "left");
+        text(data.name.toUpperCase(), PAD, 470, 92, "800", "#fff", "left");
+        let sub = prettyDate(data.date);
+        if (cfg.duration && durText) sub += "   ·   " + durText;
+        text(sub, PAD, 540, 38, "500", "rgba(255,255,255,.85)", "left");
+        if (cfg.location && locationText) text(locationText, PAD, 590, 36, "500", "rgba(255,255,255,.7)", "left");
+        const boxY = 640, boxH = 210, gap = 30, boxW = (W - PAD * 2 - gap) / 2;
+        function box(x, big, small) { ctx.fillStyle = "rgba(255,255,255,.14)"; if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, boxY, boxW, boxH, 28); ctx.fill(); } else ctx.fillRect(x, boxY, boxW, boxH); text(big, x + boxW / 2, boxY + 118, 88, "800", "#fff", "center"); text(small, x + boxW / 2, boxY + 165, 32, "600", "rgba(255,255,255,.8)", "center"); }
+        box(PAD, String(data.sets), "SETS");
+        box(PAD + boxW + gap, bigVal, bigLbl);
+        let ly = 960;
+        if (cfg.topSets && (data.topLifts || []).length) {
+          text("TOP SETS", PAD, ly, 30, "700", "rgba(255,255,255,.6)", "left"); ly += 46;
+          data.topLifts.slice(0, 5).forEach((l) => {
+            text(l.name, PAD, ly, 38, "600", "#fff", "left");
+            const right = cfg.weights && l.weight ? l.weight + " x " + l.reps : l.sets + " sets";
+            text(right, W - PAD, ly, 38, "700", "#fff", "right");
+            ly += 60;
+          });
         }
-        statBox(PAD, String(data.sets), "SETS");
-        if (showVolume) statBox(PAD + boxW + gap, data.vol.toLocaleString(), "LBS VOLUME");
-        else statBox(PAD + boxW + gap, pctText || (data.groups[0] || "DONE"), pctText ? "VS LAST TIME" : "TRAINED");
-        // lifts
-        let ly = 940;
-        text("TOP SETS", PAD, ly, 30, "700", "rgba(255,255,255,.6)", "left"); ly += 46;
-        (data.topLifts || []).slice(0, 5).forEach((l) => {
-          text(l.name, PAD, ly, 40, "600", "#fff", "left");
-          const right = showVolume ? (l.weight ? l.weight + " x " + l.reps : l.sets + " sets") : (l.sets + " sets");
-          text(right, W - PAD, ly, 40, "700", "#fff", "right");
-          ly += 62;
-        });
-        // footer
         text("forwardfitness.app", W / 2, H - 70, 34, "600", "rgba(255,255,255,.7)", "center");
         resolve(c);
       }
       if (profile.avatar) {
         const img = new Image();
-        img.onload = () => {
-          ctx.save(); ctx.beginPath(); ctx.arc(PAD + avR, avY + avR, avR, 0, Math.PI * 2); ctx.clip();
-          ctx.drawImage(img, PAD, avY, avR * 2, avR * 2); ctx.restore();
-          afterAvatar();
-        };
-        img.onerror = afterAvatar;
-        img.src = profile.avatar;
-      } else afterAvatar();
+        img.onload = () => { ctx.save(); ctx.beginPath(); ctx.arc(PAD + 46, 200, 46, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(img, PAD, 154, 92, 92); ctx.restore(); go(); };
+        img.onerror = go; img.src = profile.avatar;
+      } else go();
     });
   }
-
   function toBlob(canvas) { return new Promise((res) => canvas.toBlob(res, "image/png")); }
-  function download(blob) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "forward-fitness-" + data.date + ".png";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+  function download(blob) { const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "forward-fitness-" + data.date + ".png"; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000); }
 
   async function share() {
-    if (working) return;
-    setWorking(true);
+    if (working) return; setWorking(true);
     try {
-      const canvas = await draw();
-      const blob = await toBlob(canvas);
+      const canvas = await draw(); const blob = await toBlob(canvas);
       const file = new File([blob], "forward-fitness.png", { type: "image/png" });
-      const shareText = data.name + " done. " + data.sets + " sets" + (pctText ? ", " + pctText + " vs last time" : "") + ".";
+      const txt = data.name + " done. " + data.sets + " sets" + (pctText ? ", " + pctText + " vs last time" : "") + ".";
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: "Forward Fitness", text: shareText }); }
-        catch (e) { /* user cancelled */ }
-      } else {
-        download(blob);
-        props.flash("Image saved to your photos. Post it anywhere.");
-      }
-    } catch (e) {
-      props.flash("Could not build the image", "err");
-    }
+        try { await navigator.share({ files: [file], title: "Forward Fitness", text: txt }); } catch (e) {}
+      } else { download(blob); props.flash("Image saved to your photos. Post it anywhere."); }
+    } catch (e) { props.flash("Could not build the image", "err"); }
     setWorking(false);
   }
-
   async function save() {
-    if (working) return;
-    setWorking(true);
+    if (working) return; setWorking(true);
     try { const canvas = await draw(); const blob = await toBlob(canvas); download(blob); props.flash("Image saved"); }
     catch (e) { props.flash("Could not build the image", "err"); }
     setWorking(false);
   }
 
+  const toggles = [
+    { key: "duration", label: "Duration", disabled: !durText },
+    { key: "location", label: "Location", disabled: false },
+    { key: "volume", label: "Volume", disabled: false },
+    { key: "topSets", label: "Top sets", disabled: false },
+    { key: "weights", label: "Weights", disabled: false },
+  ];
+
   return (
     <div style={overlay}>
       <div style={Object.assign({}, sheet, { maxWidth: 400 })}>
-        <div style={{ textAlign: "center", marginBottom: 6 }}>
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
           <div style={{ fontSize: 22, fontWeight: 800 }}>Workout complete</div>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>Share it or keep it moving.</div>
+          <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>Choose what to show, then share it.</div>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "10px 2px" }}>
-          {/* Preview card (mirrors the generated image) */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "6px 2px" }}>
           <div style={{ borderRadius: 20, padding: 22, color: "#fff", background: "linear-gradient(135deg,#1a73e8,#0c3aa0)", boxShadow: shadowPrimary }}>
             <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", opacity: 0.9 }}>FORWARD FITNESS</div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
@@ -2703,31 +2733,49 @@ function WorkoutShareModal(props) {
               <span style={{ fontSize: 15, fontWeight: 700 }}>{profile.username ? "@" + profile.username : "Forward Fitness"}</span>
             </div>
             <div style={{ fontSize: 30, fontWeight: 800, marginTop: 16, lineHeight: 1.05 }}>{data.name}</div>
-            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>{prettyDate(data.date)}</div>
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>{prettyDate(data.date)}{cfg.duration && durText ? "   ·   " + durText : ""}</div>
+            {cfg.location && locationText && <div style={{ fontSize: 13, opacity: 0.75, marginTop: 2 }}>{locationText}</div>}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
               <div style={{ background: "rgba(255,255,255,.15)", borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{data.sets}</div>
                 <div style={{ fontSize: 11, opacity: 0.85, fontWeight: 600, marginTop: 2 }}>SETS</div>
               </div>
               <div style={{ background: "rgba(255,255,255,.15)", borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
-                <div style={{ fontSize: 28, fontWeight: 800 }}>{showVolume ? data.vol.toLocaleString() : (pctText || (data.groups[0] || "Done"))}</div>
-                <div style={{ fontSize: 11, opacity: 0.85, fontWeight: 600, marginTop: 2 }}>{showVolume ? "LBS VOLUME" : (pctText ? "VS LAST TIME" : "TRAINED")}</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{bigVal}</div>
+                <div style={{ fontSize: 11, opacity: 0.85, fontWeight: 600, marginTop: 2 }}>{bigLbl}</div>
               </div>
             </div>
-            {(data.topLifts || []).length > 0 && (
+            {cfg.topSets && (data.topLifts || []).length > 0 && (
               <div style={{ marginTop: 16 }}>
                 {data.topLifts.slice(0, 4).map((l, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14, padding: "5px 0", borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,.15)" }}>
                     <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: 10 }}>{l.name}</span>
-                    <span style={{ fontWeight: 700, flexShrink: 0 }}>{showVolume ? (l.weight ? l.weight + " × " + l.reps : l.sets + " sets") : l.sets + " sets"}</span>
+                    <span style={{ fontWeight: 700, flexShrink: 0 }}>{cfg.weights && l.weight ? l.weight + " × " + l.reps : l.sets + " sets"}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+            {toggles.map((t) => (
+              <button key={t.key} onClick={() => !t.disabled && toggle(t.key)} disabled={t.disabled} style={{ flex: "1 0 28%", background: t.disabled ? "#f3f4f6" : cfg[t.key] ? "#1a73e8" : "#fff", color: t.disabled ? "#c7ccd4" : cfg[t.key] ? "#fff" : "#374151", border: "2px solid " + (cfg[t.key] && !t.disabled ? "#1a73e8" : "#eaeef3"), borderRadius: 12, padding: "10px 8px", fontSize: 13, fontWeight: 700, minHeight: 42, opacity: t.disabled ? 0.7 : 1 }}>{t.label}</button>
+            ))}
+          </div>
+          {cfg.location && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input value={locationText} onChange={(e) => setLocationText(e.target.value)} placeholder={geoBusy ? "Finding your location..." : "Add a location"} style={Object.assign({}, fieldStyle, { flex: 1 })} />
+                <button onClick={fetchLocation} disabled={geoBusy} aria-label="use my location" style={{ flexShrink: 0, background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, width: 52, color: "#1a73e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 0 1 12 0c0 4.314-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <button onClick={props.onClose} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Done</button>
+          <button onClick={props.onClose} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Done</button>
           <button onClick={save} disabled={working} style={{ background: "#fff", color: "#1a73e8", border: "1px solid #dbe9fd", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Save</button>
           <button onClick={share} disabled={working} style={{ flex: 1, background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 52, boxShadow: shadowPrimary, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" /></svg>
@@ -2738,6 +2786,7 @@ function WorkoutShareModal(props) {
     </div>
   );
 }
+
 
 // ─── SHARED STYLES ───
 
