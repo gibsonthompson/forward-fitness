@@ -278,6 +278,63 @@ function workoutGroups(w) {
   for (const ex of w.exercises || []) { const e = findEx(ex.exerciseId); if (e && seen.indexOf(e.group) === -1) seen.push(e.group); }
   return seen;
 }
+// Total working volume (weight × reps, warm-ups excluded)
+function workoutVolume(w) {
+  let v = 0;
+  for (const ex of (w.exercises || [])) for (const s of workSets(ex.sets)) v += (Number(s.weight) || 0) * (Number(s.reps) || 0);
+  return Math.round(v);
+}
+function workoutSetCount(w) {
+  let n = 0;
+  for (const ex of (w.exercises || [])) n += workSets(ex.sets).length;
+  return n;
+}
+function groupSig(w) { return workoutGroups(w).slice().sort().join("|"); }
+// % volume change vs the most recent EARLIER workout that hit the same muscle groups.
+// `workouts` is oldest-first; returns a rounded integer or null when there's no comparable session.
+function volumeDelta(workouts, index) {
+  const cur = workouts[index];
+  const sig = groupSig(cur);
+  const curVol = workoutVolume(cur);
+  if (!curVol || !sig) return null;
+  for (let i = index - 1; i >= 0; i--) {
+    if (groupSig(workouts[i]) === sig) {
+      const prev = workoutVolume(workouts[i]);
+      return prev > 0 ? Math.round(((curVol - prev) / prev) * 100) : null;
+    }
+  }
+  return null;
+}
+// Build the recap object used by the post-workout share card.
+// `workouts` is oldest-first and does NOT yet include the just-finished session.
+function buildShareSummary(cleaned, workouts, splits, activeSplitId) {
+  const groups = workoutGroups(cleaned);
+  const split = activeSplitId ? (splits || []).find((s) => s.id === activeSplitId) : null;
+  const name = split ? split.name : (groups.length ? groups.join(" / ") : "Workout");
+  const vol = workoutVolume(cleaned);
+  const sets = workoutSetCount(cleaned);
+  const sig = groupSig(cleaned);
+  let pct = null;
+  for (let i = (workouts || []).length - 1; i >= 0; i--) {
+    if (groupSig(workouts[i]) === sig) { const prev = workoutVolume(workouts[i]); if (prev > 0 && vol > 0) pct = Math.round(((vol - prev) / prev) * 100); break; }
+  }
+  const topLifts = (cleaned.exercises || []).map((ex) => {
+    const dbEx = findEx(ex.exerciseId);
+    let best = 0, bestReps = 0;
+    for (const s of workSets(ex.sets)) { const wv = Number(s.weight) || 0; if (wv >= best) { best = wv; bestReps = Number(s.reps) || 0; } }
+    return { name: dbEx ? dbEx.name : ex.exerciseId, weight: best, reps: bestReps, sets: workSets(ex.sets).length };
+  }).filter((l) => l.sets > 0).slice(0, 6);
+  return { name, date: cleaned.date, groups, vol, sets, pct, topLifts };
+}
+
+// Booleans for Mon..Sun of the current week: did a workout get logged that day?
+function weekDoneFlags(workouts) {
+  const days = new Set((workouts || []).map((w) => w.date));
+  const mon = mondayOf(today());
+  const flags = [];
+  for (let i = 0; i < 7; i++) flags.push(days.has(dateKey(addDaysDate(mon, i))));
+  return flags;
+}
 
 // ─── Progress / gamification math ───
 function dateKey(dt) { return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0"); }
@@ -400,55 +457,6 @@ function platesPerSide(weight) {
     while (perSide >= p - 0.001) { out.push(p); perSide = Math.round((perSide - p) * 100) / 100; }
   }
   return out;
-}
-
-// Progressive-overload recommendation based on the LAST session.
-// Fixed: blank RIR is treated as unknown (null), a real 0 is respected.
-function getRec(workouts, exId) {
-  const last = getLast(workouts, exId);
-  if (!last) return null;
-  const ws = workSets(last.sets);
-  if (!ws.length) return null;
-
-  let totalReps = 0;
-  let ririSum = 0;
-  let ririCount = 0;
-  let topWeight = 0;
-  for (const s of ws) {
-    totalReps += Number(s.reps) || 0;
-    if (s.rir !== null && s.rir !== undefined && s.rir !== "") { ririSum += Number(s.rir); ririCount += 1; }
-    if ((Number(s.weight) || 0) > topWeight) topWeight = Number(s.weight) || 0;
-  }
-  const avgReps = totalReps / ws.length;
-  const avgRir = ririCount > 0 ? ririSum / ririCount : null; // null = not recorded
-  const ex = findEx(exId);
-  const inc = ex && ex.area === "lower" ? 10 : 5;
-
-  // Plateau check: top-set e1RM not improving across the last 3 sessions
-  const recent = getRecentSessions(workouts, exId, 3);
-  let stalled = false;
-  if (recent.length >= 3) {
-    const tops = recent.map((sess) => {
-      let best = 0;
-      for (const s of workSets(sess.sets)) best = Math.max(best, e1rm(s.weight, s.reps));
-      return best;
-    });
-    // recent[0] is newest. Stalled if newest is not above the oldest of the three.
-    if (tops[0] > 0 && tops[2] > 0 && tops[0] <= tops[2]) stalled = true;
-  }
-
-  let rec;
-  if (avgReps >= 12 && (avgRir === null || avgRir <= 1)) {
-    rec = { w: topWeight + inc, r: 8, msg: "Move up to " + (topWeight + inc) + " lbs", color: "#22c55e" };
-  } else if (avgReps >= 12) {
-    rec = { w: topWeight, r: 12, msg: "Hit 12. Push closer to failure", color: "#1a73e8" };
-  } else if (avgReps < 8) {
-    rec = { w: topWeight, r: 8, msg: "Hold weight, build to 8 reps", color: "#f59e0b" };
-  } else {
-    rec = { w: topWeight, r: Math.min(Math.round(avgReps) + 1, 12), msg: "Add a rep this session", color: "#1a73e8" };
-  }
-  rec.stalled = stalled;
-  return rec;
 }
 
 // ─── CUSTOM CONFIRM DIALOG (replaces native confirm) ───
@@ -609,7 +617,7 @@ function Main(props) {
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
-  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, customExercises: [], customRecipes: [], activeSplits: [], weekSchedule: [] });
+  const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, username: "", avatar: "", shareShowVolume: true, customExercises: [], customRecipes: [], activeSplits: [], weekSchedule: [] });
   const [toast, setToast] = useState(null);
   const [dbOk, setDbOk] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -680,6 +688,9 @@ function Main(props) {
               proteinTarget: s.proteinTarget != null ? Number(s.proteinTarget) : null,
               calorieTarget: s.calorieTarget != null ? Number(s.calorieTarget) : null,
               restSeconds: Number(s.restSeconds) || 120,
+              username: typeof s.username === "string" ? s.username : "",
+              avatar: typeof s.avatar === "string" ? s.avatar : "",
+              shareShowVolume: s.shareShowVolume !== false,
               customExercises,
               customRecipes,
               activeSplits,
@@ -758,6 +769,9 @@ function Main(props) {
       proteinTarget: next.proteinTarget,
       calorieTarget: next.calorieTarget,
       restSeconds: next.restSeconds,
+      username: next.username || "",
+      avatar: next.avatar || "",
+      shareShowVolume: next.shareShowVolume !== false,
       customExercises: next.customExercises || [],
       customRecipes: next.customRecipes || [],
       activeSplits: next.activeSplits || [],
@@ -785,6 +799,13 @@ function Main(props) {
     } catch (e) {
       flash("Could not save settings: " + e.message, "err");
     }
+  }
+
+  // Save profile fields (username, avatar, share prefs) without closing the settings sheet.
+  async function updateProfile(patch, msg) {
+    const next = Object.assign({}, profile, patch);
+    try { await persistProfile(next); if (msg) flash(msg); return true; }
+    catch (e) { flash("Could not save: " + e.message, "err"); return false; }
   }
 
   async function addCustomExercise(ex) {
@@ -875,10 +896,11 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} />}
         {tab === "learn" && <LearnTab />}
+        {tab === "profile" && <ProfileTab profile={profile} workouts={workouts} weekSchedule={profile.weekSchedule || []} onSave={updateProfile} onSignOut={onSignOut} />}
       </div>
 
       {rest.running && <RestBar rest={rest} onAdjust={adjustRest} onSkip={skipRest} />}
@@ -889,6 +911,7 @@ function Main(props) {
           { id: "nutrition", label: "Food", d: "M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" },
           { id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" },
           { id: "learn", label: "Learn", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
+          { id: "profile", label: "Profile", d: "M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
         ].map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#9ca3af" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? 2.2 : 1.5} strokeLinecap="round" strokeLinejoin="round"><path d={t.d} /></svg>
@@ -945,9 +968,9 @@ function WorkoutTab(props) {
   const [saving, setSaving] = useState(false);
   const [plates, setPlates] = useState(null); // weight number for plate modal
   const [editing, setEditing] = useState(null); // workout object being edited
-  const [scheduleEditing, setScheduleEditing] = useState(false);
-  const [weekOpen, setWeekOpen] = useState(false);
   const [splitsOpen, setSplitsOpen] = useState(false);
+  const [shareData, setShareData] = useState(null); // finished-workout summary to share
+  const [showAllRecent, setShowAllRecent] = useState(false);
 
   useEffect(() => {
     if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId })));
@@ -956,9 +979,9 @@ function WorkoutTab(props) {
   function prefillSets(exId) {
     const last = getLast(workouts, exId);
     if (last && last.sets && last.sets.length > 0) {
-      return last.sets.map((s) => ({ weight: String(s.weight || ""), reps: String(s.reps || ""), rir: "", warmup: !!s.warmup, done: false, note: "" }));
+      return last.sets.map((s) => ({ weight: String(s.weight || ""), reps: String(s.reps || ""), warmup: !!s.warmup, done: false, note: "" }));
     }
-    return [{ weight: "", reps: "", rir: "", warmup: false, done: false, note: "" }];
+    return [{ weight: "", reps: "", warmup: false, done: false, note: "" }];
   }
 
   function loadSplit(split) {
@@ -1003,7 +1026,7 @@ function WorkoutTab(props) {
   function addSet(exIdx) {
     mutateExercise(exIdx, (ex) => {
       const lastSet = ex.sets[ex.sets.length - 1] || { weight: "", reps: "", warmup: false };
-      return { exerciseId: ex.exerciseId, sets: ex.sets.concat([{ weight: lastSet.weight, reps: lastSet.reps, rir: "", warmup: false, done: false, note: "" }]) };
+      return { exerciseId: ex.exerciseId, sets: ex.sets.concat([{ weight: lastSet.weight, reps: lastSet.reps, warmup: false, done: false, note: "" }]) };
     });
   }
   function removeSet(exIdx, setIdx) {
@@ -1028,12 +1051,6 @@ function WorkoutTab(props) {
       return { date: w.date, exercises };
     });
   }
-  function applyRec(exIdx, rec) {
-    mutateExercise(exIdx, (ex) => ({
-      exerciseId: ex.exerciseId,
-      sets: ex.sets.map((s) => (s.warmup ? s : Object.assign({}, s, { weight: String(rec.w), reps: String(rec.r) }))),
-    }));
-  }
 
   function cleanExercises(exercises) {
     return exercises.map((ex) => ({
@@ -1042,7 +1059,6 @@ function WorkoutTab(props) {
         const out = {
           weight: Number(s.weight) || 0,
           reps: Number(s.reps) || 0,
-          rir: s.rir === "" || s.rir === null || s.rir === undefined ? null : Number(s.rir),
           warmup: !!s.warmup,
         };
         if (s.note && String(s.note).trim()) out.note = String(s.note).trim();
@@ -1078,8 +1094,10 @@ function WorkoutTab(props) {
         }
       }
     }
+    const summary = buildShareSummary(cleaned, workouts, splits, activeSplitId);
     setActiveSplitId(null);
     setWorkout({ date: today(), exercises: [] });
+    setShareData(summary);
   }
 
   async function discardWorkout() {
@@ -1136,33 +1154,10 @@ function WorkoutTab(props) {
               )}
             </div>
 
-            {/* This Week (collapsible) */}
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <button onClick={() => setWeekOpen(!weekOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
-                  This Week
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: weekOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
-                </button>
-                {onSaveSchedule && <button onClick={() => setScheduleEditing(true)} style={{ background: "none", border: "none", color: "#1a73e8", fontSize: 13, fontWeight: 600, padding: 4 }}>Edit</button>}
-              </div>
-              {weekOpen && (
-                <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden", marginTop: 8 }}>
-                  {DAY_ABBR.map((d, i) => {
-                    const val = (weekSchedule || [])[i];
-                    const split = val && val !== "rest" ? splits.find((s) => s.id === val) : null;
-                    const isToday = i === tIdx;
-                    return (
-                      <button key={i} onClick={() => { if (split) loadSplit(split); }} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: isToday ? "#f0f5ff" : "#fff", border: "none", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", padding: "13px 16px", minHeight: 52, cursor: split ? "pointer" : "default" }}>
-                        <span style={{ flexShrink: 0, width: 38, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{d}</span>
-                        <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
-                        {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
-                        {split && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {/* This Week (always open, drag a workout onto a day to schedule) */}
+            {onSaveSchedule && (
+              <WeekBoard schedule={weekSchedule} splits={splits} workouts={workouts} tIdx={tIdx} onSaveSchedule={onSaveSchedule} onLoadSplit={loadSplit} splitGroups={splitGroups} />
+            )}
 
             {/* Other workouts (collapsible) */}
             {(() => {
@@ -1221,7 +1216,6 @@ function WorkoutTab(props) {
           exercise={ex}
           dbEx={findEx(ex.exerciseId)}
           last={getLast(workouts, ex.exerciseId)}
-          rec={getRec(workouts, ex.exerciseId)}
           live
           onUpdateSet={(si, f, v) => updateSet(exIdx, si, f, v)}
           onToggleDone={(si) => toggleDone(exIdx, si)}
@@ -1229,7 +1223,6 @@ function WorkoutTab(props) {
           onAddSet={() => addSet(exIdx)}
           onRemoveSet={(si) => removeSet(exIdx, si)}
           onRemove={() => removeExercise(exIdx)}
-          onApplyRec={(rec) => applyRec(exIdx, rec)}
           onPlates={(wt) => setPlates(wt)}
           onMove={(dir) => moveExercise(exIdx, dir)}
           canMoveUp={exIdx > 0}
@@ -1245,46 +1238,63 @@ function WorkoutTab(props) {
         <button onClick={finishWorkout} disabled={saving} style={Object.assign({}, primaryBtn, { marginBottom: 24, opacity: saving ? 0.75 : 1 })}>{saving ? "Saving..." : "Save Workout"}</button>
       )}
 
-      {workouts.length > 0 && (
-        <div style={{ marginTop: 12 }}>
-          <div style={labelStyle}>Recent Workouts</div>
-          {workouts.slice().reverse().slice(0, 10).map((w, i) => {
-            const groups = workoutGroups(w);
-            const parts = w.date.split("-");
-            const setCount = (w.exercises || []).reduce((a, ex) => a + workSets(ex.sets).length, 0);
-            return (
-              <button key={w.id || i} onClick={() => setEditing(w)} style={Object.assign({}, cardStyle, { padding: 14, width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 14 })}>
-                <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 12, background: "#f0f5ff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: "#1a73e8" }}>{Number(parts[2])}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: "#7aa7ee", textTransform: "uppercase", marginTop: 2 }}>{new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString("en", { month: "short" })}</span>
-                </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{weekdayLabel(w.date)}</span>
-                  <span style={{ display: "block", fontSize: 13, color: "#6b7280", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{groups.length ? groups.join(" · ") : (w.exercises || []).length + " exercises"}</span>
-                </span>
-                <span style={{ flexShrink: 0, textAlign: "right" }}>
-                  <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#1a2332" }}>{setCount}</span>
-                  <span style={{ display: "block", fontSize: 10, color: "#9ca3af", fontWeight: 600 }}>SETS</span>
-                </span>
+      {workouts.length > 0 && (() => {
+        const deltaById = {};
+        workouts.forEach((w, i) => { deltaById[w.id != null ? w.id : "i" + i] = volumeDelta(workouts, i); });
+        const recent = workouts.slice().reverse();
+        const shown = showAllRecent ? recent : recent.slice(0, 5);
+        return (
+          <div style={{ marginTop: 12 }}>
+            <div style={labelStyle}>Recent Workouts</div>
+            {shown.map((w, i) => {
+              const groups = workoutGroups(w);
+              const parts = w.date.split("-");
+              const setCount = workoutSetCount(w);
+              const pct = deltaById[w.id != null ? w.id : null];
+              return (
+                <button key={w.id || i} onClick={() => setEditing(w)} style={Object.assign({}, cardStyle, { padding: 14, width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 14 })}>
+                  <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 12, background: "#f0f5ff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "#1a73e8" }}>{Number(parts[2])}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "#7aa7ee", textTransform: "uppercase", marginTop: 2 }}>{new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString("en", { month: "short" })}</span>
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{weekdayLabel(w.date)}</span>
+                      {pct != null && pct !== 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: pct > 0 ? "#16a34a" : "#9ca3af", background: pct > 0 ? "#f0fdf4" : "#f3f4f6", borderRadius: 6, padding: "2px 7px" }}>{pct > 0 ? "+" : ""}{pct}% vol</span>
+                      )}
+                    </span>
+                    <span style={{ display: "block", fontSize: 13, color: "#6b7280", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{groups.length ? groups.join(" · ") : (w.exercises || []).length + " exercises"}</span>
+                  </span>
+                  <span style={{ flexShrink: 0, textAlign: "right" }}>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#1a2332" }}>{setCount}</span>
+                    <span style={{ display: "block", fontSize: 10, color: "#9ca3af", fontWeight: 600 }}>SETS</span>
+                  </span>
+                </button>
+              );
+            })}
+            {recent.length > 5 && (
+              <button onClick={() => setShowAllRecent(!showAllRecent)} style={{ width: "100%", background: "none", border: "none", color: "#1a73e8", fontSize: 14, fontWeight: 600, padding: "10px 0 4px" }}>
+                {showAllRecent ? "Show less" : "Show " + (recent.length - 5) + " more"}
               </button>
-            );
-          })}
-        </div>
-      )}
+            )}
+          </div>
+        );
+      })()}
 
       {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
       {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
-      {scheduleEditing && <ScheduleEditor schedule={weekSchedule} splits={splits} onSave={onSaveSchedule} onClose={() => setScheduleEditing(false)} />}
+      {shareData && <WorkoutShareModal data={shareData} profile={props.profile || {}} flash={flash} onClose={() => setShareData(null)} />}
     </div>
   );
 }
 
 // ─── EXERCISE CARD (shared by live session + edit) ───
 function ExerciseCard(props) {
-  const { exercise: ex, dbEx, last, rec, live, onUpdateSet, onToggleDone, onToggleWarmup, onAddSet, onRemoveSet, onRemove, onApplyRec, onPlates, onMove, canMoveUp, canMoveDown } = props;
+  const { exercise: ex, dbEx, last, live, onUpdateSet, onToggleDone, onToggleWarmup, onAddSet, onRemoveSet, onRemove, onPlates, onMove, canMoveUp, canMoveDown } = props;
   const [noteOpen, setNoteOpen] = useState(null);
-  const cols = live ? "26px 1fr 1fr 44px 40px" : "26px 1fr 1fr 44px 36px";
+  const cols = live ? "28px 1fr 1fr 46px" : "28px 1fr 1fr";
   const moveBtn = { background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 15, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 };
   return (
     <div style={cardStyle}>
@@ -1311,54 +1321,90 @@ function ExerciseCard(props) {
         </div>
       )}
 
-      {live && rec && (
-        <div style={{ marginBottom: 10 }}>
-          <div onClick={() => onApplyRec(rec)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: rec.color + "10", borderRadius: 8, borderLeft: "3px solid " + rec.color, cursor: "pointer" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: rec.color, flex: 1 }}>{rec.msg}</span>
-            <span style={{ fontWeight: 700, color: rec.color }}>{rec.w}×{rec.r}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: rec.color, border: "1px solid " + rec.color, borderRadius: 6, padding: "3px 8px" }}>Apply</span>
-          </div>
-          {rec.stalled && <div style={{ fontSize: 12, color: "#f59e0b", fontWeight: 600, marginTop: 6, paddingLeft: 4 }}>Stalled 3 sessions. Consider a deload week at 60%.</div>}
-        </div>
-      )}
-
       <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, marginBottom: 6 }}>
         <span style={colStyle}>Set</span>
         <span style={colStyle}>Lbs</span>
         <span style={colStyle}>Reps</span>
-        <span style={colStyle}>RIR</span>
-        <span></span>
+        {live && <span></span>}
       </div>
 
       {ex.sets.map((s, si) => (
-        <div key={si} style={{ marginBottom: 6 }}>
-          <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center" }}>
-            <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#e8f0fe" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#1a73e8" : "#9ca3af", padding: 0, minHeight: 40 }}>{s.warmup ? "W" : si + 1}</button>
-            <div style={{ position: "relative" }}>
-              <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, s.warmup ? warmupInput : null, s.done ? doneInput : null)} placeholder="lbs" />
-              {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
-            </div>
-            <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, s.warmup ? warmupInput : null, s.done ? doneInput : null)} placeholder="reps" />
-            <input type="number" inputMode="numeric" value={s.rir} onChange={(e) => onUpdateSet(si, "rir", e.target.value)} style={Object.assign({}, inputStyle, { color: "#9ca3af" }, s.warmup ? warmupInput : null, s.done ? doneInput : null)} placeholder="—" />
-            {live ? (
-              <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-              </button>
-            ) : (
-              <button onClick={() => onRemoveSet(si)} style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, padding: 0, minHeight: 40 }}>−</button>
-            )}
-          </div>
-          {live && ((noteOpen === si || (s.note && s.note.length)) ? (
-            <input value={s.note || ""} onChange={(e) => onUpdateSet(si, "note", e.target.value)} onBlur={() => { if (!s.note) setNoteOpen(null); }} autoFocus={noteOpen === si} placeholder="Add a note" style={noteInput} />
-          ) : (
-            <button onClick={() => setNoteOpen(si)} style={noteAddBtn}>+ note</button>
-          ))}
-        </div>
+        <SwipeSetRow
+          key={si}
+          s={s} si={si} live={live} cols={cols}
+          onUpdateSet={onUpdateSet}
+          onToggleWarmup={onToggleWarmup}
+          onToggleDone={onToggleDone}
+          onPlates={onPlates}
+          onRemoveSet={onRemoveSet}
+          noteOpen={noteOpen === si}
+          onOpenNote={() => setNoteOpen(si)}
+          onCloseNote={() => setNoteOpen(null)}
+        />
       ))}
 
-      <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-        <button onClick={onAddSet} style={{ flex: 1, background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#9ca3af", fontSize: 13, fontWeight: 500, minHeight: 44 }}>+ Add Set</button>
-        {live && ex.sets.length > 1 && <button onClick={() => onRemoveSet(ex.sets.length - 1)} style={{ background: "none", border: "1px dashed #eaeef3", borderRadius: 8, padding: "10px 16px", color: "#c7ccd4", fontSize: 13, fontWeight: 500, minHeight: 44 }}>− Set</button>}
+      <button onClick={onAddSet} style={{ width: "100%", background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#9ca3af", fontSize: 13, fontWeight: 500, minHeight: 44, marginTop: 4 }}>+ Add Set</button>
+      {ex.sets.length > 1 && <p style={{ fontSize: 11, color: "#c7ccd4", textAlign: "center", margin: "6px 0 0", fontWeight: 500 }}>Swipe a set left to delete it</p>}
+    </div>
+  );
+}
+
+// One set row with swipe-left-to-reveal-delete (pointer events, works on touch + mouse)
+function SwipeSetRow(props) {
+  const { s, si, live, cols, onUpdateSet, onToggleWarmup, onToggleDone, onPlates, onRemoveSet, noteOpen, onOpenNote, onCloseNote } = props;
+  const REVEAL = 84;
+  const [dx, setDx] = useState(0);
+  const [open, setOpen] = useState(false);
+  const drag = useRef(null);
+
+  function down(e) { drag.current = { x: e.clientX, base: open ? -REVEAL : 0, moved: false }; }
+  function move(e) {
+    const d = drag.current;
+    if (!d) return;
+    const delta = e.clientX - d.x;
+    if (!d.moved && Math.abs(delta) < 6) return;
+    d.moved = true;
+    setDx(Math.max(-REVEAL, Math.min(0, d.base + delta)));
+  }
+  function up() {
+    const d = drag.current; drag.current = null;
+    if (!d) return;
+    if (!d.moved) { if (open) { setOpen(false); setDx(0); } return; }
+    if (dx < -REVEAL / 2) { setOpen(true); setDx(-REVEAL); } else { setOpen(false); setDx(0); }
+  }
+  function del() { setOpen(false); setDx(0); onRemoveSet(si); }
+
+  const dragging = drag.current && drag.current.moved;
+  const inputExtras = Object.assign({}, s.warmup ? warmupInput : null, s.done ? doneInput : null);
+
+  return (
+    <div style={{ marginBottom: 6, position: "relative", borderRadius: 10, overflow: "hidden" }}>
+      <button onClick={del} aria-label="delete set" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: REVEAL, background: "#dc2626", color: "#fff", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+        Delete
+      </button>
+      <div
+        onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
+        style={{ transform: "translateX(" + dx + "px)", transition: dragging ? "none" : "transform .18s cubic-bezier(.22,1,.36,1)", background: "#fff", position: "relative", touchAction: "pan-y" }}
+      >
+        <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center", padding: "1px 0" }}>
+          <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#e8f0fe" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#1a73e8" : "#9ca3af", padding: 0, minHeight: 40 }}>{s.warmup ? "W" : si + 1}</button>
+          <div style={{ position: "relative" }}>
+            <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="lbs" />
+            {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
+          </div>
+          <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="reps" />
+          {live && (
+            <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+            </button>
+          )}
+        </div>
+        {live && ((noteOpen || (s.note && s.note.length)) ? (
+          <input value={s.note || ""} onChange={(e) => onUpdateSet(si, "note", e.target.value)} onBlur={() => { if (!s.note) onCloseNote(); }} autoFocus={noteOpen} placeholder="Add a note" style={noteInput} />
+        ) : (
+          <button onClick={onOpenNote} style={noteAddBtn}>+ note</button>
+        ))}
       </div>
     </div>
   );
@@ -1610,50 +1656,6 @@ function PlanLibrary(props) {
   );
 }
 
-// ─── SCHEDULE EDITOR (assign splits to weekdays) ───
-function ScheduleEditor(props) {
-  const known = new Set((props.splits || []).map((s) => s.id));
-  const [sched, setSched] = useState(() => {
-    const base = (props.schedule || []).slice();
-    while (base.length < 7) base.push("rest");
-    return base.slice(0, 7).map((v) => (v && v !== "rest" && known.has(v) ? v : "rest"));
-  });
-  const [busy, setBusy] = useState(false);
-  function setDay(i, val) { setSched((prev) => prev.map((v, idx) => (idx === i ? val : v))); }
-  async function save() {
-    setBusy(true);
-    let ok = true;
-    if (props.onSave) ok = await props.onSave(sched);
-    setBusy(false);
-    if (ok !== false) props.onClose();
-  }
-  const selectStyle = { flex: 1, minWidth: 0, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 10, color: "#1a2332", padding: "11px 12px", fontSize: 15, fontWeight: 500, outline: "none" };
-  return (
-    <div style={overlay}>
-      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
-        <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Weekly Schedule</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
-        </div>
-        <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 0, marginBottom: 16, flexShrink: 0 }}>Assign a split to each day, or leave it as rest.</p>
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          {DAY_FULL.map((d, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none" }}>
-              <span style={{ width: 92, flexShrink: 0, fontSize: 14, fontWeight: 600, color: i === todayIndex() ? "#1a73e8" : "#1a2332" }}>{d}</span>
-              <select value={sched[i]} onChange={(e) => setDay(i, e.target.value)} style={selectStyle}>
-                <option value="rest">Rest</option>
-                {(props.splits || []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-          ))}
-          {(props.splits || []).length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 12 }}>You have no splits yet. Create one first and it will show up here.</p>}
-        </div>
-        <button onClick={save} disabled={busy} style={Object.assign({}, primaryBtn, { borderRadius: 12, padding: "16px", fontSize: 15, minHeight: 52, marginTop: 8, opacity: busy ? 0.75 : 1 })}>{busy ? "Saving..." : "Save Schedule"}</button>
-      </div>
-    </div>
-  );
-}
-
 // ─── EDIT WORKOUT MODAL ───
 function EditWorkoutModal(props) {
   useNoZoom();
@@ -1662,7 +1664,7 @@ function EditWorkoutModal(props) {
   const [exercises, setExercises] = useState(() =>
     (w.exercises || []).map((ex) => ({
       exerciseId: ex.exerciseId,
-      sets: (ex.sets || []).map((s) => ({ weight: String(s.weight ?? ""), reps: String(s.reps ?? ""), rir: s.rir === null || s.rir === undefined ? "" : String(s.rir), warmup: !!s.warmup, note: s.note || "" })),
+      sets: (ex.sets || []).map((s) => ({ weight: String(s.weight ?? ""), reps: String(s.reps ?? ""), warmup: !!s.warmup, note: s.note || "" })),
     }))
   );
   const [picker, setPicker] = useState(false);
@@ -1671,17 +1673,17 @@ function EditWorkoutModal(props) {
   function mutate(exIdx, fn) { setExercises((list) => list.map((ex, i) => (i === exIdx ? fn(ex) : ex))); }
   function updateSet(exIdx, si, f, v) { mutate(exIdx, (ex) => ({ exerciseId: ex.exerciseId, sets: ex.sets.map((s, j) => (j === si ? Object.assign({}, s, { [f]: v }) : s)) })); }
   function toggleWarmup(exIdx, si) { mutate(exIdx, (ex) => ({ exerciseId: ex.exerciseId, sets: ex.sets.map((s, j) => (j === si ? Object.assign({}, s, { warmup: !s.warmup }) : s)) })); }
-  function addSet(exIdx) { mutate(exIdx, (ex) => { const l = ex.sets[ex.sets.length - 1] || { weight: "", reps: "" }; return { exerciseId: ex.exerciseId, sets: ex.sets.concat([{ weight: l.weight, reps: l.reps, rir: "", warmup: false }]) }; }); }
+  function addSet(exIdx) { mutate(exIdx, (ex) => { const l = ex.sets[ex.sets.length - 1] || { weight: "", reps: "" }; return { exerciseId: ex.exerciseId, sets: ex.sets.concat([{ weight: l.weight, reps: l.reps, warmup: false }]) }; }); }
   function removeSet(exIdx, si) { setExercises((list) => list.map((ex, i) => (i === exIdx ? { exerciseId: ex.exerciseId, sets: ex.sets.filter((_, j) => j !== si) } : ex)).filter((ex) => ex.sets.length > 0)); }
   function removeExercise(exIdx) { setExercises((list) => list.filter((_, i) => i !== exIdx)); }
-  function addExercise(exId) { setExercises((list) => list.concat([{ exerciseId: exId, sets: [{ weight: "", reps: "", rir: "", warmup: false }] }])); setPicker(false); }
+  function addExercise(exId) { setExercises((list) => list.concat([{ exerciseId: exId, sets: [{ weight: "", reps: "", warmup: false }] }])); setPicker(false); }
 
   async function save() {
     if (saving) return;
     setSaving(true);
     const cleaned = exercises.map((ex) => ({
       exerciseId: ex.exerciseId,
-      sets: ex.sets.map((s) => { const out = { weight: Number(s.weight) || 0, reps: Number(s.reps) || 0, rir: s.rir === "" ? null : Number(s.rir), warmup: !!s.warmup }; if (s.note && String(s.note).trim()) out.note = String(s.note).trim(); return out; }),
+      sets: ex.sets.map((s) => { const out = { weight: Number(s.weight) || 0, reps: Number(s.reps) || 0, warmup: !!s.warmup }; if (s.note && String(s.note).trim()) out.note = String(s.note).trim(); return out; }),
     }));
     const ok = await props.onSave(w.id, { date, exercises: cleaned });
     setSaving(false);
@@ -2208,7 +2210,12 @@ function SettingsSheet(props) {
           <div style={{ marginBottom: 16 }}>
             <div style={labelStyle}>Default Rest Timer (seconds)</div>
             <input style={fieldStyle} type="number" inputMode="numeric" value={rest} onChange={(e) => setRest(e.target.value)} placeholder="120" />
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>Set to 0 to turn the rest timer off.</p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+              {[["Off", "0"], ["60s", "60"], ["90s", "90"], ["2m", "120"], ["3m", "180"]].map(([lbl, val]) => (
+                <button key={val} onClick={() => setRest(val)} style={{ flex: 1, minWidth: 56, background: rest === val ? "#1a73e8" : "#fff", color: rest === val ? "#fff" : "#374151", border: rest === val ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 12, padding: "10px 6px", fontSize: 13, fontWeight: 700, minHeight: 42 }}>{lbl}</button>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>The timer starts automatically when you check off a set. Set to 0 (Off) to disable it.</p>
           </div>
 
           {props.onAddSplit && (
@@ -2375,12 +2382,371 @@ function LearnTab() {
   );
 }
 
+// ─── WEEK BOARD (always open, drag a workout onto a day; shows completion checks) ───
+function WeekBoard(props) {
+  const { splits, workouts, tIdx, onSaveSchedule, onLoadSplit } = props;
+  const known = new Set((splits || []).map((s) => s.id));
+  const [sched, setSched] = useState(() => {
+    const b = (props.schedule || []).slice();
+    while (b.length < 7) b.push("rest");
+    return b.slice(0, 7).map((v) => (v && v !== "rest" && known.has(v) ? v : "rest"));
+  });
+  const [floating, setFloating] = useState(null);
+  const [hoverDay, setHoverDay] = useState(null);
+  const dragRef = useRef(null);
+  const hoverRef = useRef(null);
+  const done = weekDoneFlags(workouts);
+  const splitById = (id) => (splits || []).find((s) => s.id === id);
+
+  function startDrag(val, label, e) {
+    e.preventDefault();
+    dragRef.current = { val, label };
+    setFloating({ label, x: e.clientX, y: e.clientY });
+    function onMove(ev) {
+      if (!dragRef.current) return;
+      setFloating({ label: dragRef.current.label, x: ev.clientX, y: ev.clientY });
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const row = el && el.closest ? el.closest("[data-weekday]") : null;
+      const idx = row ? Number(row.getAttribute("data-weekday")) : null;
+      hoverRef.current = idx; setHoverDay(idx);
+    }
+    function onUp() {
+      window.removeEventListener("pointermove", onMove);
+      const idx = hoverRef.current;
+      const d = dragRef.current;
+      dragRef.current = null; hoverRef.current = null; setFloating(null); setHoverDay(null);
+      if (d && idx != null) setSched((prev) => { const next = prev.slice(); next[idx] = d.val; onSaveSchedule(next); return next; });
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp, { once: true });
+  }
+
+  const chip = { flexShrink: 0, border: "none", borderRadius: 20, padding: "9px 14px", fontSize: 13, fontWeight: 700, touchAction: "none", cursor: "grab", display: "flex", alignItems: "center", gap: 6 };
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={Object.assign({}, labelStyle, { marginBottom: 8 })}>This Week</div>
+      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
+        {DAY_ABBR.map((d, i) => {
+          const val = sched[i];
+          const split = val && val !== "rest" ? splitById(val) : null;
+          const isToday = i === tIdx;
+          const hovered = hoverDay === i;
+          return (
+            <div
+              key={i}
+              data-weekday={i}
+              onClick={() => { if (split) onLoadSplit(split); }}
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: hovered ? "#e8f0fe" : isToday ? "#f0f5ff" : "#fff", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", boxShadow: hovered ? "inset 0 0 0 2px #1a73e8" : "none", padding: "13px 16px", minHeight: 52, cursor: split ? "pointer" : "default" }}
+            >
+              <span style={{ flexShrink: 0, width: 38, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{d}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
+              {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
+              {done[i] ? (
+                <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="completed">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                </span>
+              ) : split ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
+              ) : <span style={{ width: 18, flexShrink: 0 }} />}
+            </div>
+          );
+        })}
+      </div>
+
+      <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 2px 8px", lineHeight: 1.4 }}>Drag a workout onto a day to schedule it. Drop <b style={{ color: "#6b7280" }}>Rest</b> on a day to clear it. Green checks mark days you trained.</p>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
+        {(splits || []).map((s) => (
+          <button key={s.id} onPointerDown={(e) => startDrag(s.id, s.name, e)} style={Object.assign({}, chip, { background: "#eaf2fe", color: "#1a73e8" })}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="5" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="19" r="1" /></svg>
+            {s.name}
+          </button>
+        ))}
+        <button onPointerDown={(e) => startDrag("rest", "Rest", e)} style={Object.assign({}, chip, { background: "#f3f4f6", color: "#6b7280" })}>Rest</button>
+      </div>
+      {(splits || []).length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 6 }}>Create a workout first (Settings, top right) and it will show up here to drag.</p>}
+
+      {floating && (
+        <div style={{ position: "fixed", left: floating.x, top: floating.y, transform: "translate(-50%,-140%)", zIndex: 400, pointerEvents: "none", background: "#1a73e8", color: "#fff", borderRadius: 20, padding: "9px 16px", fontSize: 13, fontWeight: 700, boxShadow: "0 10px 24px rgba(26,115,232,.4)" }}>{floating.label}</div>
+      )}
+    </div>
+  );
+}
+
+// ─── PROFILE TAB (avatar + username + share settings) ───
+function ProfileTab(props) {
+  const { profile, workouts, weekSchedule, onSave, onSignOut } = props;
+  const [username, setUsername] = useState(profile.username || "");
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef(null);
+  const stats = computeGameStats(workouts, weekSchedule);
+  const showVolume = profile.shareShowVolume !== false;
+
+  function pickPhoto() { if (fileRef.current) fileRef.current.click(); }
+  function onFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 256;
+        const c = document.createElement("canvas");
+        c.width = size; c.height = size;
+        const ctx = c.getContext("2d");
+        const scale = Math.max(size / img.width, size / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        onSave({ avatar: c.toDataURL("image/jpeg", 0.85) }, "Photo updated");
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  async function saveName() {
+    const u = (username || "").trim();
+    setBusy(true);
+    await onSave({ username: u }, "Profile saved");
+    setBusy(false);
+  }
+
+  const tiles = [
+    { v: stats.total, l: "Workouts", accent: "#1a73e8" },
+    { v: stats.streak, l: "Week Streak", accent: "#f59e0b" },
+    { v: stats.sets, l: "Total Sets", accent: "#22c55e" },
+  ];
+  const initial = (profile.username || "").trim().charAt(0).toUpperCase() || "?";
+
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+        <button onClick={pickPhoto} style={{ position: "relative", width: 96, height: 96, borderRadius: "50%", border: "none", padding: 0, background: "#eaf2fe", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: shadowSm }}>
+          {profile.avatar ? (
+            <img src={profile.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ fontSize: 40, fontWeight: 800, color: "#1a73e8" }}>{initial}</span>
+          )}
+          <span style={{ position: "absolute", right: 2, bottom: 2, width: 30, height: 30, borderRadius: "50%", background: "#1a73e8", border: "3px solid #f5f7fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+          </span>
+        </button>
+        <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
+        <div style={{ fontSize: 20, fontWeight: 800, marginTop: 12 }}>{profile.username ? "@" + profile.username : "Set a username"}</div>
+        <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>Tap the photo to change it</div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
+        {tiles.map((s, i) => (
+          <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "18px 8px", textAlign: "center", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: s.accent }}>{s.v}</div>
+            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
+        <div style={labelStyle}>Username</div>
+        <input style={fieldStyle} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="yourname" autoCapitalize="none" autoCorrect="off" />
+        <p style={{ fontSize: 12, color: "#9ca3af", margin: "8px 0 12px" }}>Shown on the workouts you share.</p>
+        <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : "Save Profile"}</button>
+      </div>
+
+      <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
+        <div style={labelStyle}>Sharing</div>
+        <button onClick={() => onSave({ shareShowVolume: !showVolume }, "Saved")} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", background: "none", border: "none", padding: "6px 0", textAlign: "left" }}>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>Show weight on shared posts</span>
+            <span style={{ display: "block", fontSize: 13, color: "#9ca3af", marginTop: 2, lineHeight: 1.4 }}>{showVolume ? "Posts show total volume and top-set weights." : "Posts hide weights and show sets plus percent better instead."}</span>
+          </span>
+          <span style={{ flexShrink: 0, width: 46, height: 28, borderRadius: 14, background: showVolume ? "#1a73e8" : "#d1d5db", position: "relative", transition: "background .2s" }}>
+            <span style={{ position: "absolute", top: 3, left: showVolume ? 21 : 3, width: 22, height: 22, borderRadius: "50%", background: "#fff", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} />
+          </span>
+        </button>
+      </div>
+
+      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 4 }}>Sign Out</button>}
+    </div>
+  );
+}
+
+// ─── WORKOUT SHARE CARD (post-workout, Strava style) ───
+function prettyDate(dateStr) {
+  const p = dateStr.split("-").map(Number);
+  return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function WorkoutShareModal(props) {
+  const { data, profile } = props;
+  const showVolume = profile.shareShowVolume !== false;
+  const [working, setWorking] = useState(false);
+  const pctText = data.pct != null && data.pct > 0 ? "+" + data.pct + "%" : (data.pct != null ? data.pct + "%" : null);
+
+  // Draw the shareable image (1080x1350) on an offscreen canvas.
+  function draw() {
+    return new Promise((resolve) => {
+      const W = 1080, H = 1350;
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const ctx = c.getContext("2d");
+      const g = ctx.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, "#1a73e8"); g.addColorStop(1, "#0c3aa0");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      const PAD = 90;
+      ctx.textBaseline = "alphabetic";
+
+      function text(str, x, y, size, weight, color, align) {
+        ctx.fillStyle = color; ctx.textAlign = align || "left";
+        ctx.font = weight + " " + size + "px Inter, -apple-system, Segoe UI, Roboto, sans-serif";
+        ctx.fillText(str, x, y);
+      }
+
+      // brand
+      text("FORWARD FITNESS", PAD, 130, 34, "800", "rgba(255,255,255,.9)", "left");
+      // avatar + username
+      const avY = 210, avR = 46;
+      function afterAvatar() {
+        const nameX = PAD + (profile.avatar ? avR * 2 + 28 : 0);
+        text(profile.username ? "@" + profile.username : "Forward Fitness", nameX, avY + avR + 16, 40, "700", "#fff", "left");
+        // workout name
+        text(data.name.toUpperCase(), PAD, 470, 96, "800", "#fff", "left");
+        text(prettyDate(data.date), PAD, 540, 40, "500", "rgba(255,255,255,.8)", "left");
+        // stat blocks
+        const boxY = 610, boxH = 220, gap = 30;
+        const boxW = (W - PAD * 2 - gap) / 2;
+        function statBox(x, big, small) {
+          ctx.fillStyle = "rgba(255,255,255,.14)";
+          if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, boxY, boxW, boxH, 28); ctx.fill(); }
+          else ctx.fillRect(x, boxY, boxW, boxH);
+          text(big, x + boxW / 2, boxY + 120, 92, "800", "#fff", "center");
+          text(small, x + boxW / 2, boxY + 170, 34, "600", "rgba(255,255,255,.8)", "center");
+        }
+        statBox(PAD, String(data.sets), "SETS");
+        if (showVolume) statBox(PAD + boxW + gap, data.vol.toLocaleString(), "LBS VOLUME");
+        else statBox(PAD + boxW + gap, pctText || (data.groups[0] || "DONE"), pctText ? "VS LAST TIME" : "TRAINED");
+        // lifts
+        let ly = 940;
+        text("TOP SETS", PAD, ly, 30, "700", "rgba(255,255,255,.6)", "left"); ly += 46;
+        (data.topLifts || []).slice(0, 5).forEach((l) => {
+          text(l.name, PAD, ly, 40, "600", "#fff", "left");
+          const right = showVolume ? (l.weight ? l.weight + " x " + l.reps : l.sets + " sets") : (l.sets + " sets");
+          text(right, W - PAD, ly, 40, "700", "#fff", "right");
+          ly += 62;
+        });
+        // footer
+        text("forwardfitness.app", W / 2, H - 70, 34, "600", "rgba(255,255,255,.7)", "center");
+        resolve(c);
+      }
+      if (profile.avatar) {
+        const img = new Image();
+        img.onload = () => {
+          ctx.save(); ctx.beginPath(); ctx.arc(PAD + avR, avY + avR, avR, 0, Math.PI * 2); ctx.clip();
+          ctx.drawImage(img, PAD, avY, avR * 2, avR * 2); ctx.restore();
+          afterAvatar();
+        };
+        img.onerror = afterAvatar;
+        img.src = profile.avatar;
+      } else afterAvatar();
+    });
+  }
+
+  function toBlob(canvas) { return new Promise((res) => canvas.toBlob(res, "image/png")); }
+  function download(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "forward-fitness-" + data.date + ".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function share() {
+    if (working) return;
+    setWorking(true);
+    try {
+      const canvas = await draw();
+      const blob = await toBlob(canvas);
+      const file = new File([blob], "forward-fitness.png", { type: "image/png" });
+      const shareText = data.name + " done. " + data.sets + " sets" + (pctText ? ", " + pctText + " vs last time" : "") + ".";
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: "Forward Fitness", text: shareText }); }
+        catch (e) { /* user cancelled */ }
+      } else {
+        download(blob);
+        props.flash("Image saved to your photos. Post it anywhere.");
+      }
+    } catch (e) {
+      props.flash("Could not build the image", "err");
+    }
+    setWorking(false);
+  }
+
+  async function save() {
+    if (working) return;
+    setWorking(true);
+    try { const canvas = await draw(); const blob = await toBlob(canvas); download(blob); props.flash("Image saved"); }
+    catch (e) { props.flash("Could not build the image", "err"); }
+    setWorking(false);
+  }
+
+  return (
+    <div style={overlay}>
+      <div style={Object.assign({}, sheet, { maxWidth: 400 })}>
+        <div style={{ textAlign: "center", marginBottom: 6 }}>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>Workout complete</div>
+          <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>Share it or keep it moving.</div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "10px 2px" }}>
+          {/* Preview card (mirrors the generated image) */}
+          <div style={{ borderRadius: 20, padding: 22, color: "#fff", background: "linear-gradient(135deg,#1a73e8,#0c3aa0)", boxShadow: shadowPrimary }}>
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", opacity: 0.9 }}>FORWARD FITNESS</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+              {profile.avatar && <img src={profile.avatar} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />}
+              <span style={{ fontSize: 15, fontWeight: 700 }}>{profile.username ? "@" + profile.username : "Forward Fitness"}</span>
+            </div>
+            <div style={{ fontSize: 30, fontWeight: 800, marginTop: 16, lineHeight: 1.05 }}>{data.name}</div>
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>{prettyDate(data.date)}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+              <div style={{ background: "rgba(255,255,255,.15)", borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{data.sets}</div>
+                <div style={{ fontSize: 11, opacity: 0.85, fontWeight: 600, marginTop: 2 }}>SETS</div>
+              </div>
+              <div style={{ background: "rgba(255,255,255,.15)", borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{showVolume ? data.vol.toLocaleString() : (pctText || (data.groups[0] || "Done"))}</div>
+                <div style={{ fontSize: 11, opacity: 0.85, fontWeight: 600, marginTop: 2 }}>{showVolume ? "LBS VOLUME" : (pctText ? "VS LAST TIME" : "TRAINED")}</div>
+              </div>
+            </div>
+            {(data.topLifts || []).length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                {data.topLifts.slice(0, 4).map((l, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14, padding: "5px 0", borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,.15)" }}>
+                    <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: 10 }}>{l.name}</span>
+                    <span style={{ fontWeight: 700, flexShrink: 0 }}>{showVolume ? (l.weight ? l.weight + " × " + l.reps : l.sets + " sets") : l.sets + " sets"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button onClick={props.onClose} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Done</button>
+          <button onClick={save} disabled={working} style={{ background: "#fff", color: "#1a73e8", border: "1px solid #dbe9fd", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Save</button>
+          <button onClick={share} disabled={working} style={{ flex: 1, background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 52, boxShadow: shadowPrimary, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" /></svg>
+            {working ? "..." : "Share"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── SHARED STYLES ───
+
 // Elevation scale: tight ambient-occlusion shadow + softer ambient shadow, consistent downward light.
 const shadowSm = "0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05)";
 const shadowMd = "0 2px 4px rgba(16,24,40,.05), 0 10px 24px rgba(16,24,40,.09)";
 const shadowLg = "0 -2px 8px rgba(16,24,40,.04), 0 -16px 48px rgba(16,24,40,.18)";
 const shadowPrimary = "0 2px 6px rgba(26,115,232,.28), 0 8px 20px rgba(26,115,232,.22)";
+const shadowCard = "0 8px 24px rgba(16,24,40,.14), 0 24px 60px rgba(16,24,40,.20)";
 const BORDER = "#eaeef3";
 
 const cardStyle = { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, border: "1px solid " + BORDER, boxShadow: shadowSm, overflow: "hidden" };
@@ -2390,8 +2756,8 @@ const labelStyle = { fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBott
 const colStyle = { fontSize: 11, fontWeight: 500, color: "#9ca3af", textAlign: "center" };
 const navBtnStyle = { background: "#fff", border: "1px solid " + BORDER, borderRadius: 12, width: 40, height: 40, fontSize: 20, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: shadowSm };
 const closeBtn = { background: "none", border: "none", color: "#d1d5db", fontSize: 20, padding: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" };
-const overlay = { position: "fixed", inset: 0, background: "rgba(16,24,40,.42)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" };
-const sheet = { background: "#fff", borderRadius: "24px 24px 0 0", padding: "20px 20px max(20px,env(safe-area-inset-bottom))", width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: shadowLg, animation: "slideUp .28s cubic-bezier(.22,1,.36,1)" };
+const overlay = { position: "fixed", inset: 0, background: "rgba(16,24,40,.42)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
+const sheet = { background: "#fff", borderRadius: 22, padding: "20px", width: "100%", maxWidth: 480, maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: shadowCard, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" };
 const sheetHead = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 };
 const xBtn = { background: "#f3f4f6", border: "none", borderRadius: 50, width: 36, height: 36, fontSize: 18, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" };
 const primaryBtn = { width: "100%", background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, boxShadow: shadowPrimary };
