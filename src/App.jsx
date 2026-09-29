@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
+import Overview from "./components/Overview";
+import { feedback } from "./haptics";
 
 // ─── Config ───
 const DEFAULT_WEIGHT = 180;
@@ -613,7 +615,7 @@ function AuthScreen() {
 function Main(props) {
   const USER_ID = props.userId;
   const onSignOut = props.onSignOut;
-  const [tab, setTab] = useState("workout");
+  const [tab, setTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState({});
@@ -715,6 +717,7 @@ function Main(props) {
       setWorkouts((prev) => prev.concat([{ id: res.data.id, date: res.data.date, exercises: res.data.exercises }]));
       localStorage.removeItem("ff-draft");
       flash("Workout saved!");
+      feedback("success");
       return true;
     } catch (e) {
       flash("Save failed: " + e.message, "err");
@@ -878,7 +881,7 @@ function Main(props) {
   );
 
   return (
-    <div style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
+    <div className={tab === "home" ? "overview-shell" : undefined} style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
       <ConfirmHost />
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{overscroll-behavior-y:none}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overscroll-behavior-y:none}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes coachdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}@keyframes popIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
@@ -896,6 +899,7 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
+        {tab === "home" && <Overview workouts={workouts} meals={meals} schedule={profile.weekSchedule || []} splits={currentSplits} proteinTarget={proteinTarget} calorieTarget={calorieTarget} username={profile.username} onNavigate={setTab} />}
         {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} onSaveProfile={updateProfile} />}
         {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
         {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} />}
@@ -907,13 +911,14 @@ function Main(props) {
 
       <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "rgba(255,255,255,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid " + BORDER, boxShadow: "0 -2px 16px rgba(16,24,40,.06)", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
+          { id: "home", label: "Today", d: "M3 10l9-7 9 7v11h-6v-7H9v7H3z" },
           { id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },
           { id: "nutrition", label: "Food", d: "M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" },
           { id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" },
           { id: "learn", label: "Learn", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
           { id: "profile", label: "Profile", d: "M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
         ].map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#9ca3af" }}>
+          <button key={t.id} aria-current={tab === t.id ? "page" : undefined} onClick={() => { if (tab !== t.id) feedback(); setTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#9ca3af" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? 2.2 : 1.5} strokeLinecap="round" strokeLinejoin="round"><path d={t.d} /></svg>
             <span style={{ fontSize: 11, fontWeight: tab === t.id ? 600 : 400 }}>{t.label}</span>
           </button>
@@ -1012,19 +1017,18 @@ function WorkoutTab(props) {
     mutateExercise(exIdx, (ex) => ({ exerciseId: ex.exerciseId, sets: ex.sets.map((s, si) => (si === setIdx ? Object.assign({}, s, { warmup: !s.warmup }) : s)) }));
   }
   function toggleDone(exIdx, setIdx) {
-    let becameDone = false;
+    const becameDone = !workout.exercises[exIdx].sets[setIdx].done;
     setWorkout((w) => ({
       date: w.date,
       exercises: w.exercises.map((ex, ei) => {
         if (ei !== exIdx) return ex;
         return { exerciseId: ex.exerciseId, sets: ex.sets.map((s, si) => {
           if (si !== setIdx) return s;
-          becameDone = !s.done;
           return Object.assign({}, s, { done: !s.done });
         }) };
       }),
     }));
-    if (becameDone && restSeconds > 0) startRest(restSeconds);
+    if (becameDone) { feedback(); if (restSeconds > 0) startRest(restSeconds); }
   }
   function addSet(exIdx) {
     mutateExercise(exIdx, (ex) => {
@@ -2175,6 +2179,7 @@ function ProgressTab(props) {
 
 // ─── SETTINGS SHEET ───
 function SettingsSheet(props) {
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => { try { return localStorage.getItem("ff-haptics") !== "off"; } catch { return true; } });
   const p = props.profile;
   const [weight, setWeight] = useState(String(p.weight || ""));
   const [protein, setProtein] = useState(p.proteinTarget != null ? String(p.proteinTarget) : "");
@@ -2202,13 +2207,17 @@ function SettingsSheet(props) {
 
   return (
     <div style={overlay}>
-      <div style={sheet}>
+      <div style={{ ...sheet, color: "#1a2332" }}>
         <div style={sheetHead}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Settings</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "#1a2332" }}>Settings</h2>
           <button onClick={props.onClose} style={xBtn}>✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 48, color: "#1a2332", marginBottom: 16 }}>
+              Haptic feedback
+              <input type="checkbox" checked={hapticsEnabled} onChange={(e) => { const enabled = e.target.checked; setHapticsEnabled(enabled); try { localStorage.setItem("ff-haptics", enabled ? "on" : "off"); } catch {} if (enabled) feedback(); }} />
+            </label>
             <div style={labelStyle}>Body Weight (lbs)</div>
             <input style={fieldStyle} type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={String(DEFAULT_WEIGHT)} />
           </div>
