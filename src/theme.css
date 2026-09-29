@@ -1,0 +1,18 @@
+:root{color-scheme:dark;--surface:#000;--raised:#151715;--accent:#b7df2f;--text:#f0f2ec;--muted:#a3ab9e;--line:#303630}
+body{background:var(--surface);color:var(--text)}
+button,input,textarea,select{font:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
+button:disabled{opacity:.5!important;cursor:not-allowed!important}
+h1,h2,h3{text-wrap:balance}p{text-wrap:pretty}
+input[type=number],.overview strong{font-variant-numeric:tabular-nums}
+input[type=checkbox]{accent-color:var(--accent);width:20px;height:20px}
+.forward-app{min-height:100dvh!important}
+.forward-app>header{padding-top:max(16px,env(safe-area-inset-top))!important;background:#000!important;box-shadow:none!important}
+.forward-app>nav{background:rgba(14,16,14,.96)!important}
+.forward-app>nav button{min-height:52px}
+.forward-app>nav button[aria-current=page]{color:var(--accent)!important}
+.forward-app>nav button[aria-current=page] svg{background:#253019;border-radius:12px;box-sizing:content-box;padding:4px 10px;margin-top:-4px;margin-bottom:-4px}
+.preview-tabs{display:flex;gap:8px;padding:4px 0 20px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.preview-tabs button{flex:1;min-height:44px;border:1px solid var(--line);background:var(--raised);color:var(--muted);border-radius:24px}
+.preview-tabs button[aria-pressed=true]{color:#111700;background:var(--accent);border-color:var(--accent)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}

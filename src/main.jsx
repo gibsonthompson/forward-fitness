@@ -1,4 +1,5 @@
 import React from 'react'
+import './theme.css'
 import ReactDOM from 'react-dom/client'
 
 const preview = import.meta.env.DEV && new URLSearchParams(location.search).has('design-preview');

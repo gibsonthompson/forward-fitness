@@ -23,7 +23,7 @@ export default function Overview({ workouts=[], meals={}, schedule=[], splits=[]
   const now = new Date();
   const data = overviewData(workouts, meals, schedule, now);
   const rings = [
-    { label:'Training days', value:data.days, goal:data.goal, unit:'this week', color:'#c5fa5f', tab:'workout' },
+    { label:'Training days', value:data.days, goal:data.goal, unit:'this week', color:'#b7df2f', tab:'workout' },
     { label:'Protein', value:Math.round(data.protein), goal:proteinTarget, unit:'g today', color:'#8d9fff', tab:'nutrition' },
     { label:'Fuel', value:Math.round(data.calories), goal:calorieTarget, unit:'kcal today', color:'#ff9b72', tab:'nutrition' },
   ];
@@ -49,7 +49,7 @@ export default function Overview({ workouts=[], meals={}, schedule=[], splits=[]
     <div className="ov-divider"/>
     <div className="ov-section-head"><h3>Training trend</h3><span>Working sets</span></div>
     <div className="ov-total">{total}<span>sets in {range} days</span></div>
-    <svg className="ov-chart" viewBox="0 0 360 130" role="img" aria-label={`${total} working sets logged over the last ${range} days`}><path d="M12 108H348" stroke="#353833" strokeDasharray="2 5"/><polyline points={line} fill="none" stroke="#c5fa5f" strokeWidth="2.5" strokeLinejoin="round"/><circle cx="348" cy={108-points[range-1].value/max*90} r="4" fill="#c5fa5f"/></svg>
+    <svg className="ov-chart" viewBox="0 0 360 130" role="img" aria-label={`${total} working sets logged over the last ${range} days`}><path d="M12 108H348" stroke="#353833" strokeDasharray="2 5"/><polyline points={line} fill="none" stroke="#b7df2f" strokeWidth="2.5" strokeLinejoin="round"/><circle cx="348" cy={108-points[range-1].value/max*90} r="4" fill="#b7df2f"/></svg>
     <div className="ov-ranges" aria-label="Chart period">{[7,30,90].map(n => <button key={n} aria-pressed={range===n} onClick={() => setRange(n)}>{n===7 ? '1W' : n===30 ? '1M' : '3M'}</button>)}</div>
     {!total && <p className="ov-empty">Your trend starts with your first logged set.</p>}
     <div className="ov-workout"><div className="ov-section-head"><p className="ov-eyebrow">ON YOUR SCHEDULE</p><span aria-hidden="true">↗</span></div><h3>{selected==='rest' ? 'Room to recover.' : split?.name || 'Make your next move.'}</h3><p>{selected==='rest' ? 'Rest is part of getting stronger. Your plan resumes when you’re ready.' : split ? `${split.exercises.length} exercises · Your pace, your progress.` : 'Choose a workout and build a week that works for you.'}</p><button className="ov-primary" onClick={() => onNavigate('workout')}>{selected==='rest' ? 'View training plan' : 'Go to workout'} <span aria-hidden="true">→</span></button></div>

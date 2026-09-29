@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import Overview from "./components/Overview";
 import { feedback } from "./haptics";
+import "./theme.css";
 
 // ─── Config ───
 const DEFAULT_WEIGHT = 180;
@@ -493,7 +494,7 @@ function useNoZoom() {
   }, []);
 }
 
-function ConfirmHost() {
+export function ConfirmHost() {
   const [state, setState] = useState(null);
   useEffect(() => {
     _confirm = (opts) => new Promise((resolve) => setState(Object.assign({}, opts, { resolve })));
@@ -503,12 +504,12 @@ function ConfirmHost() {
   function close(val) { const r = state.resolve; setState(null); if (r) r(val); }
   return (
     <div style={Object.assign({}, overlay, { alignItems: "center", padding: 24, zIndex: 300 })} onClick={() => close(false)}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, padding: 24, width: "100%", maxWidth: 360, boxShadow: shadowLg, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" }}>
-        {state.title && <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2332", marginBottom: 8 }}>{state.title}</div>}
-        {state.message && <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, marginBottom: 22 }}>{state.message}</div>}
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#151715", borderRadius: 20, padding: 24, width: "100%", maxWidth: 360, boxShadow: shadowLg, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" }}>
+        {state.title && <div style={{ fontSize: 18, fontWeight: 700, color: "#f0f2ec", marginBottom: 8 }}>{state.title}</div>}
+        {state.message && <div style={{ fontSize: 14, color: "#acb3a7", lineHeight: 1.5, marginBottom: 22 }}>{state.message}</div>}
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => close(false)} style={{ flex: 1, background: "#f3f4f6", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 600, color: "#374151", minHeight: 48 }}>{state.cancelLabel || "Cancel"}</button>
-          <button onClick={() => close(true)} style={{ flex: 1, background: state.danger ? "#dc2626" : "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, minHeight: 48, boxShadow: state.danger ? "none" : shadowPrimary }}>{state.confirmLabel || "Confirm"}</button>
+          <button onClick={() => close(false)} style={{ flex: 1, background: "#202420", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 600, color: "#d7dcd2", minHeight: 48 }}>{state.cancelLabel || "Cancel"}</button>
+          <button onClick={() => close(true)} style={{ flex: 1, background: state.danger ? "#dc2626" : "linear-gradient(180deg,#c3ed45,#b7df2f)", color: "#111700", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, minHeight: 48, boxShadow: state.danger ? "none" : shadowPrimary }}>{state.confirmLabel || "Confirm"}</button>
         </div>
       </div>
     </div>
@@ -528,9 +529,9 @@ export default function App() {
 
   if (session === undefined) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f7fa" }}>
-        <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#f5f7fa}"}</style>
-        <div style={{ width: 28, height: 28, border: "3px solid #eaeef3", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#000000" }}>
+        <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#000000}"}</style>
+        <div style={{ width: 28, height: 28, border: "3px solid #303630", borderTopColor: "#b7df2f", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
       </div>
     );
   }
@@ -583,14 +584,14 @@ function AuthScreen() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f7fa", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
+    <div style={{ minHeight: "100vh", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#f0f2ec" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f7fa}input{font-family:inherit;font-size:16px!important}button{font-family:inherit;-webkit-appearance:none;cursor:pointer}"}</style>
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#000000}input{font-family:inherit;font-size:16px!important}button{font-family:inherit;-webkit-appearance:none;cursor:pointer}"}</style>
       <div style={{ width: "100%", maxWidth: 380 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, textAlign: "center", marginBottom: 4 }}>Forward<span style={{ color: "#1a73e8" }}>Fitness</span></h1>
-        <p style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, marginBottom: 28 }}>{mode === "signup" ? "Create your account" : "Sign in to your training log"}</p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, textAlign: "center", marginBottom: 4 }}>Forward<span style={{ color: "#b7df2f" }}>Fitness</span></h1>
+        <p style={{ textAlign: "center", color: "#a3ab9e", fontSize: 14, marginBottom: 28 }}>{mode === "signup" ? "Create your account" : "Sign in to your training log"}</p>
 
-        <div style={{ background: "#fff", border: "1px solid #eaeef3", borderRadius: 16, padding: 20 }}>
+        <div style={{ background: "#151715", border: "1px solid #303630", borderRadius: 16, padding: 20 }}>
           <div style={labelStyle}>Username</div>
           <input style={fieldStyle} type="text" autoCapitalize="none" autoCorrect="off" autoComplete="username" value={username} onChange={(ev) => setUsername(ev.target.value)} placeholder="yourname" />
           <div style={Object.assign({}, labelStyle, { marginTop: 14 })}>Password</div>
@@ -598,12 +599,12 @@ function AuthScreen() {
 
           {msg && <div style={{ marginTop: 14, fontSize: 13, fontWeight: 600, color: msg.type === "err" ? "#dc2626" : "#16a34a" }}>{msg.text}</div>}
 
-          <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 18, opacity: busy ? 0.8 : 1 }}>
+          <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#53622f" : "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 18, opacity: busy ? 0.8 : 1 }}>
             {busy ? "..." : mode === "signup" ? "Create Account" : "Sign In"}
           </button>
         </div>
 
-        <button onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setMsg(null); }} style={{ width: "100%", background: "none", border: "none", color: "#1a73e8", fontSize: 14, fontWeight: 600, marginTop: 18, padding: 8 }}>
+        <button onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setMsg(null); }} style={{ width: "100%", background: "none", border: "none", color: "#b7df2f", fontSize: 14, fontWeight: 600, marginTop: 18, padding: 8 }}>
           {mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up"}
         </button>
       </div>
@@ -874,25 +875,25 @@ function Main(props) {
   const calorieTarget = profile.calorieTarget != null ? profile.calorieTarget : Math.round(profile.weight * 16 + 300);
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f7fa" }}>
-      <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#f5f7fa}"}</style>
-      <div style={{ width: 28, height: 28, border: "3px solid #eaeef3", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#000000" }}>
+      <style>{"@keyframes spin{to{transform:rotate(360deg)}}body{margin:0;background:#000000}"}</style>
+      <div style={{ width: 28, height: 28, border: "3px solid #303630", borderTopColor: "#b7df2f", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
     </div>
   );
 
   return (
-    <div className={tab === "home" ? "overview-shell" : undefined} style={{ background: "#f5f7fa", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#1a2332" }}>
+    <div className="forward-app" style={{ background: "#000000", minHeight: "100vh", maxWidth: 520, margin: "0 auto", paddingBottom: rest.running ? 150 : 90, fontFamily: "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif", color: "#f0f2ec" }}>
       <ConfirmHost />
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{overscroll-behavior-y:none}body{margin:0;background:#f5f7fa;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overscroll-behavior-y:none}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes coachdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}@keyframes popIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
+      <style>{"*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{overscroll-behavior-y:none}body{margin:0;background:#000000;font-family:Inter,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overscroll-behavior-y:none}input,textarea{font-family:inherit;font-size:16px!important;transition:border-color .15s ease,box-shadow .15s ease}input:focus,textarea:focus{border-color:#b7df2f;box-shadow:0 0 0 3px rgba(26,115,232,.18)}input[type=number]{-moz-appearance:textfield}input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}button{font-family:inherit;-webkit-appearance:none;cursor:pointer;transition:transform .12s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,opacity .2s ease,background .2s ease}button:active:not(:disabled){transform:scale(.97)}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes coachdot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}@keyframes popIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}"}</style>
 
-      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: toast.type === "err" ? "#fef2f2" : "#f0fdf4", color: toast.type === "err" ? "#dc2626" : "#16a34a", border: "1px solid " + (toast.type === "err" ? "#fecaca" : "#bbf7d0"), borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, animation: "fadeIn .2s ease", boxShadow: "0 4px 12px rgba(0,0,0,.1)", maxWidth: "90%", textAlign: "center" }}>{toast.msg}</div>}
+      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", zIndex: 999, background: toast.type === "err" ? "#321919" : "#182a1b", color: toast.type === "err" ? "#dc2626" : "#16a34a", border: "1px solid " + (toast.type === "err" ? "#633333" : "#315d36"), borderRadius: 12, padding: "12px 24px", fontSize: 14, fontWeight: 600, animation: "fadeIn .2s ease", boxShadow: "0 4px 12px rgba(0,0,0,.1)", maxWidth: "90%", textAlign: "center" }}>{toast.msg}</div>}
 
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "#fff", borderBottom: "1px solid " + BORDER, boxShadow: "0 1px 3px rgba(16,24,40,.04)", position: "sticky", top: 0, zIndex: 50 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Forward<span style={{ color: "#1a73e8" }}>Fitness</span></h1>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "#151715", borderBottom: "1px solid " + BORDER, boxShadow: "0 1px 3px rgba(16,24,40,.04)", position: "sticky", top: 0, zIndex: 50 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Forward<span style={{ color: "#b7df2f" }}>Fitness</span></h1>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {!dbOk && <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600 }}>Offline</span>}
-          <button onClick={() => setShowSettings(true)} aria-label="Settings" style={{ background: "none", border: "none", padding: 4, color: "#9ca3af", display: "flex" }}>
+          <button onClick={() => setShowSettings(true)} aria-label="Settings" style={{ background: "none", border: "none", padding: 4, color: "#a3ab9e", display: "flex" }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
           </button>
         </div>
@@ -909,7 +910,7 @@ function Main(props) {
 
       {rest.running && <RestBar rest={rest} onAdjust={adjustRest} onSkip={skipRest} />}
 
-      <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "rgba(255,255,255,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid " + BORDER, boxShadow: "0 -2px 16px rgba(16,24,40,.06)", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
+      <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "rgba(14,16,14,.96)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid " + BORDER, boxShadow: "0 -2px 16px rgba(16,24,40,.06)", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
           { id: "home", label: "Today", d: "M3 10l9-7 9 7v11h-6v-7H9v7H3z" },
           { id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },
@@ -918,7 +919,7 @@ function Main(props) {
           { id: "learn", label: "Learn", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
           { id: "profile", label: "Profile", d: "M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
         ].map((t) => (
-          <button key={t.id} aria-current={tab === t.id ? "page" : undefined} onClick={() => { if (tab !== t.id) feedback(); setTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#9ca3af" }}>
+          <button key={t.id} aria-current={tab === t.id ? "page" : undefined} onClick={() => { if (tab !== t.id) feedback(); setTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#b7df2f" : "#a3ab9e" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? 2.2 : 1.5} strokeLinecap="round" strokeLinejoin="round"><path d={t.d} /></svg>
             <span style={{ fontSize: 11, fontWeight: tab === t.id ? 600 : 400 }}>{t.label}</span>
           </button>
@@ -938,35 +939,36 @@ function RestBar(props) {
   const pct = r.total > 0 ? (r.secondsLeft / r.total) * 100 : 0;
   return (
     <div style={{ position: "fixed", bottom: "calc(58px + env(safe-area-inset-bottom))", left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, zIndex: 120, padding: "0 12px" }}>
-      <div style={{ background: "#1a2332", borderRadius: 14, padding: "12px 14px", boxShadow: "0 6px 20px rgba(0,0,0,.25)", display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ background: "#f0f2ec", borderRadius: 14, padding: "12px 14px", boxShadow: "0 6px 20px rgba(0,0,0,.25)", display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 6 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ color: "#9ca3af", fontSize: 11, fontWeight: 600, letterSpacing: ".04em" }}>REST</span>
+            <span style={{ color: "#a3ab9e", fontSize: 11, fontWeight: 600, letterSpacing: ".04em" }}>REST</span>
             <span style={{ color: "#fff", fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{mm}:{ss}</span>
           </div>
           <div style={{ height: 4, background: "rgba(255,255,255,.15)", borderRadius: 4, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: pct + "%", background: "#1a73e8", borderRadius: 4, transition: "width 1s linear" }} />
+            <div style={{ height: "100%", width: pct + "%", background: "#b7df2f", borderRadius: 4, transition: "width 1s linear" }} />
           </div>
         </div>
         <button onClick={() => props.onAdjust(-15)} style={restBtn}>-15</button>
         <button onClick={() => props.onAdjust(15)} style={restBtn}>+15</button>
-        <button onClick={props.onSkip} style={Object.assign({}, restBtn, { background: "#1a73e8", color: "#fff", borderColor: "#1a73e8" })}>Skip</button>
+        <button onClick={props.onSkip} style={Object.assign({}, restBtn, { background: "#b7df2f", color: "#111700", borderColor: "#b7df2f" })}>Skip</button>
       </div>
     </div>
   );
 }
-const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.15)", color: "#eaeef3", borderRadius: 10, padding: "10px 10px", fontSize: 13, fontWeight: 700, minWidth: 44, minHeight: 44 };
+const restBtn = { background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.15)", color: "#303630", borderRadius: 10, padding: "10px 10px", fontSize: 13, fontWeight: 700, minWidth: 44, minHeight: 44 };
 
 // ─── WORKOUT TAB ───
-function WorkoutTab(props) {
+export function WorkoutTab(props) {
+  const draftKey = props.draftKey || "ff-draft";
   const { workouts, onSave, onUpdate, onDelete, flash, startRest, restSeconds, onCreateExercise, splits, weekSchedule, onSaveSchedule, onSyncSplit } = props;
 
   const [workout, setWorkout] = useState(() => {
-    try { const d = localStorage.getItem("ff-draft"); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
+    try { const d = localStorage.getItem(draftKey); return d ? JSON.parse(d) : { date: today(), exercises: [] }; }
     catch (e) { return { date: today(), exercises: [] }; }
   });
   const [activeSplitId, setActiveSplitId] = useState(() => {
-    try { const d = JSON.parse(localStorage.getItem("ff-draft") || "null"); return d && d.splitId ? d.splitId : null; }
+    try { const d = JSON.parse(localStorage.getItem(draftKey) || "null"); return d && d.splitId ? d.splitId : null; }
     catch (e) { return null; }
   });
   const [picker, setPicker] = useState(false);
@@ -976,10 +978,10 @@ function WorkoutTab(props) {
   const [splitsOpen, setSplitsOpen] = useState(false);
   const [shareData, setShareData] = useState(null); // finished-workout summary to share
   const [showAllRecent, setShowAllRecent] = useState(false);
-  const [startedAt, setStartedAt] = useState(() => { try { const d = JSON.parse(localStorage.getItem("ff-draft") || "null"); return d && d.startedAt ? d.startedAt : null; } catch (e) { return null; } });
+  const [startedAt, setStartedAt] = useState(() => { try { const d = JSON.parse(localStorage.getItem(draftKey) || "null"); return d && d.startedAt ? d.startedAt : null; } catch (e) { return null; } });
 
   useEffect(() => {
-    if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId, startedAt })));
+    if (workout.exercises.length > 0) localStorage.setItem(draftKey, JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId, startedAt })));
   }, [workout, activeSplitId, startedAt]);
 
   function prefillSets(exId) {
@@ -1045,7 +1047,7 @@ function WorkoutTab(props) {
   function removeExercise(exIdx) {
     setWorkout((w) => {
       const exercises = w.exercises.filter((_, i) => i !== exIdx);
-      if (exercises.length === 0) localStorage.removeItem("ff-draft");
+      if (exercises.length === 0) localStorage.removeItem(draftKey);
       return { date: w.date, exercises };
     });
   }
@@ -1115,7 +1117,7 @@ function WorkoutTab(props) {
       const yes = await appConfirm({ title: "Discard workout?", message: "Sets you entered won't be saved.", confirmLabel: "Discard", cancelLabel: "Keep going", danger: true });
       if (!yes) return;
     }
-    localStorage.removeItem("ff-draft");
+    localStorage.removeItem(draftKey);
     setActiveSplitId(null);
     setStartedAt(null);
     setWorkout({ date: today(), exercises: [] });
@@ -1141,7 +1143,7 @@ function WorkoutTab(props) {
             {/* Today hero */}
             <div style={{ marginBottom: 18 }}>
               {todaySplit ? (
-                <button onClick={() => loadSplit(todaySplit)} style={{ width: "100%", textAlign: "left", border: "none", borderRadius: 20, padding: 22, color: "#fff", background: "linear-gradient(135deg,#1a73e8,#0c47b7)", boxShadow: shadowPrimary, display: "flex", alignItems: "center", gap: 16 }}>
+                <button onClick={() => loadSplit(todaySplit)} style={{ width: "100%", textAlign: "left", border: "none", borderRadius: 20, padding: 22, color: "#111700", background: "linear-gradient(135deg,#b7df2f,#90b322)", boxShadow: shadowPrimary, display: "flex", alignItems: "center", gap: 16 }}>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", opacity: 0.85 }}>TODAY · {todayName.toUpperCase()}</span>
                     <span style={{ display: "block", fontSize: 26, fontWeight: 800, marginTop: 6 }}>{todaySplit.name}</span>
@@ -1155,11 +1157,11 @@ function WorkoutTab(props) {
                   </span>
                 </button>
               ) : (
-                <div style={{ borderRadius: 20, padding: 22, background: "#fff", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
-                  <span style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "#9ca3af" }}>TODAY · {todayName.toUpperCase()}</span>
-                  <span style={{ display: "block", fontSize: 24, fontWeight: 800, marginTop: 6, color: "#1a2332" }}>{isRest ? "Rest Day" : "No Workout Scheduled"}</span>
-                  <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8, marginBottom: 14, lineHeight: 1.5 }}>{isRest ? "Recovery is where the growth happens. Take it easy today." : "Pick a split to train, or set up your week."}</p>
-                  <button onClick={() => setSplitsOpen(true)} style={{ background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, padding: "11px 18px", color: "#1a73e8", fontSize: 14, fontWeight: 700, minHeight: 44 }}>{isRest ? "Train anyway" : "Choose a workout"}</button>
+                <div style={{ borderRadius: 20, padding: 22, background: "#151715", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+                  <span style={{ display: "block", fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "#a3ab9e" }}>TODAY · {todayName.toUpperCase()}</span>
+                  <span style={{ display: "block", fontSize: 24, fontWeight: 800, marginTop: 6, color: "#f0f2ec" }}>{isRest ? "Rest Day" : "No Workout Scheduled"}</span>
+                  <p style={{ fontSize: 13, color: "#acb3a7", marginTop: 8, marginBottom: 14, lineHeight: 1.5 }}>{isRest ? "Recovery is where the growth happens. Take it easy today." : "Pick a split to train, or set up your week."}</p>
+                  <button onClick={() => setSplitsOpen(true)} style={{ background: "#202b13", border: "1px solid #36442a", borderRadius: 12, padding: "11px 18px", color: "#b7df2f", fontSize: 14, fontWeight: 700, minHeight: 44 }}>{isRest ? "Train anyway" : "Choose a workout"}</button>
                 </div>
               )}
             </div>
@@ -1175,25 +1177,25 @@ function WorkoutTab(props) {
               if (todaySplit && otherSplits.length === 0) return null; // today's split is the only one
               return (
                 <div style={{ marginBottom: 20 }}>
-                  <button onClick={() => setSplitsOpen(!splitsOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#6b7280", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
+                  <button onClick={() => setSplitsOpen(!splitsOpen)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "6px 0", color: "#acb3a7", fontSize: 13, fontWeight: 700, letterSpacing: ".02em", textTransform: "uppercase" }}>
                     Other Workouts
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: splitsOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><path d="M6 9l6 6 6-6" /></svg>
                   </button>
                   {splitsOpen && (
                     splits.length === 0 ? (
-                      <p style={{ color: "#9ca3af", fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>No workouts yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
+                      <p style={{ color: "#a3ab9e", fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>No workouts yet. Add one or pick a plan from Settings (the gear icon, top right).</p>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
                         {otherSplits.map((s) => (
-                          <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
-                            <span style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 12, background: "linear-gradient(180deg,#eaf2fe,#dbe9fd)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
+                          <button key={s.id || s.name} onClick={() => loadSplit(s)} style={{ display: "flex", alignItems: "center", gap: 14, background: "#151715", border: "1px solid " + BORDER, borderRadius: 16, padding: 16, boxShadow: shadowSm, textAlign: "left", width: "100%" }}>
+                            <span style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 12, background: "linear-gradient(180deg,#202b13,#36442a)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b7df2f" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7" /></svg>
                             </span>
                             <span style={{ flex: 1, minWidth: 0 }}>
-                              <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{s.name}</span>
+                              <span style={{ display: "block", fontSize: 15, fontWeight: 700, color: "#f0f2ec" }}>{s.name}</span>
                               <span style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 5, alignItems: "center" }}>
-                                {splitGroups(s).slice(0, 3).map((g) => <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 6, padding: "3px 8px" }}>{g}</span>)}
-                                <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
+                                {splitGroups(s).slice(0, 3).map((g) => <span key={g} style={{ fontSize: 11, fontWeight: 600, color: "#acb3a7", background: "#202420", borderRadius: 6, padding: "3px 8px" }}>{g}</span>)}
+                                <span style={{ fontSize: 12, color: "#a3ab9e", fontWeight: 500 }}>{(s.exercises || []).length} exercises</span>
                               </span>
                             </span>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c7ccd4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" /></svg>
@@ -1211,11 +1213,11 @@ function WorkoutTab(props) {
 
       {workout.exercises.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <button onClick={discardWorkout} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#6b7280", fontSize: 14, fontWeight: 600, padding: "4px 0" }}>
+          <button onClick={discardWorkout} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#acb3a7", fontSize: 14, fontWeight: 600, padding: "4px 0" }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             Discard
           </button>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#1a2332", letterSpacing: ".02em", textTransform: "uppercase" }}>Active Workout</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#f0f2ec", letterSpacing: ".02em", textTransform: "uppercase" }}>Active Workout</span>
           <span style={{ width: 64 }} />
         </div>
       )}
@@ -1241,7 +1243,7 @@ function WorkoutTab(props) {
       ))}
 
       {workout.exercises.length > 0 && (
-        <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "16px", color: "#1a73e8", fontSize: 15, fontWeight: 700, marginBottom: 12, minHeight: 52, boxShadow: shadowSm }}>+ Add Exercise</button>
+        <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#151715", border: "1px solid " + BORDER, borderRadius: 14, padding: "16px", color: "#b7df2f", fontSize: 15, fontWeight: 700, marginBottom: 12, minHeight: 52, boxShadow: shadowSm }}>+ Add Exercise</button>
       )}
 
       {workout.exercises.length > 0 && (
@@ -1263,28 +1265,28 @@ function WorkoutTab(props) {
               const pct = deltaById[w.id != null ? w.id : null];
               return (
                 <button key={w.id || i} onClick={() => setEditing(w)} style={Object.assign({}, cardStyle, { padding: 14, width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 14 })}>
-                  <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 12, background: "#f0f5ff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: "#1a73e8" }}>{Number(parts[2])}</span>
+                  <span style={{ flexShrink: 0, width: 48, height: 48, borderRadius: 12, background: "#202b13", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: "#b7df2f" }}>{Number(parts[2])}</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: "#7aa7ee", textTransform: "uppercase", marginTop: 2 }}>{new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).toLocaleDateString("en", { month: "short" })}</span>
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: "#1a2332" }}>{weekdayLabel(w.date)}</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: "#f0f2ec" }}>{weekdayLabel(w.date)}</span>
                       {pct != null && pct !== 0 && (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: pct > 0 ? "#16a34a" : "#9ca3af", background: pct > 0 ? "#f0fdf4" : "#f3f4f6", borderRadius: 6, padding: "2px 7px" }}>{pct > 0 ? "+" : ""}{pct}% vol</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: pct > 0 ? "#16a34a" : "#a3ab9e", background: pct > 0 ? "#182a1b" : "#202420", borderRadius: 6, padding: "2px 7px" }}>{pct > 0 ? "+" : ""}{pct}% vol</span>
                       )}
                     </span>
-                    <span style={{ display: "block", fontSize: 13, color: "#6b7280", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{groups.length ? groups.join(" · ") : (w.exercises || []).length + " exercises"}</span>
+                    <span style={{ display: "block", fontSize: 13, color: "#acb3a7", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{groups.length ? groups.join(" · ") : (w.exercises || []).length + " exercises"}</span>
                   </span>
                   <span style={{ flexShrink: 0, textAlign: "right" }}>
-                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#1a2332" }}>{setCount}</span>
-                    <span style={{ display: "block", fontSize: 10, color: "#9ca3af", fontWeight: 600 }}>SETS</span>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#f0f2ec" }}>{setCount}</span>
+                    <span style={{ display: "block", fontSize: 10, color: "#a3ab9e", fontWeight: 600 }}>SETS</span>
                   </span>
                 </button>
               );
             })}
             {recent.length > 5 && (
-              <button onClick={() => setShowAllRecent(!showAllRecent)} style={{ width: "100%", background: "none", border: "none", color: "#1a73e8", fontSize: 14, fontWeight: 600, padding: "10px 0 4px" }}>
+              <button onClick={() => setShowAllRecent(!showAllRecent)} style={{ width: "100%", background: "none", border: "none", color: "#b7df2f", fontSize: 14, fontWeight: 600, padding: "10px 0 4px" }}>
                 {showAllRecent ? "Show less" : "Show " + (recent.length - 5) + " more"}
               </button>
             )}
@@ -1305,28 +1307,28 @@ function ExerciseCard(props) {
   const { exercise: ex, dbEx, last, live, onUpdateSet, onToggleDone, onToggleWarmup, onAddSet, onRemoveSet, onRemove, onPlates, onMove, canMoveUp, canMoveDown } = props;
   const [noteOpen, setNoteOpen] = useState(null);
   const cols = live ? "28px 1fr 1fr 46px" : "28px 1fr 1fr";
-  const moveBtn = { background: "#f3f4f6", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 15, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 };
+  const moveBtn = { background: "#202420", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 15, color: "#acb3a7", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 };
   return (
     <div style={cardStyle}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 600 }}>{dbEx ? dbEx.name : ex.exerciseId}</div>
-          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{dbEx ? dbEx.group : ""}</div>
+          <div style={{ fontSize: 12, color: "#a3ab9e", marginTop: 2 }}>{dbEx ? dbEx.group : ""}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {live && onMove && (
             <>
-              <button onClick={() => onMove(-1)} disabled={!canMoveUp} aria-label="move up" style={Object.assign({}, moveBtn, { color: canMoveUp ? "#6b7280" : "#d1d5db" })}>↑</button>
-              <button onClick={() => onMove(1)} disabled={!canMoveDown} aria-label="move down" style={Object.assign({}, moveBtn, { color: canMoveDown ? "#6b7280" : "#d1d5db" })}>↓</button>
+              <button onClick={() => onMove(-1)} disabled={!canMoveUp} aria-label="move up" style={Object.assign({}, moveBtn, { color: canMoveUp ? "#acb3a7" : "#d1d5db" })}>↑</button>
+              <button onClick={() => onMove(1)} disabled={!canMoveDown} aria-label="move down" style={Object.assign({}, moveBtn, { color: canMoveDown ? "#acb3a7" : "#d1d5db" })}>↓</button>
             </>
           )}
-          <button onClick={onRemove} style={closeBtn}>✕</button>
+          <button onClick={onRemove} style={closeBtn} aria-label="Close">✕</button>
         </div>
       </div>
 
       {live && last && (
-        <div style={{ background: "#f9fafb", borderRadius: 8, padding: "8px 12px", marginBottom: 10, fontSize: 13, color: "#6b7280" }}>
-          <b style={{ color: "#9ca3af", fontWeight: 600, fontSize: 11 }}>LAST: </b>
+        <div style={{ background: "#202420", borderRadius: 8, padding: "8px 12px", marginBottom: 10, fontSize: 13, color: "#acb3a7" }}>
+          <b style={{ color: "#a3ab9e", fontWeight: 600, fontSize: 11 }}>LAST: </b>
           {workSets(last.sets).map((s, i) => <span key={i}>{i > 0 ? " → " : ""}{s.weight}×{s.reps}</span>)}
         </div>
       )}
@@ -1353,7 +1355,7 @@ function ExerciseCard(props) {
         />
       ))}
 
-      <button onClick={onAddSet} style={{ width: "100%", background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#9ca3af", fontSize: 13, fontWeight: 500, minHeight: 44, marginTop: 4 }}>+ Add Set</button>
+      <button onClick={onAddSet} style={{ width: "100%", background: "none", border: "1px dashed #d1d5db", borderRadius: 8, padding: "10px", color: "#a3ab9e", fontSize: 13, fontWeight: 500, minHeight: 44, marginTop: 4 }}>+ Add Set</button>
     </div>
   );
 }
@@ -1401,18 +1403,18 @@ function SwipeSetRow(props) {
         <div
           ref={frontRef}
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-          style={{ transform: "translateX(" + (open ? -REVEAL : 0) + "px)", background: "#fff", position: "relative", touchAction: "pan-y" }}
+          style={{ transform: "translateX(" + (open ? -REVEAL : 0) + "px)", background: "#151715", position: "relative", touchAction: "pan-y" }}
         >
           <div style={{ display: "grid", gridTemplateColumns: cols, gap: 6, alignItems: "center" }}>
-            <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#e8f0fe" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#1a73e8" : "#9ca3af", padding: 0, minHeight: 44 }}>{s.warmup ? "W" : si + 1}</button>
+            <button onClick={() => onToggleWarmup(si)} title="Tap to toggle warm-up" style={{ background: s.warmup ? "#202b13" : "none", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, color: s.warmup ? "#b7df2f" : "#a3ab9e", padding: 0, minHeight: 44 }}>{s.warmup ? "W" : si + 1}</button>
             <div style={{ position: "relative" }}>
               <input type="number" inputMode="decimal" value={s.weight} onChange={(e) => onUpdateSet(si, "weight", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="lbs" />
               {live && Number(s.weight) > BAR_WEIGHT && <button onClick={() => onPlates(Number(s.weight))} aria-label="plates" style={{ position: "absolute", right: 2, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c7ccd4", fontSize: 11, padding: 4 }}>▦</button>}
             </div>
             <input type="number" inputMode="numeric" value={s.reps} onChange={(e) => onUpdateSet(si, "reps", e.target.value)} style={Object.assign({}, inputStyle, inputExtras)} placeholder="reps" />
             {live && (
-              <button onClick={() => onToggleDone(si)} aria-label="complete set" style={{ background: s.done ? "#22c55e" : "#fff", border: "2px solid " + (s.done ? "#22c55e" : "#d1d5db"), borderRadius: 8, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#fff" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              <button onClick={() => onToggleDone(si)} aria-label={s.done ? "Mark set incomplete" : "Complete set"} aria-pressed={!!s.done} style={{ background: s.done ? "#b7df2f" : "#151715", border: "2px solid " + (s.done ? "#b7df2f" : "#d1d5db"), borderRadius: 8, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={s.done ? "#111700" : "#d1d5db"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
               </button>
             )}
           </div>
@@ -1426,25 +1428,25 @@ function SwipeSetRow(props) {
     </div>
   );
 }
-const doneInput = { background: "#f0fdf4", borderColor: "#bbf7d0" };
-const warmupInput = { background: "#eff5ff", borderColor: "#cfe0fb" };
-const noteInput = { width: "100%", boxSizing: "border-box", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, padding: "8px 10px", fontSize: 16, color: "#475467", outline: "none" };
+const doneInput = { background: "#182a1b", borderColor: "#315d36" };
+const warmupInput = { background: "#202b13", borderColor: "#36442a" };
+const noteInput = { width: "100%", boxSizing: "border-box", marginTop: 6, background: "#101310", border: "1px solid #303630", borderRadius: 8, padding: "8px 10px", fontSize: 16, color: "#acb3a7", outline: "none" };
 const noteAddBtn = { background: "none", border: "none", color: "#c7ccd4", fontSize: 12, fontWeight: 500, padding: "4px 2px 0", marginTop: 2 };
 
 // ─── PLATE MODAL ───
 function PlateModal(props) {
   const plates = platesPerSide(props.weight);
-  const colorOf = (p) => ({ 45: "#1a73e8", 35: "#f59e0b", 25: "#22c55e", 10: "#6b7280", 5: "#dc2626", 2.5: "#9ca3af" }[p] || "#6b7280");
+  const colorOf = (p) => ({ 45: "#b7df2f", 35: "#f59e0b", 25: "#22c55e", 10: "#acb3a7", 5: "#dc2626", 2.5: "#a3ab9e" }[p] || "#acb3a7");
   return (
     <div onClick={props.onClose} style={overlay}>
       <div onClick={(e) => e.stopPropagation()} style={sheet}>
         <div style={sheetHead}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{props.weight} lbs</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
-        <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 0, marginBottom: 16 }}>Per side, with a 45 lb bar</p>
+        <p style={{ fontSize: 13, color: "#a3ab9e", marginTop: 0, marginBottom: 16 }}>Per side, with a 45 lb bar</p>
         {plates.length === 0 ? (
-          <p style={{ color: "#6b7280", fontSize: 14 }}>Just the bar (or below 45 lb).</p>
+          <p style={{ color: "#acb3a7", fontSize: 14 }}>Just the bar (or below 45 lb).</p>
         ) : (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {plates.map((p, i) => (
@@ -1502,8 +1504,8 @@ function Picker(props) {
         <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{creating ? "New Exercise" : multi ? "Choose Exercises" : "Add Exercise"}</h2>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {multi && !creating && <button onClick={props.onDone} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 14, fontWeight: 700, minHeight: 40 }}>Done{selected.size ? " (" + selected.size + ")" : ""}</button>}
-            <button onClick={props.onClose} style={xBtn}>✕</button>
+            {multi && !creating && <button onClick={props.onDone} style={{ background: "#b7df2f", color: "#111700", border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 14, fontWeight: 700, minHeight: 40 }}>Done{selected.size ? " (" + selected.size + ")" : ""}</button>}
+            <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
           </div>
         </div>
 
@@ -1514,41 +1516,41 @@ function Picker(props) {
             <div style={labelStyle}>Muscle Group</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
               {GROUPS.map((g) => (
-                <button key={g} onClick={() => setNewGroup(g)} style={{ background: newGroup === g ? "#1a73e8" : "#fff", color: newGroup === g ? "#fff" : "#374151", border: newGroup === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 20, padding: "8px 14px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
+                <button key={g} onClick={() => setNewGroup(g)} style={{ background: newGroup === g ? "#b7df2f" : "#151715", color: newGroup === g ? "#111700" : "#d7dcd2", border: newGroup === g ? "2px solid #b7df2f" : "2px solid #303630", borderRadius: 20, padding: "8px 14px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
               ))}
             </div>
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>{areaForGroup(newGroup) === "lower" ? "Lower body: weight jumps of 10 lbs when you progress." : "Upper body: weight jumps of 5 lbs when you progress."}</p>
+            <p style={{ fontSize: 12, color: "#a3ab9e", marginTop: 8 }}>{areaForGroup(newGroup) === "lower" ? "Lower body: weight jumps of 10 lbs when you progress." : "Upper body: weight jumps of 5 lbs when you progress."}</p>
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={() => setCreating(false)} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Back</button>
-              <button onClick={createExercise} disabled={busy || !newName.trim()} style={{ flex: 1, background: busy || !newName.trim() ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : multi ? "Create & Select" : "Create & Add"}</button>
+              <button onClick={() => setCreating(false)} style={{ background: "#202420", color: "#d7dcd2", border: "none", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Back</button>
+              <button onClick={createExercise} disabled={busy || !newName.trim()} style={{ flex: 1, background: busy || !newName.trim() ? "#53622f" : "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48 }}>{busy ? "Saving..." : multi ? "Create & Select" : "Create & Add"}</button>
             </div>
           </div>
         ) : (
           <>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search exercises" style={Object.assign({}, fieldStyle, { marginBottom: 12, flexShrink: 0 })} />
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", overflowY: "hidden", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #f3f4f6", WebkitOverflowScrolling: "touch", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", overflowY: "hidden", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #202420", WebkitOverflowScrolling: "touch", flexShrink: 0 }}>
               {["All"].concat(GROUPS).map((g) => (
-                <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#1a73e8" : "#fff", color: filter === g ? "#fff" : "#374151", border: filter === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
+                <button key={g} onClick={() => setFilter(g)} style={{ background: filter === g ? "#b7df2f" : "#151715", color: filter === g ? "#111700" : "#d7dcd2", border: filter === g ? "2px solid #b7df2f" : "2px solid #303630", borderRadius: 24, padding: "10px 20px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
               ))}
             </div>
             {props.onCreate && (
-              <button onClick={() => setCreating(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48, flexShrink: 0 }}>+ Create New Exercise</button>
+              <button onClick={() => setCreating(true)} style={{ width: "100%", background: "#202b13", border: "1px dashed #b7df2f", borderRadius: 12, padding: "14px", color: "#b7df2f", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48, flexShrink: 0 }}>+ Create New Exercise</button>
             )}
             <div style={{ flex: 1, overflowY: "auto" }}>
-              {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No matches</p>}
+              {list.length === 0 && <p style={{ color: "#a3ab9e", textAlign: "center", padding: 20, fontSize: 14 }}>No matches</p>}
               {list.map((e) => {
                 const sel = selected.has(e.id);
                 return (
-                  <button key={e.id} onClick={() => pick(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
+                  <button key={e.id} onClick={() => pick(e.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #202420", color: "#f0f2ec", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                       {multi && (
-                        <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, border: "2px solid " + (sel ? "#1a73e8" : "#d1d5db"), background: sel ? "#1a73e8" : "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 6, border: "2px solid " + (sel ? "#b7df2f" : "#d1d5db"), background: sel ? "#b7df2f" : "#151715", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           {sel && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                         </span>
                       )}
-                      <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}{e.custom && <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginLeft: 8 }}>custom</span>}{!multi && inSet.has(e.id) && <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 600, marginLeft: 8 }}>added</span>}</span>
+                      <span style={{ fontSize: 16, fontWeight: 500 }}>{e.name}{e.custom && <span style={{ fontSize: 11, color: "#a3ab9e", fontWeight: 600, marginLeft: 8 }}>custom</span>}{!multi && inSet.has(e.id) && <span style={{ fontSize: 11, color: "#b7df2f", fontWeight: 600, marginLeft: 8 }}>added</span>}</span>
                     </span>
-                    <span style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500, flexShrink: 0 }}>{e.group}</span>
+                    <span style={{ fontSize: 13, color: "#a3ab9e", fontWeight: 500, flexShrink: 0 }}>{e.group}</span>
                   </button>
                 );
               })}
@@ -1600,7 +1602,7 @@ function SplitBuilder(props) {
       <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
         <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{editing ? "Edit Workout" : "New Workout"}</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={labelStyle}>Name</div>
@@ -1608,25 +1610,25 @@ function SplitBuilder(props) {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Exercises ({ids.length})</div>
-            <button onClick={() => setPicking(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 600 }}>+ Add</button>
+            <button onClick={() => setPicking(true)} style={{ background: "#b7df2f", color: "#111700", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 14, fontWeight: 600 }}>+ Add</button>
           </div>
 
-          {ids.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, padding: "8px 0 16px" }}>No exercises yet. Tap Add to choose some.</p>}
+          {ids.length === 0 && <p style={{ color: "#a3ab9e", fontSize: 14, padding: "8px 0 16px" }}>No exercises yet. Tap Add to choose some.</p>}
           {ids.map((id, i) => {
             const ex = findEx(id);
             return (
-              <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #f3f4f6" }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#9ca3af", width: 20, textAlign: "center" }}>{i + 1}</span>
+              <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 0", borderBottom: "1px solid #202420" }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#a3ab9e", width: 20, textAlign: "center" }}>{i + 1}</span>
                 <span style={{ flex: 1, fontSize: 15, fontWeight: 500, minWidth: 0 }}>{ex ? ex.name : id}</span>
-                <button onClick={() => move(i, -1)} disabled={i === 0} aria-label="up" style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 34, height: 34, fontSize: 16, color: i === 0 ? "#d1d5db" : "#6b7280" }}>↑</button>
-                <button onClick={() => move(i, 1)} disabled={i === ids.length - 1} aria-label="down" style={{ background: "#f3f4f6", border: "none", borderRadius: 8, width: 34, height: 34, fontSize: 16, color: i === ids.length - 1 ? "#d1d5db" : "#6b7280" }}>↓</button>
+                <button onClick={() => move(i, -1)} disabled={i === 0} aria-label="up" style={{ background: "#202420", border: "none", borderRadius: 8, width: 34, height: 34, fontSize: 16, color: i === 0 ? "#d1d5db" : "#acb3a7" }}>↑</button>
+                <button onClick={() => move(i, 1)} disabled={i === ids.length - 1} aria-label="down" style={{ background: "#202420", border: "none", borderRadius: 8, width: 34, height: 34, fontSize: 16, color: i === ids.length - 1 ? "#d1d5db" : "#acb3a7" }}>↓</button>
                 <button onClick={() => remove(id)} aria-label="remove" style={{ background: "none", border: "none", color: "#d1d5db", fontSize: 18, width: 30 }}>✕</button>
               </div>
             );
           })}
           {err && <div style={{ fontSize: 13, fontWeight: 600, color: "#dc2626", marginTop: 12 }}>{err}</div>}
         </div>
-        <button onClick={save} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : editing ? "Save Changes" : "Save Workout"}</button>
+        <button onClick={save} disabled={busy} style={{ width: "100%", background: busy ? "#53622f" : "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : editing ? "Save Changes" : "Save Workout"}</button>
       </div>
       {picking && <Picker multi selectedIds={ids} onToggle={toggle} onCreate={props.onCreateExercise} onDone={() => setPicking(false)} onClose={() => setPicking(false)} />}
     </div>
@@ -1650,21 +1652,21 @@ function PlanLibrary(props) {
       <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
         <div style={Object.assign({}, sheetHead, { flexShrink: 0 })}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Workout Plans</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
-        <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 0, marginBottom: 16, flexShrink: 0 }}>Pick a program. Its sessions load onto your home screen.</p>
+        <p style={{ fontSize: 13, color: "#a3ab9e", marginTop: 0, marginBottom: 16, flexShrink: 0 }}>Pick a program. Its sessions load onto your home screen.</p>
         <div style={{ flex: 1, overflowY: "auto" }}>
           {PLANS.map((plan) => (
             <div key={plan.id} style={Object.assign({}, cardStyle, { marginBottom: 12 })}>
               <div style={{ fontSize: 16, fontWeight: 600 }}>{plan.name}</div>
-              <div style={{ fontSize: 12, color: "#1a73e8", fontWeight: 600, marginTop: 2 }}>{plan.days_per_week} · {plan.days.length} sessions</div>
-              <p style={{ fontSize: 13, color: "#6b7280", marginTop: 8, marginBottom: 10, lineHeight: 1.45 }}>{plan.desc}</p>
+              <div style={{ fontSize: 12, color: "#b7df2f", fontWeight: 600, marginTop: 2 }}>{plan.days_per_week} · {plan.days.length} sessions</div>
+              <p style={{ fontSize: 13, color: "#acb3a7", marginTop: 8, marginBottom: 10, lineHeight: 1.45 }}>{plan.desc}</p>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
                 {plan.days.map((d, i) => (
-                  <span key={i} style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 8, padding: "5px 10px" }}>{d.name}</span>
+                  <span key={i} style={{ fontSize: 12, fontWeight: 600, color: "#acb3a7", background: "#202420", borderRadius: 8, padding: "5px 10px" }}>{d.name}</span>
                 ))}
               </div>
-              <button onClick={() => apply(plan)} disabled={busyId === plan.id} style={{ width: "100%", background: busyId === plan.id ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>{busyId === plan.id ? "Loading..." : "Use This Plan"}</button>
+              <button onClick={() => apply(plan)} disabled={busyId === plan.id} style={{ width: "100%", background: busyId === plan.id ? "#53622f" : "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>{busyId === plan.id ? "Loading..." : "Use This Plan"}</button>
             </div>
           ))}
         </div>
@@ -1716,7 +1718,7 @@ function EditWorkoutModal(props) {
       <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
         <div style={sheetHead}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Edit Workout</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ marginBottom: 12 }}>
@@ -1736,11 +1738,11 @@ function EditWorkoutModal(props) {
               onRemove={() => removeExercise(exIdx)}
             />
           ))}
-          <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#fff", border: "1px solid #eaeef3", borderRadius: 14, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 600, marginBottom: 12, minHeight: 48 }}>+ Add Exercise</button>
+          <button onClick={() => setPicker(true)} style={{ width: "100%", background: "#151715", border: "1px solid #303630", borderRadius: 14, padding: "14px", color: "#b7df2f", fontSize: 14, fontWeight: 600, marginBottom: 12, minHeight: 48 }}>+ Add Exercise</button>
         </div>
         <div style={{ display: "flex", gap: 8, paddingTop: 12 }}>
-          <button onClick={del} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Delete</button>
-          <button onClick={save} disabled={saving} style={{ flex: 1, background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48, opacity: saving ? 0.8 : 1 }}>{saving ? "Saving..." : "Save Changes"}</button>
+          <button onClick={del} style={{ background: "#321919", color: "#dc2626", border: "1px solid #633333", borderRadius: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, minHeight: 48 }}>Delete</button>
+          <button onClick={save} disabled={saving} style={{ flex: 1, background: "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 48, opacity: saving ? 0.8 : 1 }}>{saving ? "Saving..." : "Save Changes"}</button>
         </div>
       </div>
       {picker && <Picker inWorkoutIds={exercises.map((e) => e.exerciseId)} onSelect={addExercise} onCreate={props.onCreateExercise} onClose={() => setPicker(false)} />}
@@ -1795,29 +1797,29 @@ function FoodTab(props) {
   return (
     <div>
       <h2 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 4 }}>Meal Library</h2>
-      <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 4, marginBottom: 16 }}>High-protein meals built for muscle. Tap one to see how to make it.</p>
+      <p style={{ color: "#a3ab9e", fontSize: 14, marginTop: 4, marginBottom: 16 }}>High-protein meals built for muscle. Tap one to see how to make it.</p>
 
       {props.onAddRecipe && (
-        <button onClick={() => setShowForm(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48 }}>+ Add Your Own Recipe</button>
+        <button onClick={() => setShowForm(true)} style={{ width: "100%", background: "#202b13", border: "1px dashed #b7df2f", borderRadius: 12, padding: "14px", color: "#b7df2f", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48 }}>+ Add Your Own Recipe</button>
       )}
 
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search meals or ingredients" style={Object.assign({}, fieldStyle, { marginBottom: 12 })} />
 
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 16, WebkitOverflowScrolling: "touch" }}>
         {["All"].concat(MEAL_CATS).map((g) => (
-          <button key={g} onClick={() => setCat(g)} style={{ background: cat === g ? "#1a73e8" : "#fff", color: cat === g ? "#fff" : "#374151", border: cat === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 24, padding: "10px 18px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
+          <button key={g} onClick={() => setCat(g)} style={{ background: cat === g ? "#b7df2f" : "#151715", color: cat === g ? "#111700" : "#d7dcd2", border: cat === g ? "2px solid #b7df2f" : "2px solid #303630", borderRadius: 24, padding: "10px 18px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
         ))}
       </div>
 
-      {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No meals match that search</p>}
+      {list.length === 0 && <p style={{ color: "#a3ab9e", textAlign: "center", padding: 20, fontSize: 14 }}>No meals match that search</p>}
       {list.map((r) => (
         <button key={r.id} onClick={() => setDetail(r)} style={Object.assign({}, cardStyle, { width: "100%", textAlign: "left", display: "block" })}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 600 }}>{r.name}</div>
-              <div style={{ fontSize: 13, color: "#6b7280", marginTop: 3, lineHeight: 1.4 }}>{r.blurb}</div>
+              <div style={{ fontSize: 13, color: "#acb3a7", marginTop: 3, lineHeight: 1.4 }}>{r.blurb}</div>
             </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 20, padding: "5px 10px", whiteSpace: "nowrap" }}>{r.time} min</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#acb3a7", background: "#202420", borderRadius: 20, padding: "5px 10px", whiteSpace: "nowrap" }}>{r.time} min</span>
           </div>
           <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
             <MacroPill label="P" val={r.p + "g"} strong />
@@ -1828,10 +1830,10 @@ function FoodTab(props) {
         </button>
       ))}
 
-      <div style={{ borderTop: "1px solid #eaeef3", marginTop: 20, paddingTop: 20 }}>
+      <div style={{ borderTop: "1px solid #303630", marginTop: 20, paddingTop: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 20 }}>
           <button onClick={() => setDate(shiftDay(date, -1))} style={navBtnStyle}>‹</button>
-          <span style={{ fontSize: 15, fontWeight: 600, color: date === today() ? "#1a73e8" : "#6b7280" }}>{date === today() ? "Today" : date}</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: date === today() ? "#b7df2f" : "#acb3a7" }}>{date === today() ? "Today" : date}</span>
           <button onClick={() => setDate(shiftDay(date, 1))} style={navBtnStyle}>›</button>
         </div>
 
@@ -1845,10 +1847,10 @@ function FoodTab(props) {
           <div style={{ display: "flex", gap: 4, height: 48 }}>
             {week.map((wk, i) => (
               <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                <div style={{ width: "100%", flex: 1, background: "#f3f4f6", borderRadius: 4, display: "flex", alignItems: "flex-end" }}>
-                  <div style={{ width: "100%", height: Math.min((wk.p / pt) * 100, 100) + "%", background: wk.p >= pt ? "#22c55e" : "#1a73e8", borderRadius: 4, minHeight: 2 }} />
+                <div style={{ width: "100%", flex: 1, background: "#202420", borderRadius: 4, display: "flex", alignItems: "flex-end" }}>
+                  <div style={{ width: "100%", height: Math.min((wk.p / pt) * 100, 100) + "%", background: wk.p >= pt ? "#22c55e" : "#b7df2f", borderRadius: 4, minHeight: 2 }} />
                 </div>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>{wk.day}</span>
+                <span style={{ fontSize: 10, color: "#a3ab9e" }}>{wk.day}</span>
               </div>
             ))}
           </div>
@@ -1857,16 +1859,16 @@ function FoodTab(props) {
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Logged Meals</div>
-            <button onClick={() => setShowPresets(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>+ Quick Food</button>
+            <button onClick={() => setShowPresets(true)} style={{ background: "#b7df2f", color: "#111700", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>+ Quick Food</button>
           </div>
-          {dm.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>Nothing logged yet. Log a meal from the library above, or add one below.</p>}
+          {dm.length === 0 && <p style={{ color: "#a3ab9e", textAlign: "center", padding: 20, fontSize: 14 }}>Nothing logged yet. Log a meal from the library above, or add one below.</p>}
           {dm.map((m, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f3f4f6" }}>
+            <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #202420" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
-                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{m.protein}g · {m.cals} cal{m.time ? " · " + m.time : ""}</div>
+                <div style={{ fontSize: 13, color: "#a3ab9e", marginTop: 2 }}>{m.protein}g · {m.cals} cal{m.time ? " · " + m.time : ""}</div>
               </div>
-              <button onClick={() => onRemove(date, i)} style={closeBtn}>✕</button>
+              <button onClick={() => onRemove(date, i)} style={closeBtn} aria-label="Close">✕</button>
             </div>
           ))}
         </div>
@@ -1878,7 +1880,7 @@ function FoodTab(props) {
             <input style={fieldStyle} placeholder="Protein (g)" type="number" inputMode="numeric" value={cust.p} onChange={(e) => setCust(Object.assign({}, cust, { p: e.target.value }))} />
             <input style={fieldStyle} placeholder="Calories" type="number" inputMode="numeric" value={cust.c} onChange={(e) => setCust(Object.assign({}, cust, { c: e.target.value }))} />
           </div>
-          <button onClick={addCustom} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 600, marginTop: 10, minHeight: 48 }}>Log It</button>
+          <button onClick={addCustom} style={{ width: "100%", background: "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 600, marginTop: 10, minHeight: 48 }}>Log It</button>
         </div>
       </div>
 
@@ -1891,13 +1893,13 @@ function FoodTab(props) {
           <div style={Object.assign({}, sheet, { maxHeight: "80vh" })}>
             <div style={sheetHead}>
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Quick Foods</h2>
-              <button onClick={() => setShowPresets(false)} style={xBtn}>✕</button>
+              <button onClick={() => setShowPresets(false)} style={xBtn} aria-label="Close">✕</button>
             </div>
             <div style={{ flex: 1, overflowY: "auto" }}>
               {FOOD_PRESETS.map((p, i) => (
-                <button key={i} onClick={() => logMeal(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
+                <button key={i} onClick={() => logMeal(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #202420", color: "#f0f2ec", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
                   <span style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</span>
-                  <span style={{ fontSize: 13, color: "#9ca3af" }}>{p.p}g · {p.c}cal</span>
+                  <span style={{ fontSize: 13, color: "#a3ab9e" }}>{p.p}g · {p.c}cal</span>
                 </button>
               ))}
             </div>
@@ -1910,7 +1912,7 @@ function FoodTab(props) {
 
 function MacroPill(props) {
   return (
-    <span style={{ fontSize: 12, fontWeight: 600, color: props.strong ? "#1a73e8" : "#6b7280", background: props.strong ? "#1a73e810" : "#f3f4f6", borderRadius: 8, padding: "5px 10px" }}>
+    <span style={{ fontSize: 12, fontWeight: 600, color: props.strong ? "#b7df2f" : "#acb3a7", background: props.strong ? "#b7df2f10" : "#202420", borderRadius: 8, padding: "5px 10px" }}>
       {props.label ? props.label + " " : ""}{props.val}
     </span>
   );
@@ -1925,17 +1927,17 @@ function RecipeDetail(props) {
         <div style={sheetHead}>
           <div>
             <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0 }}>{r.name}</h2>
-            <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{r.cat} · {r.time} min</div>
+            <div style={{ fontSize: 13, color: "#a3ab9e", marginTop: 2 }}>{r.cat} · {r.time} min</div>
           </div>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
             {[{ l: "Protein", v: r.p + "g", strong: true }, { l: "Carbs", v: r.c + "g" }, { l: "Fat", v: r.f + "g" }, { l: "Calories", v: r.cals }].map((m, i) => (
-              <div key={i} style={{ background: m.strong ? "#1a73e810" : "#f9fafb", border: "1px solid " + (m.strong ? "#1a73e830" : "#eaeef3"), borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
-                <div style={{ fontSize: 17, fontWeight: 700, color: m.strong ? "#1a73e8" : "#1a2332" }}>{m.v}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 2 }}>{m.l}</div>
+              <div key={i} style={{ background: m.strong ? "#b7df2f10" : "#202420", border: "1px solid " + (m.strong ? "#b7df2f30" : "#303630"), borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
+                <div style={{ fontSize: 17, fontWeight: 700, color: m.strong ? "#b7df2f" : "#f0f2ec" }}>{m.v}</div>
+                <div style={{ fontSize: 11, color: "#a3ab9e", fontWeight: 500, marginTop: 2 }}>{m.l}</div>
               </div>
             ))}
           </div>
@@ -1943,9 +1945,9 @@ function RecipeDetail(props) {
           <div style={labelStyle}>Ingredients</div>
           <div style={{ marginBottom: 20 }}>
             {r.ingredients.map((ing, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 0", borderBottom: i < r.ingredients.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                <span style={{ color: "#1a73e8", fontWeight: 700, lineHeight: 1.4 }}>·</span>
-                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.4 }}>{ing}</span>
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 0", borderBottom: i < r.ingredients.length - 1 ? "1px solid #202420" : "none" }}>
+                <span style={{ color: "#b7df2f", fontWeight: 700, lineHeight: 1.4 }}>·</span>
+                <span style={{ fontSize: 14, color: "#d7dcd2", lineHeight: 1.4 }}>{ing}</span>
               </div>
             ))}
           </div>
@@ -1954,14 +1956,14 @@ function RecipeDetail(props) {
           <div style={{ marginBottom: 8 }}>
             {r.steps.map((st, i) => (
               <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
-                <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: "50%", background: "#1a73e8", color: "#fff", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.5, paddingTop: 2 }}>{st}</span>
+                <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: "50%", background: "#b7df2f", color: "#111700", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                <span style={{ fontSize: 14, color: "#d7dcd2", lineHeight: 1.5, paddingTop: 2 }}>{st}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <button onClick={props.onLog} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Log to Today ({r.p}g · {r.cals} cal)</button>
+        <button onClick={props.onLog} style={{ width: "100%", background: "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Log to Today ({r.p}g · {r.cals} cal)</button>
       </div>
     </div>
   );
@@ -2007,7 +2009,7 @@ function RecipeForm(props) {
       <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
         <div style={sheetHead}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>New Recipe</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={labelStyle}>Name</div>
@@ -2016,7 +2018,7 @@ function RecipeForm(props) {
           <div style={labelStyle}>Category</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
             {MEAL_CATS.map((g) => (
-              <button key={g} onClick={() => set("cat", g)} style={{ background: f.cat === g ? "#1a73e8" : "#fff", color: f.cat === g ? "#fff" : "#374151", border: f.cat === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
+              <button key={g} onClick={() => set("cat", g)} style={{ background: f.cat === g ? "#b7df2f" : "#151715", color: f.cat === g ? "#111700" : "#d7dcd2", border: f.cat === g ? "2px solid #b7df2f" : "2px solid #303630", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
             ))}
           </div>
 
@@ -2053,7 +2055,7 @@ function RecipeForm(props) {
 
           {err && <div style={{ fontSize: 13, fontWeight: 600, color: "#dc2626", marginBottom: 8 }}>{err}</div>}
         </div>
-        <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : "Save Recipe"}</button>
+        <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#53622f" : "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : "Save Recipe"}</button>
       </div>
     </div>
   );
@@ -2062,15 +2064,15 @@ function RecipeForm(props) {
 function Ring(props) {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 12, fontWeight: 500, color: "#9ca3af", marginBottom: 10 }}>{props.label}</div>
+      <div style={{ fontSize: 12, fontWeight: 500, color: "#a3ab9e", marginBottom: 10 }}>{props.label}</div>
       <div style={{ position: "relative", width: 80, height: 80 }}>
         <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="34" fill="none" stroke="#f3f4f6" strokeWidth="5" />
-          <circle cx="40" cy="40" r="34" fill="none" stroke={props.pct >= 100 ? "#22c55e" : "#1a73e8"} strokeWidth="5" strokeDasharray={props.pct * 2.14 + " 214"} strokeLinecap="round" transform="rotate(-90 40 40)" />
+          <circle cx="40" cy="40" r="34" fill="none" stroke="#202420" strokeWidth="5" />
+          <circle cx="40" cy="40" r="34" fill="none" stroke={props.pct >= 100 ? "#22c55e" : "#b7df2f"} strokeWidth="5" strokeDasharray={props.pct * 2.14 + " 214"} strokeLinecap="round" transform="rotate(-90 40 40)" />
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontSize: 16, fontWeight: 700 }}>{props.val}{props.unit}</span>
-          <span style={{ fontSize: 10, color: "#9ca3af" }}>/{props.tgt}</span>
+          <span style={{ fontSize: 10, color: "#a3ab9e" }}>/{props.tgt}</span>
         </div>
       </div>
     </div>
@@ -2078,7 +2080,7 @@ function Ring(props) {
 }
 
 // ─── PROGRESS TAB ───
-function ProgressTab(props) {
+export function ProgressTab(props) {
   const stats = computeGameStats(props.workouts, props.weekSchedule);
   const grid = buildHabitGrid(stats.workoutDays, 10);
   const badges = achievementsFor(stats);
@@ -2088,13 +2090,13 @@ function ProgressTab(props) {
   return (
     <div>
       {/* Level hero */}
-      <div style={{ background: "linear-gradient(135deg,#1a73e8,#0c47b7)", borderRadius: 20, padding: 20, color: "#fff", marginBottom: 16, boxShadow: shadowPrimary }}>
+      <div style={{ background: "linear-gradient(135deg,#b7df2f,#90b322)", borderRadius: 20, padding: 20, color: "#111700", marginBottom: 16, boxShadow: shadowPrimary }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
           <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, letterSpacing: ".04em" }}>LEVEL {stats.level}</span>
           <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>{stats.total} workouts</span>
         </div>
         <div style={{ height: 10, background: "rgba(255,255,255,.22)", borderRadius: 6, marginTop: 12, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: (stats.intoLevel * 10) + "%", background: "#fff", borderRadius: 6 }} />
+          <div style={{ height: "100%", width: (stats.intoLevel * 10) + "%", background: "#151715", borderRadius: 6 }} />
         </div>
         <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.9, marginTop: 10 }}>{10 - stats.intoLevel} more {10 - stats.intoLevel === 1 ? "workout" : "workouts"} to Level {stats.level + 1}</div>
       </div>
@@ -2104,11 +2106,11 @@ function ProgressTab(props) {
         {[
           { v: stats.streak, l: stats.streak === 1 ? "Week Streak" : "Week Streak", accent: "#f59e0b" },
           { v: stats.perfectWeeks, l: "Perfect Weeks", accent: "#22c55e" },
-          { v: stats.sets, l: "Total Sets", accent: "#1a73e8" },
+          { v: stats.sets, l: "Total Sets", accent: "#b7df2f" },
         ].map((s, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "18px 8px", textAlign: "center", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+          <div key={i} style={{ background: "#151715", borderRadius: 16, padding: "18px 8px", textAlign: "center", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
             <div style={{ fontSize: 26, fontWeight: 800, color: s.accent }}>{s.v}</div>
-            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
+            <div style={{ fontSize: 11, color: "#a3ab9e", fontWeight: 600, marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
           </div>
         ))}
       </div>
@@ -2117,16 +2119,16 @@ function ProgressTab(props) {
       <div style={Object.assign({}, cardStyle, { marginBottom: 20, padding: 18 })}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>This Week</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: stats.thisWeekScheduled && stats.thisWeekDone >= stats.thisWeekScheduled ? "#22c55e" : "#9ca3af" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: stats.thisWeekScheduled && stats.thisWeekDone >= stats.thisWeekScheduled ? "#22c55e" : "#a3ab9e" }}>
             {stats.thisWeekScheduled > 0 ? stats.thisWeekDone + " / " + stats.thisWeekScheduled : "No schedule set"}
           </span>
         </div>
         {stats.thisWeekScheduled > 0 ? (
-          <div style={{ height: 8, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: weekPct + "%", background: weekPct >= 100 ? "#22c55e" : "#1a73e8", borderRadius: 5, transition: "width .3s ease" }} />
+          <div style={{ height: 8, background: "#202420", borderRadius: 5, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: weekPct + "%", background: weekPct >= 100 ? "#22c55e" : "#b7df2f", borderRadius: 5, transition: "width .3s ease" }} />
           </div>
         ) : (
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Set a weekly schedule on the Train tab to track perfect weeks and streaks.</p>
+          <p style={{ fontSize: 13, color: "#a3ab9e", margin: 0 }}>Set a weekly schedule on the Train tab to track perfect weeks and streaks.</p>
         )}
       </div>
 
@@ -2140,7 +2142,7 @@ function ProgressTab(props) {
           {grid.map((row, ri) => (
             <div key={ri} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 7, marginBottom: ri < grid.length - 1 ? 7 : 0 }}>
               {row.map((c, ci) => (
-                <div key={ci} style={{ aspectRatio: "1", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", background: c.done ? "#22c55e" : c.future ? "transparent" : "#f1f3f6", border: c.isToday ? "2px solid #1a73e8" : c.future ? "1px dashed #e3e8ef" : "none" }}>
+                <div key={ci} style={{ aspectRatio: "1", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", background: c.done ? "#22c55e" : c.future ? "transparent" : "#202420", border: c.isToday ? "2px solid #b7df2f" : c.future ? "1px dashed #303630" : "none" }}>
                   {c.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                 </div>
               ))}
@@ -2153,26 +2155,26 @@ function ProgressTab(props) {
       <div style={{ marginBottom: 8 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Achievements</div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af" }}>{earnedCount} / {badges.length}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#a3ab9e" }}>{earnedCount} / {badges.length}</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           {badges.map((b) => (
-            <div key={b.id} style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "14px 8px", textAlign: "center", boxShadow: b.earned ? shadowSm : "none", opacity: b.earned ? 1 : 0.55 }}>
-              <div style={{ width: 40, height: 40, margin: "0 auto 8px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: b.earned ? "linear-gradient(135deg,#f6c453,#e69a17)" : "#eef1f5" }}>
+            <div key={b.id} style={{ background: "#151715", border: "1px solid " + BORDER, borderRadius: 14, padding: "14px 8px", textAlign: "center", boxShadow: b.earned ? shadowSm : "none", opacity: b.earned ? 1 : 0.55 }}>
+              <div style={{ width: 40, height: 40, margin: "0 auto 8px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: b.earned ? "linear-gradient(135deg,#f6c453,#e69a17)" : "#202420" }}>
                 {b.earned ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 4H5a2 2 0 0 0 0 4h.5M17 4h2a2 2 0 0 1 0 4h-.5" /></svg>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a3ab9e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
                 )}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a2332", lineHeight: 1.2 }}>{b.label}</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3, lineHeight: 1.2 }}>{b.req}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#f0f2ec", lineHeight: 1.2 }}>{b.label}</div>
+              <div style={{ fontSize: 10, color: "#a3ab9e", marginTop: 3, lineHeight: 1.2 }}>{b.req}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {stats.total === 0 && <p style={{ color: "#9ca3af", fontSize: 14, textAlign: "center", padding: "24px 20px 0" }}>Log your first workout to start leveling up.</p>}
+      {stats.total === 0 && <p style={{ color: "#a3ab9e", fontSize: 14, textAlign: "center", padding: "24px 20px 0" }}>Log your first workout to start leveling up.</p>}
     </div>
   );
 }
@@ -2207,14 +2209,14 @@ function SettingsSheet(props) {
 
   return (
     <div style={overlay}>
-      <div style={{ ...sheet, color: "#1a2332" }}>
+      <div style={{ ...sheet, color: "#f0f2ec" }}>
         <div style={sheetHead}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "#1a2332" }}>Settings</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "#f0f2ec" }}>Settings</h2>
+          <button onClick={props.onClose} style={xBtn} aria-label="Close">✕</button>
         </div>
         <div style={{ flex: 1, overflowY: "auto" }}>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 48, color: "#1a2332", marginBottom: 16 }}>
+            <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 48, color: "#f0f2ec", marginBottom: 16 }}>
               Haptic feedback
               <input type="checkbox" checked={hapticsEnabled} onChange={(e) => { const enabled = e.target.checked; setHapticsEnabled(enabled); try { localStorage.setItem("ff-haptics", enabled ? "on" : "off"); } catch {} if (enabled) feedback(); }} />
             </label>
@@ -2234,35 +2236,35 @@ function SettingsSheet(props) {
             <input style={fieldStyle} type="number" inputMode="numeric" value={rest} onChange={(e) => setRest(e.target.value)} placeholder="120" />
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
               {[["Off", "0"], ["60s", "60"], ["90s", "90"], ["2m", "120"], ["3m", "180"]].map(([lbl, val]) => (
-                <button key={val} onClick={() => setRest(val)} style={{ flex: 1, minWidth: 56, background: rest === val ? "#1a73e8" : "#fff", color: rest === val ? "#fff" : "#374151", border: rest === val ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 12, padding: "10px 6px", fontSize: 13, fontWeight: 700, minHeight: 42 }}>{lbl}</button>
+                <button key={val} onClick={() => setRest(val)} style={{ flex: 1, minWidth: 56, background: rest === val ? "#b7df2f" : "#151715", color: rest === val ? "#111700" : "#d7dcd2", border: rest === val ? "2px solid #b7df2f" : "2px solid #303630", borderRadius: 12, padding: "10px 6px", fontSize: 13, fontWeight: 700, minHeight: 42 }}>{lbl}</button>
               ))}
             </div>
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 8 }}>The timer starts automatically when you check off a set. Set to 0 (Off) to disable it.</p>
+            <p style={{ fontSize: 12, color: "#a3ab9e", marginTop: 8 }}>The timer starts automatically when you check off a set. Set to 0 (Off) to disable it.</p>
           </div>
 
           {props.onAddSplit && (
-            <div style={{ marginBottom: 16, borderTop: "1px solid #f3f4f6", paddingTop: 16 }}>
+            <div style={{ marginBottom: 16, borderTop: "1px solid #202420", paddingTop: 16 }}>
               <div style={labelStyle}>Your Workouts</div>
-              {splits.length === 0 && <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 0, marginBottom: 12 }}>No workouts yet.</p>}
+              {splits.length === 0 && <p style={{ color: "#a3ab9e", fontSize: 14, marginTop: 0, marginBottom: 12 }}>No workouts yet.</p>}
               {splits.map((s) => (
-                <div key={s.id || s.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
+                <div key={s.id || s.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 0", borderBottom: "1px solid #202420" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 500 }}>{s.name}</div>
-                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{(s.exercises || []).length} exercises</div>
+                    <div style={{ fontSize: 12, color: "#a3ab9e", marginTop: 2 }}>{(s.exercises || []).length} exercises</div>
                   </div>
-                  {props.onUpdateSplit && s.id && <button onClick={() => setEditingSplit(s)} style={{ background: "#f0f5ff", border: "none", borderRadius: 9, color: "#1a73e8", fontSize: 13, fontWeight: 700, padding: "8px 14px", minHeight: 38, flexShrink: 0 }}>Edit</button>}
+                  {props.onUpdateSplit && s.id && <button onClick={() => setEditingSplit(s)} style={{ background: "#202b13", border: "none", borderRadius: 9, color: "#b7df2f", fontSize: 13, fontWeight: 700, padding: "8px 14px", minHeight: 38, flexShrink: 0 }}>Edit</button>}
                   {props.onRemoveSplit && s.id && <button onClick={() => confirmRemoveSplit(s)} aria-label="remove workout" style={closeBtn}>✕</button>}
                 </div>
               ))}
               <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "12px", color: "#1a73e8", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Workout</button>
-                <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, padding: "12px", color: "#374151", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
+                <button onClick={() => setBuilding(true)} style={{ flex: 1, background: "#202b13", border: "1px dashed #b7df2f", borderRadius: 12, padding: "12px", color: "#b7df2f", fontSize: 13, fontWeight: 700, minHeight: 48 }}>+ New Workout</button>
+                <button onClick={() => setPlanLib(true)} style={{ flex: 1, background: "#151715", border: "1px solid #303630", borderRadius: 12, padding: "12px", color: "#d7dcd2", fontSize: 13, fontWeight: 700, minHeight: 48 }}>Browse Plans</button>
               </div>
             </div>
           )}
         </div>
-        <button onClick={save} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Save</button>
-        {props.onSignOut && <button onClick={props.onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 10 }}>Sign Out</button>}
+        <button onClick={save} style={{ width: "100%", background: "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Save</button>
+        {props.onSignOut && <button onClick={props.onSignOut} style={{ width: "100%", background: "none", color: "#dc2626", border: "1px solid #633333", borderRadius: 12, padding: "14px", fontSize: 14, fontWeight: 700, minHeight: 48, marginTop: 10 }}>Sign Out</button>}
       </div>
       {building && <SplitBuilder onSave={props.onAddSplit} onCreateExercise={props.onCreateExercise} onClose={() => setBuilding(false)} />}
       {editingSplit && <SplitBuilder initial={editingSplit} onSave={props.onUpdateSplit} onCreateExercise={props.onCreateExercise} onClose={() => setEditingSplit(null)} />}
@@ -2321,32 +2323,32 @@ function ChatCoach() {
   function onKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }
   function clearChat() { setMessages([]); try { localStorage.removeItem("ff-chat"); } catch (e) {} }
 
-  const userBubble = { background: "linear-gradient(135deg,#1a73e8,#1565d8)", color: "#fff", borderBottomRightRadius: 5 };
-  const botBubble = { background: "#f3f4f6", color: "#1a2332", borderBottomLeftRadius: 5 };
+  const userBubble = { background: "linear-gradient(135deg,#b7df2f,#b7df2f)", color: "#111700", borderBottomRightRadius: 5 };
+  const botBubble = { background: "#202420", color: "#f0f2ec", borderBottomLeftRadius: 5 };
 
   return (
     <div style={{ marginBottom: 28 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#b7df2f,#90b322)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
           </div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#1a2332", lineHeight: 1.1 }}>Coach</div>
-            <div style={{ fontSize: 12, color: "#9ca3af" }}>Ask anything about training & nutrition</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#f0f2ec", lineHeight: 1.1 }}>Coach</div>
+            <div style={{ fontSize: 12, color: "#a3ab9e" }}>Ask anything about training & nutrition</div>
           </div>
         </div>
-        {messages.length > 0 && <button onClick={clearChat} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, fontWeight: 600, padding: 4 }}>Clear</button>}
+        {messages.length > 0 && <button onClick={clearChat} style={{ background: "none", border: "none", color: "#a3ab9e", fontSize: 13, fontWeight: 600, padding: 4 }}>Clear</button>}
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 18, boxShadow: shadowSm, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: "#151715", border: "1px solid " + BORDER, borderRadius: 18, boxShadow: shadowSm, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div ref={scrollRef} style={{ padding: 16, maxHeight: "46vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
           {messages.length === 0 && !loading && (
             <div style={{ padding: "4px 0" }}>
-              <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, marginTop: 0, marginBottom: 14 }}>I can help with form, programming, nutrition, and recovery. I stick to fitness, so for medical concerns please see a professional.</p>
+              <p style={{ fontSize: 14, color: "#acb3a7", lineHeight: 1.5, marginTop: 0, marginBottom: 14 }}>I can help with form, programming, nutrition, and recovery. I stick to fitness, so for medical concerns please see a professional.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {COACH_SUGGESTIONS.map((q, i) => (
-                  <button key={i} onClick={() => send(q)} style={{ textAlign: "left", background: "#f7f9fc", border: "1px solid " + BORDER, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: "#1a2332", fontWeight: 500 }}>{q}</button>
+                  <button key={i} onClick={() => send(q)} style={{ textAlign: "left", background: "#101310", border: "1px solid " + BORDER, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: "#f0f2ec", fontWeight: 500 }}>{q}</button>
                 ))}
               </div>
             </div>
@@ -2358,15 +2360,15 @@ function ChatCoach() {
           ))}
           {loading && (
             <div style={{ display: "flex", justifyContent: "flex-start" }}>
-              <div style={{ background: "#f3f4f6", borderRadius: 16, borderBottomLeftRadius: 5, padding: "14px 16px", display: "flex", gap: 5 }}>
-                {[0, 1, 2].map((i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#9ca3af", display: "inline-block", animation: "coachdot 1s " + (i * 0.15) + "s infinite ease-in-out" }} />)}
+              <div style={{ background: "#202420", borderRadius: 16, borderBottomLeftRadius: 5, padding: "14px 16px", display: "flex", gap: 5 }}>
+                {[0, 1, 2].map((i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#a3ab9e", display: "inline-block", animation: "coachdot 1s " + (i * 0.15) + "s infinite ease-in-out" }} />)}
               </div>
             </div>
           )}
         </div>
         <div style={{ borderTop: "1px solid " + BORDER, padding: 10, display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} rows={1} placeholder="Ask the coach..." style={{ flex: 1, resize: "none", border: "none", outline: "none", background: "transparent", fontSize: 15, color: "#1a2332", padding: "9px 6px", maxHeight: 120, fontFamily: "inherit" }} />
-          <button onClick={() => send()} disabled={loading || !input.trim()} aria-label="send" style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "none", background: loading || !input.trim() ? "#c7d6f0" : "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} rows={1} placeholder="Ask the coach..." style={{ flex: 1, resize: "none", border: "none", outline: "none", background: "transparent", fontSize: 15, color: "#f0f2ec", padding: "9px 6px", maxHeight: 120, fontFamily: "inherit" }} />
+          <button onClick={() => send()} disabled={loading || !input.trim()} aria-label="send" style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "none", background: loading || !input.trim() ? "#c7d6f0" : "linear-gradient(135deg,#b7df2f,#90b322)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
           </button>
         </div>
@@ -2392,12 +2394,12 @@ function LearnTab() {
       <ChatCoach />
       <div style={labelStyle}>Training Knowledge</div>
       {sections.map((s) => (
-        <div key={s.id} style={{ background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
-          <button onClick={() => toggle(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: 16, width: "100%", textAlign: "left", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>
+        <div key={s.id} style={{ background: "#151715", border: "1px solid #303630", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
+          <button onClick={() => toggle(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: 16, width: "100%", textAlign: "left", fontSize: 15, fontWeight: 600, color: "#f0f2ec" }}>
             {s.t}
-            <span style={{ transform: open === s.id ? "rotate(180deg)" : "none", transition: "transform .2s", color: "#9ca3af", fontSize: 18 }}>{"\u25BE"}</span>
+            <span style={{ transform: open === s.id ? "rotate(180deg)" : "none", transition: "transform .2s", color: "#a3ab9e", fontSize: 18 }}>{"\u25BE"}</span>
           </button>
-          {open === s.id && <pre style={{ padding: "0 16px 16px", fontSize: 13, color: "#6b7280", lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "inherit", margin: 0 }}>{s.c}</pre>}
+          {open === s.id && <pre style={{ padding: "0 16px 16px", fontSize: 13, color: "#acb3a7", lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "inherit", margin: 0 }}>{s.c}</pre>}
         </div>
       ))}
     </div>
@@ -2483,7 +2485,7 @@ function WeekBoard(props) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={Object.assign({}, labelStyle, { marginBottom: 8 })}>This Week</div>
-      <div ref={containerRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ position: "relative", background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
+      <div ref={containerRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} style={{ position: "relative", background: "#151715", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, overflow: "hidden" }}>
         {sched.map((val, i) => {
           const split = val && val !== "rest" ? splitById(val) : null;
           const isToday = i === tIdx;
@@ -2493,14 +2495,14 @@ function WeekBoard(props) {
             <div
               key={i}
               data-row={i}
-              style={{ display: "flex", alignItems: "center", gap: 10, height: ROW_H, padding: "0 12px 0 14px", boxSizing: "border-box", background: isToday ? "#f0f5ff" : "#fff", borderBottom: i < 6 ? "1px solid #f3f4f6" : "none", transform: "translateY(" + shift + "px)" + (lifted ? " scale(1.02)" : ""), transition: lifted ? "none" : "transform .16s cubic-bezier(.22,1,.36,1)", boxShadow: lifted ? "0 10px 24px rgba(16,24,40,.18)" : "none", zIndex: lifted ? 5 : 1, position: "relative", touchAction: "pan-y", cursor: "grab" }}
+              style={{ display: "flex", alignItems: "center", gap: 10, height: ROW_H, padding: "0 12px 0 14px", boxSizing: "border-box", background: isToday ? "#202b13" : "#151715", borderBottom: i < 6 ? "1px solid #202420" : "none", transform: "translateY(" + shift + "px)" + (lifted ? " scale(1.02)" : ""), transition: lifted ? "none" : "transform .16s cubic-bezier(.22,1,.36,1)", boxShadow: lifted ? "0 10px 24px rgba(16,24,40,.18)" : "none", zIndex: lifted ? 5 : 1, position: "relative", touchAction: "pan-y", cursor: "grab" }}
             >
               <span style={{ flexShrink: 0, color: "#c7ccd4", display: "flex", flexDirection: "column", gap: 2, lineHeight: 0 }} aria-hidden="true">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M4 8h16M4 16h16" /></svg>
               </span>
-              <span style={{ flexShrink: 0, width: 34, fontSize: 13, fontWeight: 700, color: isToday ? "#1a73e8" : "#9ca3af" }}>{DAY_ABBR[i]}</span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#1a2332" : "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
-              {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#1a73e8", background: "#dbe9fd", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
+              <span style={{ flexShrink: 0, width: 34, fontSize: 13, fontWeight: 700, color: isToday ? "#b7df2f" : "#a3ab9e" }}>{DAY_ABBR[i]}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: split ? 600 : 400, color: split ? "#f0f2ec" : "#a3ab9e", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{split ? split.name : "Rest"}</span>
+              {isToday && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: "#b7df2f", background: "#36442a", borderRadius: 6, padding: "3px 7px", letterSpacing: ".03em" }}>TODAY</span>}
               {done[i] && (
                 <span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="completed">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
@@ -2510,29 +2512,29 @@ function WeekBoard(props) {
           );
         })}
       </div>
-      <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 2px 0", lineHeight: 1.4 }}>Press and hold a day to lift it, then drag to reorder. Tap a day to set its workout. Green checks mark days you trained.</p>
-      {(splits || []).length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 6 }}>Create a workout first (Settings, top right) and it will show up here.</p>}
+      <p style={{ fontSize: 12.5, color: "#a3ab9e", margin: "10px 2px 0", lineHeight: 1.4 }}>Press and hold a day to lift it, then drag to reorder. Tap a day to set its workout. Green checks mark days you trained.</p>
+      {(splits || []).length === 0 && <p style={{ fontSize: 13, color: "#a3ab9e", marginTop: 6 }}>Create a workout first (Settings, top right) and it will show up here.</p>}
 
       {assignDay != null && (
         <div style={overlay} onClick={() => setAssignDay(null)}>
           <div onClick={(e) => e.stopPropagation()} style={Object.assign({}, sheet, { maxWidth: 380 })}>
             <div style={sheetHead}>
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{DAY_FULL[assignDay]}</h2>
-              <button onClick={() => setAssignDay(null)} style={xBtn}>✕</button>
+              <button onClick={() => setAssignDay(null)} style={xBtn} aria-label="Close">✕</button>
             </div>
             <div style={{ flex: 1, overflowY: "auto" }}>
               {(splits || []).map((s) => {
                 const active = sched[assignDay] === s.id;
                 return (
-                  <button key={s.id} onClick={() => assign(assignDay, s.id)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: active ? "#f0f5ff" : "none", border: "none", borderBottom: "1px solid #f3f4f6", padding: "15px 6px", minHeight: 52, fontSize: 16, fontWeight: active ? 700 : 500, color: active ? "#1a73e8" : "#1a2332" }}>
+                  <button key={s.id} onClick={() => assign(assignDay, s.id)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: active ? "#202b13" : "none", border: "none", borderBottom: "1px solid #202420", padding: "15px 6px", minHeight: 52, fontSize: 16, fontWeight: active ? 700 : 500, color: active ? "#b7df2f" : "#f0f2ec" }}>
                     {s.name}
-                    {active && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                    {active && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b7df2f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                   </button>
                 );
               })}
-              <button onClick={() => assign(assignDay, "rest")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: sched[assignDay] === "rest" ? "#f0f5ff" : "none", border: "none", padding: "15px 6px", minHeight: 52, fontSize: 16, fontWeight: sched[assignDay] === "rest" ? 700 : 500, color: sched[assignDay] === "rest" ? "#1a73e8" : "#6b7280" }}>
+              <button onClick={() => assign(assignDay, "rest")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", background: sched[assignDay] === "rest" ? "#202b13" : "none", border: "none", padding: "15px 6px", minHeight: 52, fontSize: 16, fontWeight: sched[assignDay] === "rest" ? 700 : 500, color: sched[assignDay] === "rest" ? "#b7df2f" : "#acb3a7" }}>
                 Rest
-                {sched[assignDay] === "rest" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                {sched[assignDay] === "rest" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b7df2f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
               </button>
             </div>
             {sched[assignDay] !== "rest" && splitById(sched[assignDay]) && (
@@ -2588,39 +2590,39 @@ function ProfileTab(props) {
     <div>
       {/* Header */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 24px" }}>
-        <button onClick={pickPhoto} aria-label="Change photo" style={{ position: "relative", width: 104, height: 104, borderRadius: "50%", border: "none", padding: 0, background: "#1a2332", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: "0 6px 20px rgba(16,24,40,.18)" }}>
+        <button onClick={pickPhoto} aria-label="Change photo" style={{ position: "relative", width: 104, height: 104, borderRadius: "50%", border: "none", padding: 0, background: "#f0f2ec", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: "0 6px 20px rgba(16,24,40,.18)" }}>
           {profile.avatar ? <img src={profile.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 42, fontWeight: 800, color: "#fff" }}>{initial}</span>}
-          <span style={{ position: "absolute", right: 4, bottom: 4, width: 30, height: 30, borderRadius: "50%", background: "#1a73e8", border: "3px solid #f5f7fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ position: "absolute", right: 4, bottom: 4, width: 30, height: 30, borderRadius: "50%", background: "#b7df2f", border: "3px solid #000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
           </span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
-        <div style={{ fontSize: 22, fontWeight: 800, marginTop: 14, color: "#1a2332" }}>{profile.username ? "@" + profile.username : "Add a username"}</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", marginTop: 3 }}>Level {stats.level}</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginTop: 14, color: "#f0f2ec" }}>{profile.username ? "@" + profile.username : "Add a username"}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#a3ab9e", marginTop: 3 }}>Level {stats.level}</div>
       </div>
 
       {/* Stats strip (no colored boxes) */}
-      <div style={{ display: "flex", background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: "18px 0", marginBottom: 24 }}>
+      <div style={{ display: "flex", background: "#151715", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: "18px 0", marginBottom: 24 }}>
         {stat.map((s, i) => (
-          <div key={i} style={{ flex: 1, textAlign: "center", borderLeft: i > 0 ? "1px solid #f0f2f5" : "none" }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: "#1a2332" }}>{s.v}</div>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af", marginTop: 4, letterSpacing: ".02em" }}>{s.l}</div>
+          <div key={i} style={{ flex: 1, textAlign: "center", borderLeft: i > 0 ? "1px solid #202420" : "none" }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#f0f2ec" }}>{s.v}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "#a3ab9e", marginTop: 4, letterSpacing: ".02em" }}>{s.l}</div>
           </div>
         ))}
       </div>
 
       {/* Username */}
-      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: 18, marginBottom: 16 }}>
+      <div style={{ background: "#151715", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: 18, marginBottom: 16 }}>
         <div style={labelStyle}>Username</div>
         <div style={{ position: "relative" }}>
-          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 600, color: "#9ca3af" }}>@</span>
+          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 600, color: "#a3ab9e" }}>@</span>
           <input style={Object.assign({}, fieldStyle, { paddingLeft: 30 })} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" autoCapitalize="none" autoCorrect="off" />
         </div>
-        <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 0 14px", lineHeight: 1.45 }}>This is the name shown on the workouts you share. You choose what to include each time you post.</p>
-        <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "15px", fontSize: 15, fontWeight: 700, minHeight: 50 }}>{busy ? "Saving..." : "Save Profile"}</button>
+        <p style={{ fontSize: 12.5, color: "#a3ab9e", margin: "10px 0 14px", lineHeight: 1.45 }}>This is the name shown on the workouts you share. You choose what to include each time you post.</p>
+        <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#53622f" : "#b7df2f", color: "#111700", border: "none", borderRadius: 12, padding: "15px", fontSize: 15, fontWeight: 700, minHeight: 50 }}>{busy ? "Saving..." : "Save Profile"}</button>
       </div>
 
-      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "#fff", color: "#dc2626", border: "1px solid " + BORDER, borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 54, boxShadow: shadowSm }}>Sign Out</button>}
+      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "#151715", color: "#dc2626", border: "1px solid " + BORDER, borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 54, boxShadow: shadowSm }}>Sign Out</button>}
     </div>
   );
 }
@@ -2714,7 +2716,7 @@ function WorkoutShareModal(props) {
       const c = document.createElement("canvas"); c.width = W; c.height = H;
       const ctx = c.getContext("2d");
       const g = ctx.createLinearGradient(0, 0, W, H);
-      g.addColorStop(0, "#1a73e8"); g.addColorStop(1, "#0c3aa0");
+      g.addColorStop(0, "#b7df2f"); g.addColorStop(1, "#d7e89b");
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
       function text(str, x, y, size, weight, color, align) { ctx.fillStyle = color; ctx.textAlign = align || "left"; ctx.font = weight + " " + size + "px Inter, -apple-system, Segoe UI, Roboto, sans-serif"; ctx.fillText(str, x, y); }
       function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
@@ -2787,10 +2789,10 @@ function WorkoutShareModal(props) {
       <div style={Object.assign({}, sheet, { maxWidth: 400 })}>
         <div style={{ textAlign: "center", marginBottom: 8 }}>
           <div style={{ fontSize: 22, fontWeight: 800 }}>Workout complete</div>
-          <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>Choose what to show, then share it.</div>
+          <div style={{ fontSize: 13, color: "#a3ab9e", marginTop: 2 }}>Choose what to show, then share it.</div>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "6px 2px" }}>
-          <div style={{ borderRadius: 20, padding: 22, color: "#fff", background: "linear-gradient(135deg,#1a73e8,#0c3aa0)", boxShadow: shadowPrimary }}>
+          <div style={{ borderRadius: 20, padding: 22, color: "#111700", background: "linear-gradient(135deg,#b7df2f,#d7e89b)", boxShadow: shadowPrimary }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <img src="/train/icons/icon-192.png" alt="" style={{ width: 26, height: 26, borderRadius: 7, flexShrink: 0 }} />
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", opacity: 0.9 }}>FORWARD FITNESS</div>
@@ -2827,23 +2829,23 @@ function WorkoutShareModal(props) {
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
             {toggles.map((t) => (
-              <button key={t.key} onClick={() => !t.disabled && toggle(t.key)} disabled={t.disabled} style={{ flex: "1 0 28%", background: t.disabled ? "#f3f4f6" : cfg[t.key] ? "#1a73e8" : "#fff", color: t.disabled ? "#c7ccd4" : cfg[t.key] ? "#fff" : "#374151", border: "2px solid " + (cfg[t.key] && !t.disabled ? "#1a73e8" : "#eaeef3"), borderRadius: 12, padding: "10px 8px", fontSize: 13, fontWeight: 700, minHeight: 42, opacity: t.disabled ? 0.7 : 1 }}>{t.label}</button>
+              <button key={t.key} onClick={() => !t.disabled && toggle(t.key)} disabled={t.disabled} style={{ flex: "1 0 28%", background: t.disabled ? "#202420" : cfg[t.key] ? "#b7df2f" : "#151715", color: t.disabled ? "#c7ccd4" : cfg[t.key] ? "#111700" : "#d7dcd2", border: "2px solid " + (cfg[t.key] && !t.disabled ? "#b7df2f" : "#303630"), borderRadius: 12, padding: "10px 8px", fontSize: 13, fontWeight: 700, minHeight: 42, opacity: t.disabled ? 0.7 : 1 }}>{t.label}</button>
             ))}
           </div>
           {cfg.location && (
             <div style={{ marginTop: 12 }}>
-              {geoBusy && <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 8 }}>Finding nearby places...</div>}
+              {geoBusy && <div style={{ fontSize: 13, color: "#a3ab9e", marginBottom: 8 }}>Finding nearby places...</div>}
               {places.length > 0 && (
                 <div style={{ border: "1px solid " + BORDER, borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
                   {places.map((pl, i) => {
                     const sel = pl.name === locationText;
                     return (
-                      <button key={i} onClick={() => { setLocationText(pl.name); setAddressText(pl.address || addressText); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: sel ? "#f0f5ff" : "#fff", border: "none", borderBottom: i < places.length - 1 ? "1px solid #f3f4f6" : "none", padding: "12px 14px", minHeight: 50 }}>
+                      <button key={i} onClick={() => { setLocationText(pl.name); setAddressText(pl.address || addressText); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: sel ? "#202b13" : "#151715", border: "none", borderBottom: i < places.length - 1 ? "1px solid #202420" : "none", padding: "12px 14px", minHeight: 50 }}>
                         <span style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: sel ? "#1a73e8" : "#1a2332", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pl.name}</span>
-                          {pl.address && <span style={{ display: "block", fontSize: 12.5, color: "#9ca3af", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pl.address}</span>}
+                          <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: sel ? "#b7df2f" : "#f0f2ec", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pl.name}</span>
+                          {pl.address && <span style={{ display: "block", fontSize: 12.5, color: "#a3ab9e", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pl.address}</span>}
                         </span>
-                        {sel && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M20 6L9 17l-5-5" /></svg>}
+                        {sel && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b7df2f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M20 6L9 17l-5-5" /></svg>}
                       </button>
                     );
                   })}
@@ -2853,13 +2855,13 @@ function WorkoutShareModal(props) {
               <input value={addressText} onChange={(e) => setAddressText(e.target.value)} placeholder="Address (optional)" style={fieldStyle} />
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
                 <button onClick={() => setCfg((c) => { const n = Object.assign({}, c, { address: !c.address }); persist(n); return n; })} style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, background: "none", border: "none", padding: 0, textAlign: "left" }}>
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "#1a2332" }}>Show address on card</span>
-                  <span style={{ flexShrink: 0, width: 44, height: 26, borderRadius: 13, background: cfg.address ? "#1a73e8" : "#d1d5db", position: "relative", transition: "background .2s" }}>
-                    <span style={{ position: "absolute", top: 3, left: cfg.address ? 21 : 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} />
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: "#f0f2ec" }}>Show address on card</span>
+                  <span style={{ flexShrink: 0, width: 44, height: 26, borderRadius: 13, background: cfg.address ? "#b7df2f" : "#d1d5db", position: "relative", transition: "background .2s" }}>
+                    <span style={{ position: "absolute", top: 3, left: cfg.address ? 21 : 3, width: 20, height: 20, borderRadius: "50%", background: "#151715", transition: "left .2s", boxShadow: "0 1px 3px rgba(0,0,0,.2)" }} />
                   </span>
                 </button>
-                <button onClick={fetchPlaces} disabled={geoBusy} aria-label="find nearby" style={{ flexShrink: 0, background: "#f0f5ff", border: "1px solid #dbe9fd", borderRadius: 12, width: 46, height: 40, color: "#1a73e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 0 1 12 0c0 4.314-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg>
+                <button onClick={fetchPlaces} disabled={geoBusy} aria-label="find nearby" style={{ flexShrink: 0, background: "#202b13", border: "1px solid #36442a", borderRadius: 12, width: 46, height: 40, color: "#b7df2f", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#b7df2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 0 1 12 0c0 4.314-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg>
                 </button>
               </div>
             </div>
@@ -2867,9 +2869,9 @@ function WorkoutShareModal(props) {
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <button onClick={props.onClose} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Done</button>
-          <button onClick={save} disabled={working} style={{ background: "#fff", color: "#1a73e8", border: "1px solid #dbe9fd", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Save</button>
-          <button onClick={share} disabled={working} style={{ flex: 1, background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 52, boxShadow: shadowPrimary, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button onClick={props.onClose} style={{ background: "#202420", color: "#d7dcd2", border: "none", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Done</button>
+          <button onClick={save} disabled={working} style={{ background: "#151715", color: "#b7df2f", border: "1px solid #36442a", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Save</button>
+          <button onClick={share} disabled={working} style={{ flex: 1, background: "linear-gradient(180deg,#c3ed45,#b7df2f)", color: "#111700", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 52, boxShadow: shadowPrimary, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" /></svg>
             {working ? "..." : "Share"}
           </button>
@@ -2886,19 +2888,19 @@ function WorkoutShareModal(props) {
 const shadowSm = "0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05)";
 const shadowMd = "0 2px 4px rgba(16,24,40,.05), 0 10px 24px rgba(16,24,40,.09)";
 const shadowLg = "0 -2px 8px rgba(16,24,40,.04), 0 -16px 48px rgba(16,24,40,.18)";
-const shadowPrimary = "0 2px 6px rgba(26,115,232,.28), 0 8px 20px rgba(26,115,232,.22)";
+const shadowPrimary = "none";
 const shadowCard = "0 8px 24px rgba(16,24,40,.14), 0 24px 60px rgba(16,24,40,.20)";
-const BORDER = "#eaeef3";
+const BORDER = "#303630";
 
-const cardStyle = { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, border: "1px solid " + BORDER, boxShadow: shadowSm, overflow: "hidden" };
-const inputStyle = { background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 10, color: "#1a2332", padding: "10px 4px", fontSize: 16, fontWeight: 600, textAlign: "center", outline: "none", width: "100%", minWidth: 0, minHeight: 44 };
-const fieldStyle = { background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 12, color: "#1a2332", padding: "14px 16px", fontSize: 16, outline: "none", width: "100%", boxSizing: "border-box" };
-const labelStyle = { fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 12, letterSpacing: ".02em", textTransform: "uppercase" };
-const colStyle = { fontSize: 11, fontWeight: 500, color: "#9ca3af", textAlign: "center" };
-const navBtnStyle = { background: "#fff", border: "1px solid " + BORDER, borderRadius: 12, width: 40, height: 40, fontSize: 20, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: shadowSm };
+const cardStyle = { background: "#151715", borderRadius: 16, padding: 16, marginBottom: 12, border: "1px solid " + BORDER, boxShadow: shadowSm, overflow: "hidden" };
+const inputStyle = { background: "#101310", border: "1px solid #303630", borderRadius: 10, color: "#f0f2ec", padding: "10px 4px", fontSize: 16, fontWeight: 600, textAlign: "center", outline: "none", width: "100%", minWidth: 0, minHeight: 44 };
+const fieldStyle = { background: "#101310", border: "1px solid #303630", borderRadius: 12, color: "#f0f2ec", padding: "14px 16px", fontSize: 16, outline: "none", width: "100%", boxSizing: "border-box" };
+const labelStyle = { fontSize: 12, fontWeight: 600, color: "#a3ab9e", marginBottom: 12, letterSpacing: ".02em", textTransform: "uppercase" };
+const colStyle = { fontSize: 11, fontWeight: 500, color: "#a3ab9e", textAlign: "center" };
+const navBtnStyle = { background: "#151715", border: "1px solid " + BORDER, borderRadius: 12, width: 40, height: 40, fontSize: 20, color: "#acb3a7", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: shadowSm };
 const closeBtn = { background: "none", border: "none", color: "#d1d5db", fontSize: 20, padding: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" };
 const overlay = { position: "fixed", inset: 0, background: "rgba(16,24,40,.42)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
-const sheet = { background: "#fff", borderRadius: 22, padding: "20px", width: "100%", maxWidth: 480, maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: shadowCard, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" };
+const sheet = { background: "#151715", borderRadius: 22, padding: "20px", width: "100%", maxWidth: 480, maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: shadowCard, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" };
 const sheetHead = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 };
-const xBtn = { background: "#f3f4f6", border: "none", borderRadius: 50, width: 36, height: 36, fontSize: 18, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" };
-const primaryBtn = { width: "100%", background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, boxShadow: shadowPrimary };
+const xBtn = { background: "#202420", border: "none", borderRadius: 50, width: 36, height: 36, fontSize: 18, color: "#acb3a7", display: "flex", alignItems: "center", justifyContent: "center" };
+const primaryBtn = { width: "100%", background: "linear-gradient(180deg,#c3ed45,#b7df2f)", color: "#111700", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, boxShadow: shadowPrimary };

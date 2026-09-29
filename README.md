@@ -12,7 +12,9 @@ Without configuration, the app shows setup instructions instead of failing durin
 
 ## Design preview
 
-Open `http://localhost:3000/train/?design-preview` while the development server runs. This development-only preview uses labeled sample data, supports empty states and chart range controls, and does not connect to Supabase. Navigation buttons describe their destination in the preview; the signed-in app opens the actual tabs. The preview is excluded from production builds.
+Open `http://localhost:3000/train/?design-preview` while the development server runs. This development-only preview uses labeled sample data, supports empty states and chart range controls, and does not connect to Supabase. Today, Train, and Progress are interactive in the preview. Sample workout saves and edits use in-memory data; workout drafts use a separate device-local preview key. Nutrition links explain that account configuration is required. The preview is excluded from production builds.
+
+Dark surfaces and lime accents now extend through authentication, workout forms, nutrition, progress, and settings. Keyboard focus remains visible, zoom is enabled, and native safe areas are respected.
 
 The new Today screen uses weekly active training days against the number of scheduled training days, plus today's protein and calorie totals against existing profile targets. The chart counts non-warmup sets with positive reps. Rings visually stop at 100%; numeric totals still show over-goal values. No Apple Health data is imported.
 
