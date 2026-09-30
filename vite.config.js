@@ -1,11 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// The app is served under /train (the marketing site owns the root).
-// base + outDir put every app file under /train so nothing collides with the site.
+// Web build (Vercel): the app is served under /train, output to dist/train.
+// Mobile build (Capacitor): run with CAP=1 -> base '/', output to ./mobile (Capacitor's webDir).
+// The two never collide, and the web deploy is unchanged.
+const isCap = process.env.CAP === '1'
+
 export default defineConfig({
-  base: '/train/',
+  base: isCap ? '/' : '/train/',
   plugins: [react()],
   server: { port: 3000 },
-  build: { outDir: 'dist/train', emptyOutDir: true }
+  build: {
+    outDir: isCap ? 'mobile' : 'dist/train',
+    emptyOutDir: true,
+  },
 })
