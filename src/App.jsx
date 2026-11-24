@@ -115,130 +115,6 @@ let SPLIT_SEQ = 0;
 function newSplitId() { SPLIT_SEQ += 1; return "split-" + Date.now() + "-" + SPLIT_SEQ; }
 function withSplitIds(splits) { return (splits || []).map((s) => ({ id: s.id || newSplitId(), name: s.name, exercises: s.exercises || [] })); }
 
-const FOOD_PRESETS = [
-  { name: "Chicken Breast (4oz)", p: 31, c: 130 },
-  { name: "Chicken Thigh (4oz)", p: 26, c: 165 },
-  { name: "Ground Beef 90% (4oz)", p: 22, c: 196 },
-  { name: "Salmon (4oz)", p: 25, c: 206 },
-  { name: "Steak Sirloin (6oz)", p: 42, c: 312 },
-  { name: "Turkey Breast (4oz)", p: 28, c: 120 },
-  { name: "Tuna Can (5oz)", p: 30, c: 120 },
-  { name: "Shrimp (4oz)", p: 24, c: 120 },
-  { name: "Eggs (1 large)", p: 6, c: 72 },
-  { name: "Egg Whites (3 large)", p: 11, c: 51 },
-  { name: "Whey Protein Scoop", p: 25, c: 120 },
-  { name: "Casein Protein Scoop", p: 24, c: 110 },
-  { name: "Greek Yogurt (1 cup)", p: 17, c: 130 },
-  { name: "Cottage Cheese (1 cup)", p: 28, c: 220 },
-  { name: "Milk (1 cup)", p: 8, c: 150 },
-  { name: "Protein Bar", p: 20, c: 200 },
-  { name: "Rice (1 cup cooked)", p: 4, c: 206 },
-  { name: "Black Beans (1 cup)", p: 15, c: 227 },
-];
-
-// High-protein recipe library. Macros are per single serving.
-const MEAL_CATS = ["Breakfast", "Lunch", "Dinner", "Snack"];
-const RECIPES = [
-  {
-    id: "greek-bowl", name: "Greek Yogurt Power Bowl", cat: "Breakfast", time: 5,
-    p: 42, c: 48, f: 11, cals: 450,
-    blurb: "Five-minute high-protein bowl to start the day strong.",
-    ingredients: ["1.5 cups nonfat Greek yogurt", "1 scoop vanilla whey", "1/2 cup mixed berries", "1/4 cup low-sugar granola", "1 tbsp honey", "1 tbsp chia seeds"],
-    steps: ["Stir the whey into the Greek yogurt until smooth.", "Top with berries, granola, and chia seeds.", "Drizzle honey over the top and eat."],
-  },
-  {
-    id: "egg-scramble", name: "Spinach Feta Egg Scramble", cat: "Breakfast", time: 10,
-    p: 34, c: 6, f: 18, cals: 330,
-    blurb: "Savory, low-carb, and ready before your coffee cools.",
-    ingredients: ["3 whole eggs", "4 egg whites", "2 cups fresh spinach", "1 oz feta cheese", "1 tsp olive oil", "Salt and pepper"],
-    steps: ["Heat olive oil in a nonstick pan over medium.", "Add spinach and cook until wilted, about 1 minute.", "Whisk eggs and whites, pour in, and stir gently.", "When almost set, fold in feta, season, and serve."],
-  },
-  {
-    id: "protein-oats", name: "Peanut Butter Protein Oats", cat: "Breakfast", time: 5,
-    p: 38, c: 56, f: 14, cals: 510,
-    blurb: "Make it the night before and grab it on the way out.",
-    ingredients: ["1/2 cup rolled oats", "1 scoop whey", "1 cup milk", "1 tbsp peanut butter", "1/2 banana, sliced", "Cinnamon to taste"],
-    steps: ["Combine oats, whey, and milk in a jar and stir.", "Swirl in peanut butter and add banana and cinnamon.", "Refrigerate overnight, or microwave 90 seconds to eat hot."],
-  },
-  {
-    id: "chicken-rice", name: "Grilled Chicken Rice Bowl", cat: "Lunch", time: 25,
-    p: 52, c: 58, f: 12, cals: 560,
-    blurb: "The classic muscle-building meal prep staple.",
-    ingredients: ["8 oz chicken breast", "1 cup cooked rice", "1.5 cups broccoli", "1 tbsp olive oil", "1 tbsp soy sauce", "Juice of half a lemon"],
-    steps: ["Season chicken and grill or pan-sear 6 to 7 minutes per side.", "Steam or microwave the broccoli until tender.", "Slice chicken and plate over rice with broccoli.", "Drizzle olive oil, soy sauce, and lemon over the top."],
-  },
-  {
-    id: "turkey-taco", name: "Turkey Taco Bowl", cat: "Lunch", time: 20,
-    p: 44, c: 42, f: 16, cals: 500,
-    blurb: "All the taco flavor, built into a high-protein bowl.",
-    ingredients: ["6 oz lean ground turkey (93%)", "1/2 cup black beans", "1/2 cup cooked rice", "1/4 cup salsa", "1 oz shredded cheese", "Taco seasoning"],
-    steps: ["Brown the turkey with taco seasoning over medium heat.", "Warm the black beans and rice.", "Layer rice, beans, and turkey in a bowl.", "Top with salsa and cheese."],
-  },
-  {
-    id: "tuna-bean", name: "Tuna White Bean Salad", cat: "Lunch", time: 10,
-    p: 40, c: 28, f: 15, cals: 410,
-    blurb: "No cooking, all protein. Great desk lunch.",
-    ingredients: ["2 cans tuna in water, drained", "1 cup cannellini beans", "2 cups arugula", "1 tbsp olive oil", "Juice of half a lemon", "Salt and pepper"],
-    steps: ["Flake the tuna into a bowl.", "Add beans and arugula.", "Dress with olive oil, lemon, salt, and pepper and toss."],
-  },
-  {
-    id: "salmon-sweet", name: "Salmon, Sweet Potato & Asparagus", cat: "Dinner", time: 30,
-    p: 40, c: 34, f: 22, cals: 520,
-    blurb: "A complete sheet-pan dinner with healthy fats.",
-    ingredients: ["6 oz salmon fillet", "1 medium sweet potato, cubed", "1 bunch asparagus", "1 tbsp olive oil", "Garlic powder, salt, pepper"],
-    steps: ["Heat oven to 425F.", "Toss sweet potato in half the oil and roast 15 minutes.", "Add salmon and asparagus, drizzle remaining oil, season.", "Roast 12 to 15 more minutes until salmon flakes."],
-  },
-  {
-    id: "beef-stir", name: "Lean Beef Stir-Fry", cat: "Dinner", time: 25,
-    p: 46, c: 46, f: 17, cals: 550,
-    blurb: "Fast, savory, and loaded with protein and veggies.",
-    ingredients: ["6 oz sirloin, thinly sliced", "2 cups mixed stir-fry vegetables", "1 cup cooked rice", "2 tbsp soy sauce", "1 tsp sesame oil", "1 clove garlic, minced", "1 tsp grated ginger"],
-    steps: ["Sear sliced sirloin in a hot pan 2 minutes, then set aside.", "Stir-fry vegetables with garlic and ginger until crisp-tender.", "Return beef, add soy sauce and sesame oil, toss 1 minute.", "Serve over rice."],
-  },
-  {
-    id: "chicken-fajita", name: "Chicken Fajita Skillet", cat: "Dinner", time: 25,
-    p: 48, c: 28, f: 14, cals: 430,
-    blurb: "One pan, big flavor, low effort cleanup.",
-    ingredients: ["8 oz chicken breast, sliced", "1 bell pepper, sliced", "1/2 onion, sliced", "1 tbsp olive oil", "Fajita seasoning", "Lime wedge"],
-    steps: ["Heat oil in a skillet over medium-high.", "Cook chicken with fajita seasoning 5 to 6 minutes.", "Add peppers and onion, cook until softened.", "Finish with a squeeze of lime."],
-  },
-  {
-    id: "baked-cod", name: "Baked Cod with Quinoa", cat: "Dinner", time: 30,
-    p: 42, c: 40, f: 9, cals: 400,
-    blurb: "Light, lean, and high in protein per calorie.",
-    ingredients: ["7 oz cod fillet", "3/4 cup cooked quinoa", "1 zucchini, sliced", "1 tsp olive oil", "Lemon, garlic, salt, pepper"],
-    steps: ["Heat oven to 400F.", "Place cod and zucchini on a lined tray, drizzle oil.", "Season with garlic, salt, pepper, and lemon.", "Bake 15 to 18 minutes and serve over quinoa."],
-  },
-  {
-    id: "pb-shake", name: "Banana PB Protein Shake", cat: "Snack", time: 3,
-    p: 36, c: 32, f: 10, cals: 360,
-    blurb: "Blend-and-go shake for post-workout or busy days.",
-    ingredients: ["1 scoop whey", "1 banana", "1 tbsp peanut butter", "1 cup milk", "Handful of ice"],
-    steps: ["Add everything to a blender.", "Blend until smooth and drink."],
-  },
-  {
-    id: "cottage-pineapple", name: "Cottage Cheese & Pineapple", cat: "Snack", time: 2,
-    p: 28, c: 22, f: 6, cals: 260,
-    blurb: "A two-minute casein-rich snack.",
-    ingredients: ["1 cup low-fat cottage cheese", "1/2 cup pineapple chunks", "1 tbsp sliced almonds"],
-    steps: ["Spoon cottage cheese into a bowl.", "Top with pineapple and almonds."],
-  },
-  {
-    id: "egg-hummus", name: "Eggs & Hummus Plate", cat: "Snack", time: 12,
-    p: 22, c: 18, f: 18, cals: 320,
-    blurb: "A balanced grazing plate that keeps you full.",
-    ingredients: ["3 hard-boiled eggs", "1/4 cup hummus", "1 cup carrot and cucumber sticks", "Pinch of paprika"],
-    steps: ["Halve the eggs and arrange on a plate.", "Add hummus and veggie sticks.", "Dust with paprika."],
-  },
-  {
-    id: "casein-pudding", name: "Chocolate PB Casein Pudding", cat: "Snack", time: 5,
-    p: 32, c: 14, f: 7, cals: 250,
-    blurb: "Slow-digesting protein for before bed.",
-    ingredients: ["1 scoop chocolate casein", "1/2 cup milk", "1 tsp cocoa powder", "1 tsp peanut butter"],
-    steps: ["Whisk casein, cocoa, and milk, adding milk slowly.", "Stir until it thickens into a pudding.", "Swirl in peanut butter and chill 5 minutes."],
-  },
-];
-
 const GROUPS = ["Chest", "Back", "Shoulders", "Quads", "Hamstrings", "Glutes", "Biceps", "Triceps", "Calves", "Abs", "Traps"];
 
 // ─── Helpers ───
@@ -410,6 +286,168 @@ function achievementsFor(stats) {
     { id: "fifty", label: "Beast Mode", req: "50 workouts", earned: stats.total >= 50 },
     { id: "hundred", label: "Centurion", req: "100 workouts", earned: stats.total >= 100 },
   ];
+}
+
+// ─── Analytics (Progress + Coach) ───
+function exLabel(id) {
+  const e = findEx(id);
+  if (e) return e.name;
+  return String(id || "").replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// One entry per session for an exercise, oldest first.
+function exerciseHistory(workouts, exId) {
+  const out = [];
+  for (const w of workouts || []) {
+    for (const ex of w.exercises || []) {
+      if (ex.exerciseId !== exId) continue;
+      let best = 0, top = null, vol = 0, maxReps = 0;
+      for (const s of workSets(ex.sets)) {
+        const wt = Number(s.weight) || 0, r = Number(s.reps) || 0;
+        vol += wt * r;
+        if (r > maxReps) maxReps = r;
+        const est = e1rm(wt, r);
+        if (est > best) { best = est; top = { weight: wt, reps: r }; }
+      }
+      if (best > 0) out.push({ date: w.date, best, top, volume: Math.round(vol), maxReps });
+      break;
+    }
+  }
+  return out;
+}
+
+// Exercises the user has logged with weight, most logged first.
+function loggedExercises(workouts) {
+  const count = {};
+  for (const w of workouts || []) for (const ex of w.exercises || []) {
+    if (workSets(ex.sets).some((s) => (Number(s.weight) || 0) > 0 && (Number(s.reps) || 0) > 0)) count[ex.exerciseId] = (count[ex.exerciseId] || 0) + 1;
+  }
+  return Object.keys(count).sort((a, b) => count[b] - count[a]).map((id) => ({ id, sessions: count[id] }));
+}
+
+// Best estimated 1RM per exercise, the date it was set, and the gain over the previous best.
+function personalRecords(workouts) {
+  const cutoff = shiftDay(today(), -14);
+  const out = [];
+  for (const { id } of loggedExercises(workouts)) {
+    const h = exerciseHistory(workouts, id);
+    if (!h.length) continue;
+    let bi = 0;
+    h.forEach((s, i) => { if (s.best > h[bi].best) bi = i; });
+    let prev = 0;
+    for (let i = 0; i < bi; i++) if (h[i].best > prev) prev = h[i].best;
+    out.push({ id, name: exLabel(id), best: h[bi].best, top: h[bi].top, date: h[bi].date, gain: prev > 0 ? h[bi].best - prev : 0, fresh: h[bi].date >= cutoff && prev > 0, sessions: h.length });
+  }
+  return out.sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.best - a.best);
+}
+
+// Lifts in this workout that beat the lifter's previous best estimated 1RM.
+function prsInWorkout(workout, prior) {
+  const prs = [];
+  for (const ex of workout.exercises || []) {
+    let best = 0, top = null;
+    for (const s of workSets(ex.sets)) { const est = e1rm(s.weight, s.reps); if (est > best) { best = est; top = { weight: Number(s.weight) || 0, reps: Number(s.reps) || 0 }; } }
+    if (!best) continue;
+    const h = exerciseHistory(prior, ex.exerciseId);
+    const prevBest = h.reduce((m, s) => Math.max(m, s.best), 0);
+    if (prevBest > 0 && best > prevBest) prs.push({ name: exLabel(ex.exerciseId), weight: top.weight, reps: top.reps, gain: best - prevBest });
+  }
+  return prs;
+}
+
+// Volume, sets and sessions per week for the last `n` weeks, oldest first.
+function weeklyTotals(workouts, n) {
+  const curMon = mondayOf(today());
+  const weeks = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const mon = addDaysDate(curMon, -7 * i);
+    weeks.push({ start: dateKey(mon), end: dateKey(addDaysDate(mon, 6)), label: (mon.getMonth() + 1) + "/" + mon.getDate(), volume: 0, sets: 0, sessions: 0 });
+  }
+  for (const w of workouts || []) {
+    const wk = weeks.find((x) => w.date >= x.start && w.date <= x.end);
+    if (!wk) continue;
+    wk.volume += workoutVolume(w);
+    wk.sets += workoutSetCount(w);
+    wk.sessions += 1;
+  }
+  return weeks;
+}
+
+// Totals for a date window [from, to].
+function windowTotals(workouts, from, to) {
+  const t = { sessions: 0, sets: 0, volume: 0 };
+  for (const w of workouts || []) {
+    if (w.date < from || w.date > to) continue;
+    t.sessions += 1; t.sets += workoutSetCount(w); t.volume += workoutVolume(w);
+  }
+  return t;
+}
+
+// Working sets per muscle group since a date, biggest first.
+function groupSets(workouts, from) {
+  const g = {};
+  for (const w of workouts || []) {
+    if (w.date < from) continue;
+    for (const ex of w.exercises || []) {
+      const e = findEx(ex.exerciseId);
+      const key = e ? e.group : "Other";
+      g[key] = (g[key] || 0) + workSets(ex.sets).length;
+    }
+  }
+  return Object.keys(g).map((k) => ({ group: k, sets: g[k] })).filter((x) => x.sets > 0).sort((a, b) => b.sets - a.sets);
+}
+
+function fmtVolume(v) {
+  if (v >= 1000000) return (v / 1000000).toFixed(1) + "M";
+  if (v >= 10000) return Math.round(v / 1000) + "k";
+  if (v >= 1000) return (v / 1000).toFixed(1) + "k";
+  return String(Math.round(v));
+}
+
+function relTime(iso) {
+  const t = new Date(iso).getTime();
+  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (s < 60) return "just now";
+  const m = Math.round(s / 60); if (m < 60) return m + "m ago";
+  const h = Math.round(m / 60); if (h < 24) return h + "h ago";
+  const d = Math.round(h / 24); if (d < 7) return d + "d ago";
+  return new Date(iso).toLocaleDateString("en", { month: "short", day: "numeric" });
+}
+
+// Compact text snapshot of the lifter's log for the coach.
+function coachContext(workouts, profile, splits, weekSchedule) {
+  const lines = [];
+  const list = workouts || [];
+  if (profile && profile.weight) lines.push("Bodyweight: " + profile.weight + " lb");
+  if (splits && splits.length) lines.push("Their workouts: " + splits.map((s) => s.name + " (" + (s.exercises || []).map(exLabel).join(", ") + ")").join("; "));
+  const sched = (weekSchedule || []).map((v, i) => {
+    if (!v || v === "rest") return DAY_ABBR[i] + ": rest";
+    const sp = (splits || []).find((s) => s.id === v);
+    return DAY_ABBR[i] + ": " + (sp ? sp.name : "training");
+  });
+  if (sched.length) lines.push("Weekly schedule: " + sched.join(", "));
+  const t = today();
+  const last30 = windowTotals(list, shiftDay(t, -29), t);
+  const prev30 = windowTotals(list, shiftDay(t, -59), shiftDay(t, -30));
+  lines.push("Total workouts logged: " + list.length + ". Last 30 days: " + last30.sessions + " workouts, " + last30.sets + " working sets, " + Math.round(last30.volume) + " lb volume. Previous 30 days: " + prev30.sessions + " workouts, " + prev30.sets + " sets, " + Math.round(prev30.volume) + " lb.");
+  const weeks = weeklyTotals(list, 8);
+  lines.push("Weekly volume (oldest to newest): " + weeks.map((w) => w.label + " " + Math.round(w.volume) + "lb/" + w.sessions + "x").join(", "));
+  const gs = groupSets(list, shiftDay(t, -29));
+  if (gs.length) lines.push("Working sets per muscle, last 30 days: " + gs.map((g) => g.group + " " + g.sets).join(", "));
+  const prs = personalRecords(list).slice(0, 15);
+  if (prs.length) lines.push("Best estimated 1RMs: " + prs.map((p) => p.name + " " + p.best + " (" + p.top.weight + "x" + p.top.reps + " on " + p.date + ")").join("; "));
+  const recent = list.slice(-14).reverse();
+  if (recent.length) {
+    lines.push("Recent workouts, newest first:");
+    for (const w of recent) {
+      const parts = (w.exercises || []).map((ex) => {
+        const sets = workSets(ex.sets).filter((s) => (Number(s.reps) || 0) > 0).map((s) => ((Number(s.weight) || 0) > 0 ? s.weight + "x" + s.reps : s.reps + " reps"));
+        return sets.length ? exLabel(ex.exerciseId) + " " + sets.join(", ") : "";
+      }).filter(Boolean);
+      lines.push("- " + w.date + " (" + weekdayLabel(w.date) + "): " + parts.join("; "));
+    }
+  }
+  return lines.join("\n").slice(0, 11500);
 }
 
 function e1rm(weight, reps) {
@@ -616,15 +654,11 @@ function Main(props) {
   const [tab, setTab] = useState("workout");
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState([]);
-  const [meals, setMeals] = useState({});
   const [profile, setProfile] = useState({ weight: DEFAULT_WEIGHT, proteinTarget: null, calorieTarget: null, restSeconds: 120, username: "", avatar: "", shareConfig: { duration: true, location: false, volume: true, topSets: true, weights: true }, customExercises: [], customRecipes: [], activeSplits: [], weekSchedule: [] });
   const [toast, setToast] = useState(null);
   const [dbOk, setDbOk] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [rest, setRest] = useState({ running: false, secondsLeft: 0, total: 0 });
-
-  const mealsRef = useRef(meals);
-  useEffect(() => { mealsRef.current = meals; }, [meals]);
 
   function flash(msg, type) {
     setToast({ msg, type: type || "ok" });
@@ -662,16 +696,12 @@ function Main(props) {
     (async () => {
       try {
         const r1 = await supabase.from("iron_workouts").select("*").eq("user_id", USER_ID).order("date", { ascending: false }).limit(200);
-        const r2 = await supabase.from("iron_meals").select("*").eq("user_id", USER_ID).order("date", { ascending: false }).limit(60);
         if (r1.error) throw r1.error;
-        if (r2.error) throw r2.error;
         const w = (r1.data || []).map((r) => ({ id: r.id, date: r.date, exercises: r.exercises }));
         w.reverse();
         setWorkouts(w);
-        const mObj = {};
-        (r2.data || []).forEach((r) => { mObj[r.date] = r.entries || []; });
-        setMeals(mObj);
         // profile is optional; failure here should not break the app
+        let loadedProfile = { username: "", avatar: "" };
         try {
           const r3 = await supabase.from("iron_profiles").select("*").eq("user_id", USER_ID).limit(1);
           if (!r3.error && r3.data && r3.data[0]) {
@@ -682,6 +712,7 @@ function Main(props) {
             const activeSplits = Array.isArray(s.activeSplits) ? s.activeSplits : [];
             const weekSchedule = Array.isArray(s.weekSchedule) ? s.weekSchedule : [];
             registerCustomExercises(customExercises);
+            loadedProfile = { username: typeof s.username === "string" ? s.username : "", avatar: typeof s.avatar === "string" ? s.avatar : "" };
             setProfile({
               id: row.id,
               weight: Number(s.weight) || Number(row.weight) || DEFAULT_WEIGHT,
@@ -699,6 +730,7 @@ function Main(props) {
           }
         } catch (e) { /* profile table/column may not exist yet; use defaults */ }
         setDbOk(true);
+        ensurePublicProfile(loadedProfile).then(loadSocial);
       } catch (e) {
         console.error("DB:", e);
         flash("Database connection failed", "err");
@@ -715,7 +747,7 @@ function Main(props) {
       setWorkouts((prev) => prev.concat([{ id: res.data.id, date: res.data.date, exercises: res.data.exercises }]));
       localStorage.removeItem("ff-draft");
       flash("Workout saved!");
-      return true;
+      return res.data.id || true;
     } catch (e) {
       flash("Save failed: " + e.message, "err");
       return false;
@@ -742,24 +774,6 @@ function Main(props) {
       setWorkouts((prev) => prev.filter((w) => w.id !== id));
       flash("Workout deleted");
     } catch (e) { flash("Delete failed", "err"); }
-  }
-
-  // Meal mutations are computed from authoritative state to avoid lost-update races
-  async function persistMeal(date, entries) {
-    const res = await supabase.from("iron_meals").upsert({ user_id: USER_ID, date, entries }, { onConflict: "user_id,date" });
-    if (res.error) throw res.error;
-  }
-  async function addMealEntry(date, entry) {
-    const next = (mealsRef.current[date] || []).concat([entry]);
-    setMeals((prev) => Object.assign({}, prev, { [date]: next }));
-    try { await persistMeal(date, next); flash("Meal logged!"); }
-    catch (e) { flash("Save failed", "err"); }
-  }
-  async function removeMealEntry(date, idx) {
-    const next = (mealsRef.current[date] || []).filter((_, i) => i !== idx);
-    setMeals((prev) => Object.assign({}, prev, { [date]: next }));
-    try { await persistMeal(date, next); }
-    catch (e) { flash("Save failed", "err"); }
   }
 
   // Single source of truth: write the whole settings object so nothing is dropped.
@@ -804,7 +818,12 @@ function Main(props) {
   // Save profile fields (username, avatar, share prefs) without closing the settings sheet.
   async function updateProfile(patch, msg) {
     const next = Object.assign({}, profile, patch);
-    try { await persistProfile(next); if (msg) flash(msg); return true; }
+    try {
+      await persistProfile(next);
+      if (patch.avatar !== undefined) supabase.from("iron_public_profiles").update({ avatar: patch.avatar || null, updated_at: new Date().toISOString() }).eq("user_id", USER_ID).then(() => loadSocial());
+      if (msg) flash(msg);
+      return true;
+    }
     catch (e) { flash("Could not save: " + e.message, "err"); return false; }
   }
 
@@ -813,12 +832,6 @@ function Main(props) {
     registerCustomExercises(next.customExercises);
     try { await persistProfile(next); flash("Exercise added"); return true; }
     catch (e) { flash("Could not save exercise: " + e.message, "err"); return false; }
-  }
-
-  async function addCustomRecipe(r) {
-    const next = Object.assign({}, profile, { customRecipes: (profile.customRecipes || []).concat([r]) });
-    try { await persistProfile(next); flash("Recipe added"); return true; }
-    catch (e) { flash("Could not save recipe: " + e.message, "err"); return false; }
   }
 
   // The home screen shows activeSplits, falling back to the default until the user changes it.
@@ -867,8 +880,158 @@ function Main(props) {
     catch (e) { flash("Could not save schedule: " + e.message, "err"); return false; }
   }
 
-  const proteinTarget = profile.proteinTarget != null ? profile.proteinTarget : profile.weight;
-  const calorieTarget = profile.calorieTarget != null ? profile.calorieTarget : Math.round(profile.weight * 16 + 300);
+  // ─── Social: public handle, friends, feed ───
+  const [socialState, setSocialState] = useState({ me: null, friends: [], incoming: [], outgoing: [], loaded: false });
+  const [feed, setFeed] = useState({ posts: [], loaded: false, loading: false, error: false });
+  const socialRef = useRef(socialState);
+  useEffect(() => { socialRef.current = socialState; }, [socialState]);
+
+  async function fetchPeople(ids) {
+    const uniq = Array.from(new Set(ids.filter(Boolean)));
+    if (!uniq.length) return {};
+    const r = await supabase.from("iron_public_profiles").select("user_id,username,avatar").in("user_id", uniq);
+    const map = {};
+    (r.data || []).forEach((p) => { map[p.user_id] = p; });
+    return map;
+  }
+
+  async function ensurePublicProfile(p) {
+    try {
+      const cur = await supabase.from("iron_public_profiles").select("user_id,username,avatar").eq("user_id", USER_ID).maybeSingle();
+      if (cur.error) throw cur.error;
+      if (cur.data) {
+        if ((p.avatar || "") !== (cur.data.avatar || "")) await supabase.from("iron_public_profiles").update({ avatar: p.avatar || null, updated_at: new Date().toISOString() }).eq("user_id", USER_ID);
+        return;
+      }
+      const u = await supabase.auth.getUser();
+      const email = u && u.data && u.data.user ? u.data.user.email || "" : "";
+      const login = cleanUsername(email.split("@")[0]);
+      const wanted = cleanUsername(p.username) || login || ("lifter" + String(USER_ID).replace(/-/g, "").slice(0, 6));
+      let ins = await supabase.from("iron_public_profiles").insert({ user_id: USER_ID, username: wanted, avatar: p.avatar || null });
+      if (ins.error && login && wanted !== login) ins = await supabase.from("iron_public_profiles").insert({ user_id: USER_ID, username: login, avatar: p.avatar || null });
+      if (ins.error) await supabase.from("iron_public_profiles").insert({ user_id: USER_ID, username: wanted + String(USER_ID).replace(/-/g, "").slice(0, 4), avatar: p.avatar || null });
+    } catch (e) { console.warn("public profile", e); }
+  }
+
+  async function loadSocial() {
+    try {
+      const fr = await supabase.from("iron_friendships").select("id,requester,addressee,status,created_at");
+      if (fr.error) throw fr.error;
+      const rows = fr.data || [];
+      const other = (r) => (r.requester === USER_ID ? r.addressee : r.requester);
+      const people = await fetchPeople(rows.map(other).concat([USER_ID]));
+      const person = (id) => people[id] || { user_id: id, username: "lifter", avatar: "" };
+      setSocialState({
+        me: people[USER_ID] || null,
+        friends: rows.filter((r) => r.status === "accepted").map((r) => Object.assign({ id: r.id }, person(other(r)))).sort((a, b) => a.username.localeCompare(b.username)),
+        incoming: rows.filter((r) => r.status === "pending" && r.addressee === USER_ID).map((r) => ({ id: r.id, person: person(r.requester) })),
+        outgoing: rows.filter((r) => r.status === "pending" && r.requester === USER_ID).map((r) => ({ id: r.id, person: person(r.addressee) })),
+        loaded: true,
+      });
+    } catch (e) { console.warn("social", e); }
+  }
+
+  async function searchUsers(h) {
+    const pat = h.replace(/[\\%_]/g, (c) => "\\" + c) + "%";
+    const r = await supabase.from("iron_public_profiles").select("user_id,username,avatar").ilike("username", pat).neq("user_id", USER_ID).order("username").limit(8);
+    return r.error ? [] : (r.data || []);
+  }
+
+  async function sendFriendRequest(username) {
+    const h = cleanUsername(username);
+    if (!h) return false;
+    const found = await supabase.from("iron_public_profiles").select("user_id,username").eq("username", h).maybeSingle();
+    if (found.error || !found.data) { flash("No one found with that username", "err"); return false; }
+    if (found.data.user_id === USER_ID) { flash("That's you", "err"); return false; }
+    const theirs = socialRef.current.incoming.find((r) => r.person.user_id === found.data.user_id);
+    if (theirs) return acceptRequest(theirs.id);
+    const ins = await supabase.from("iron_friendships").insert({ requester: USER_ID, addressee: found.data.user_id });
+    if (ins.error) { flash(ins.error.code === "23505" ? "You're already connected, or a request is pending" : "Could not send request", "err"); return false; }
+    flash("Request sent to @" + found.data.username);
+    await loadSocial();
+    return true;
+  }
+
+  async function acceptRequest(id) {
+    const r = await supabase.from("iron_friendships").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("id", id);
+    if (r.error) { flash("Could not accept", "err"); return false; }
+    flash("You're now friends");
+    await loadSocial();
+    loadFeed();
+    return true;
+  }
+
+  async function removeFriendship(id, quiet) {
+    const r = await supabase.from("iron_friendships").delete().eq("id", id);
+    if (r.error) { flash("Could not update", "err"); return false; }
+    if (!quiet) flash("Friend removed");
+    await loadSocial();
+    loadFeed();
+    return true;
+  }
+
+  async function loadFeed() {
+    setFeed((f) => Object.assign({}, f, { loading: true, error: false }));
+    try {
+      const r = await supabase.from("iron_posts").select("id,user_id,workout_id,summary,caption,created_at").order("created_at", { ascending: false }).limit(50);
+      if (r.error) throw r.error;
+      const posts = r.data || [];
+      let likes = [];
+      if (posts.length) {
+        const l = await supabase.from("iron_post_likes").select("post_id,user_id").in("post_id", posts.map((p) => p.id));
+        if (!l.error) likes = l.data || [];
+      }
+      const people = await fetchPeople(posts.map((p) => p.user_id).concat(likes.map((l) => l.user_id)));
+      const name = (id) => (id === USER_ID ? "you" : people[id] ? "@" + people[id].username : "a friend");
+      setFeed({
+        loaded: true, loading: false, error: false,
+        posts: posts.map((p) => {
+          const pl = likes.filter((l) => l.post_id === p.id);
+          return Object.assign({}, p, { author: people[p.user_id] || { username: "lifter" }, mine: p.user_id === USER_ID, likeCount: pl.length, liked: pl.some((l) => l.user_id === USER_ID), likers: pl.map((l) => name(l.user_id)) });
+        }),
+      });
+    } catch (e) {
+      console.warn("feed", e);
+      setFeed((f) => Object.assign({}, f, { loading: false, loaded: true, error: true }));
+    }
+  }
+
+  async function createPost(summary, caption, workoutId) {
+    const r = await supabase.from("iron_posts").insert({ user_id: USER_ID, workout_id: workoutId || null, summary, caption: (caption || "").trim() || null });
+    if (r.error) { flash("Could not post: " + r.error.message, "err"); return false; }
+    flash(socialRef.current.friends.length ? "Posted to your friends" : "Posted. Add friends so they can see it.");
+    loadFeed();
+    return true;
+  }
+
+  async function toggleLike(post) {
+    const liked = !post.liked;
+    setFeed((f) => Object.assign({}, f, { posts: f.posts.map((p) => (p.id === post.id ? Object.assign({}, p, { liked, likeCount: p.likeCount + (liked ? 1 : -1), likers: liked ? ["you"].concat(p.likers.filter((x) => x !== "you")) : p.likers.filter((x) => x !== "you") }) : p)) }));
+    const r = liked
+      ? await supabase.from("iron_post_likes").insert({ post_id: post.id, user_id: USER_ID })
+      : await supabase.from("iron_post_likes").delete().eq("post_id", post.id).eq("user_id", USER_ID);
+    if (r.error && r.error.code !== "23505") loadFeed();
+  }
+
+  async function deletePost(post) {
+    const yes = await appConfirm({ title: "Delete post?", message: "This removes it from your friends' feeds. Your workout stays in your log.", confirmLabel: "Delete", danger: true });
+    if (!yes) return;
+    const r = await supabase.from("iron_posts").delete().eq("id", post.id);
+    if (r.error) { flash("Could not delete", "err"); return; }
+    setFeed((f) => Object.assign({}, f, { posts: f.posts.filter((p) => p.id !== post.id) }));
+  }
+
+  async function setHandle(name) {
+    const h = cleanUsername(name);
+    if (h.length < 3) { flash("Usernames need at least 3 letters or numbers", "err"); return false; }
+    const r = await supabase.from("iron_public_profiles").upsert({ user_id: USER_ID, username: h, avatar: profile.avatar || null, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    if (r.error) { flash(r.error.code === "23505" ? "@" + h + " is taken" : "Could not save username", "err"); return false; }
+    const ok = await updateProfile({ username: h }, "Username saved");
+    await loadSocial();
+    return ok;
+  }
+
+  const social = { state: socialState, feed, loadSocial, loadFeed, searchUsers, sendFriendRequest, acceptRequest, removeFriendship, createPost, toggleLike, deletePost, setHandle };
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f7fa" }}>
@@ -896,11 +1059,10 @@ function Main(props) {
       </header>
 
       <div style={{ padding: "16px 20px" }}>
-        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} onSaveProfile={updateProfile} />}
-        {tab === "nutrition" && <FoodTab meals={meals} onAdd={addMealEntry} onRemove={removeMealEntry} pt={proteinTarget} ct={calorieTarget} customRecipes={profile.customRecipes || []} onAddRecipe={addCustomRecipe} />}
-        {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} />}
-        {tab === "learn" && <LearnTab />}
-        {tab === "profile" && <ProfileTab profile={profile} workouts={workouts} weekSchedule={profile.weekSchedule || []} onSave={updateProfile} onSignOut={onSignOut} />}
+        {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} onSaveProfile={updateProfile} onPost={createPost} />}
+        {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} social={social} />}
+        {tab === "coach" && <CoachTab workouts={workouts} profile={profile} splits={currentSplits} weekSchedule={profile.weekSchedule || []} />}
+        {tab === "profile" && <ProfileTab profile={profile} workouts={workouts} weekSchedule={profile.weekSchedule || []} onSave={updateProfile} onSignOut={onSignOut} social={social} />}
       </div>
 
       {rest.running && <RestBar rest={rest} onAdjust={adjustRest} onSkip={skipRest} />}
@@ -908,19 +1070,21 @@ function Main(props) {
       <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "rgba(255,255,255,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid " + BORDER, boxShadow: "0 -2px 16px rgba(16,24,40,.06)", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
           { id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },
-          { id: "nutrition", label: "Food", d: "M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" },
           { id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" },
-          { id: "learn", label: "Learn", d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" },
+          { id: "coach", label: "Coach", d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" },
           { id: "profile", label: "Profile", d: "M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
         ].map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: "8px 0", color: tab === t.id ? "#1a73e8" : "#9ca3af" }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? 2.2 : 1.5} strokeLinecap="round" strokeLinejoin="round"><path d={t.d} /></svg>
+            <span style={{ position: "relative", display: "flex" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === t.id ? 2.2 : 1.5} strokeLinecap="round" strokeLinejoin="round"><path d={t.d} /></svg>
+              {t.id === "progress" && socialState.incoming.length > 0 && <span style={{ position: "absolute", top: -2, right: -6, width: 10, height: 10, borderRadius: "50%", background: "#ef4444", border: "2px solid #fff" }} />}
+            </span>
             <span style={{ fontSize: 11, fontWeight: tab === t.id ? 600 : 400 }}>{t.label}</span>
           </button>
         ))}
       </nav>
 
-      {showSettings && <SettingsSheet profile={profile} derivedP={proteinTarget} derivedC={calorieTarget} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onUpdateSplit={updateSplit} onApplyPlan={applyPlan} onCreateExercise={addCustomExercise} />}
+      {showSettings && <SettingsSheet profile={profile} onSave={saveProfile} onClose={() => setShowSettings(false)} onSignOut={onSignOut} splits={currentSplits} onAddSplit={addSplit} onRemoveSplit={removeSplit} onUpdateSplit={updateSplit} onApplyPlan={applyPlan} onCreateExercise={addCustomExercise} />}
     </div>
   );
 }
@@ -1099,6 +1263,8 @@ function WorkoutTab(props) {
     }
     const durationSec = startedAt ? Math.round((Date.now() - startedAt) / 1000) : null;
     const summary = buildShareSummary(cleaned, workouts, splits, activeSplitId, durationSec);
+    summary.prs = prsInWorkout(cleaned, workouts);
+    summary.workoutId = typeof ok === "string" ? ok : null;
     setActiveSplitId(null);
     setStartedAt(null);
     setWorkout({ date: today(), exercises: [] });
@@ -1291,7 +1457,7 @@ function WorkoutTab(props) {
       {picker && <Picker inWorkoutIds={inWorkoutIds} onSelect={addExercise} onCreate={onCreateExercise} onClose={() => setPicker(false)} />}
       {plates !== null && <PlateModal weight={plates} onClose={() => setPlates(null)} />}
       {editing && <EditWorkoutModal workout={editing} onSave={onUpdate} onDelete={onDelete} onCreateExercise={onCreateExercise} onClose={() => setEditing(null)} />}
-      {shareData && <WorkoutShareModal data={shareData} profile={props.profile || {}} onSaveProfile={props.onSaveProfile} flash={flash} onClose={() => setShareData(null)} />}
+      {shareData && <WorkoutShareModal data={shareData} profile={props.profile || {}} onSaveProfile={props.onSaveProfile} onPost={props.onPost} flash={flash} onClose={() => setShareData(null)} />}
     </div>
   );
 }
@@ -1744,431 +1910,554 @@ function EditWorkoutModal(props) {
   );
 }
 
-// ─── FOOD TAB (recipe library + daily log) ───
-function FoodTab(props) {
-  const { meals, onAdd, onRemove, pt, ct } = props;
-  const [cat, setCat] = useState("All");
-  const [q, setQ] = useState("");
-  const [detail, setDetail] = useState(null); // recipe object
-  const [showForm, setShowForm] = useState(false);
-  const [date, setDate] = useState(today());
-  const [showPresets, setShowPresets] = useState(false);
-  const [cust, setCust] = useState({ name: "", p: "", c: "" });
+// ─── PROGRESS TAB (You + Friends) ───
+function Segmented(props) {
+  return (
+    <div style={{ display: "flex", background: "#eef1f5", borderRadius: 14, padding: 4, marginBottom: 16 }}>
+      {props.options.map((o) => {
+        const on = props.value === o.id;
+        return (
+          <button key={o.id} onClick={() => props.onChange(o.id)} style={{ flex: 1, border: "none", borderRadius: 11, padding: "10px 8px", minHeight: 42, background: on ? "#fff" : "transparent", color: on ? "#1a2332" : "#6b7280", fontSize: 14, fontWeight: 700, boxShadow: on ? shadowSm : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            {o.label}
+            {o.badge > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{o.badge}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-  const library = RECIPES.concat(props.customRecipes || []);
-  let list = cat === "All" ? library : library.filter((r) => r.cat === cat);
-  if (q.trim()) {
-    const term = q.trim().toLowerCase();
-    list = list.filter((r) => r.name.toLowerCase().includes(term) || (r.ingredients || []).join(" ").toLowerCase().includes(term));
-  }
+// Themed dropdown (no native select).
+function Dropdown(props) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    function off(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("pointerdown", off);
+    return () => document.removeEventListener("pointerdown", off);
+  }, [open]);
+  const cur = props.options.find((o) => o.value === props.value);
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button onClick={() => setOpen(!open)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#f7f9fc", border: "1px solid " + (open ? "#1a73e8" : "#e3e8ef"), borderRadius: 12, padding: "11px 14px", minHeight: 46, fontSize: 15, fontWeight: 700, color: "#1a2332", textAlign: "left" }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cur ? cur.label : "Choose"}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform .15s" }}><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 30, background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, boxShadow: shadowMd, maxHeight: 280, overflowY: "auto", padding: 4 }}>
+          {props.options.map((o) => {
+            const on = o.value === props.value;
+            return (
+              <button key={o.value} onClick={() => { props.onChange(o.value); setOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: on ? "#f0f5ff" : "transparent", border: "none", borderRadius: 10, padding: "11px 12px", fontSize: 14.5, fontWeight: on ? 700 : 500, color: on ? "#1a73e8" : "#1a2332", textAlign: "left" }}>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.label}</span>
+                {o.meta && <span style={{ flexShrink: 0, fontSize: 12, color: "#9ca3af", fontWeight: 600 }}>{o.meta}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const dm = meals[date] || [];
-  const tp = dm.reduce((a, m) => a + (Number(m.protein) || 0), 0);
-  const tc = dm.reduce((a, m) => a + (Number(m.cals) || 0), 0);
-
-  function logMeal(item) {
-    const entry = { name: item.name, protein: item.p, cals: item.c, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
-    onAdd(today(), entry);
-    setShowPresets(false);
+function LineChart(props) {
+  const pts = props.points || [];
+  const W = 320, H = 130, PL = 6, PR = 6, PT = 14, PB = 8;
+  if (pts.length < 2) {
+    return <div style={{ height: H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "0 20px" }}>{pts.length === 1 ? "One session so far. Log it again to see a trend." : "No sessions yet."}</div>;
   }
-  function logRecipe(r) {
-    onAdd(today(), { name: r.name, protein: r.p, cals: r.cals, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
-    setDetail(null);
-  }
-  function addCustom() {
-    if (!cust.name.trim()) return;
-    logMeal({ name: cust.name.trim(), p: Number(cust.p) || 0, c: Number(cust.c) || 0 });
-    setCust({ name: "", p: "", c: "" });
-  }
-
-  const week = [];
-  for (let i = 6; i >= 0; i--) {
-    const ds = shiftDay(today(), -i);
-    const dd = new Date(Number(ds.split("-")[0]), Number(ds.split("-")[1]) - 1, Number(ds.split("-")[2]));
-    week.push({ day: dd.toLocaleDateString("en", { weekday: "narrow" }), p: (meals[ds] || []).reduce((a, m) => a + (Number(m.protein) || 0), 0) });
-  }
-
+  const ys = pts.map((p) => p.y);
+  let lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
+  if (hi === lo) { hi += 5; lo -= 5; }
+  const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+  const x = (i) => PL + (i * (W - PL - PR)) / (pts.length - 1);
+  const y = (v) => PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB);
+  const line = pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.y).toFixed(1)).join(" ");
+  const area = line + " L" + x(pts.length - 1).toFixed(1) + " " + (H - PB) + " L" + x(0).toFixed(1) + " " + (H - PB) + " Z";
+  const bestI = ys.indexOf(Math.max.apply(null, ys));
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 4 }}>Meal Library</h2>
-      <p style={{ color: "#9ca3af", fontSize: 14, marginTop: 4, marginBottom: 16 }}>High-protein meals built for muscle. Tap one to see how to make it.</p>
-
-      {props.onAddRecipe && (
-        <button onClick={() => setShowForm(true)} style={{ width: "100%", background: "#f0f5ff", border: "1px dashed #1a73e8", borderRadius: 12, padding: "14px", color: "#1a73e8", fontSize: 14, fontWeight: 700, marginBottom: 12, minHeight: 48 }}>+ Add Your Own Recipe</button>
-      )}
-
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search meals or ingredients" style={Object.assign({}, fieldStyle, { marginBottom: 12 })} />
-
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 16, WebkitOverflowScrolling: "touch" }}>
-        {["All"].concat(MEAL_CATS).map((g) => (
-          <button key={g} onClick={() => setCat(g)} style={{ background: cat === g ? "#1a73e8" : "#fff", color: cat === g ? "#fff" : "#374151", border: cat === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 24, padding: "10px 18px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0, minHeight: 44 }}>{g}</button>
-        ))}
-      </div>
-
-      {list.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>No meals match that search</p>}
-      {list.map((r) => (
-        <button key={r.id} onClick={() => setDetail(r)} style={Object.assign({}, cardStyle, { width: "100%", textAlign: "left", display: "block" })}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>{r.name}</div>
-              <div style={{ fontSize: 13, color: "#6b7280", marginTop: 3, lineHeight: 1.4 }}>{r.blurb}</div>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "#f3f4f6", borderRadius: 20, padding: "5px 10px", whiteSpace: "nowrap" }}>{r.time} min</span>
-          </div>
-          <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
-            <MacroPill label="P" val={r.p + "g"} strong />
-            <MacroPill label="C" val={r.c + "g"} />
-            <MacroPill label="F" val={r.f + "g"} />
-            <MacroPill label="" val={r.cals + " cal"} />
-          </div>
-        </button>
-      ))}
-
-      <div style={{ borderTop: "1px solid #eaeef3", marginTop: 20, paddingTop: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginBottom: 20 }}>
-          <button onClick={() => setDate(shiftDay(date, -1))} style={navBtnStyle}>‹</button>
-          <span style={{ fontSize: 15, fontWeight: 600, color: date === today() ? "#1a73e8" : "#6b7280" }}>{date === today() ? "Today" : date}</span>
-          <button onClick={() => setDate(shiftDay(date, 1))} style={navBtnStyle}>›</button>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "center", gap: 36, marginBottom: 24 }}>
-          <Ring label="Protein" val={tp} tgt={pt} unit="g" pct={Math.min((tp / pt) * 100, 100)} />
-          <Ring label="Calories" val={tc} tgt={ct} unit="" pct={Math.min((tc / ct) * 100, 100)} />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <div style={labelStyle}>7-Day Protein</div>
-          <div style={{ display: "flex", gap: 4, height: 48 }}>
-            {week.map((wk, i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                <div style={{ width: "100%", flex: 1, background: "#f3f4f6", borderRadius: 4, display: "flex", alignItems: "flex-end" }}>
-                  <div style={{ width: "100%", height: Math.min((wk.p / pt) * 100, 100) + "%", background: wk.p >= pt ? "#22c55e" : "#1a73e8", borderRadius: 4, minHeight: 2 }} />
-                </div>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>{wk.day}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Logged Meals</div>
-            <button onClick={() => setShowPresets(true)} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>+ Quick Food</button>
-          </div>
-          {dm.length === 0 && <p style={{ color: "#9ca3af", textAlign: "center", padding: 20, fontSize: 14 }}>Nothing logged yet. Log a meal from the library above, or add one below.</p>}
-          {dm.map((m, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f3f4f6" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
-                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{m.protein}g · {m.cals} cal{m.time ? " · " + m.time : ""}</div>
-              </div>
-              <button onClick={() => onRemove(date, i)} style={closeBtn}>✕</button>
-            </div>
-          ))}
-        </div>
-
-        <div style={Object.assign({}, cardStyle, { marginBottom: 16 })}>
-          <div style={labelStyle}>Custom Entry</div>
-          <input style={fieldStyle} placeholder="Food name" value={cust.name} onChange={(e) => setCust(Object.assign({}, cust, { name: e.target.value }))} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-            <input style={fieldStyle} placeholder="Protein (g)" type="number" inputMode="numeric" value={cust.p} onChange={(e) => setCust(Object.assign({}, cust, { p: e.target.value }))} />
-            <input style={fieldStyle} placeholder="Calories" type="number" inputMode="numeric" value={cust.c} onChange={(e) => setCust(Object.assign({}, cust, { c: e.target.value }))} />
-          </div>
-          <button onClick={addCustom} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 600, marginTop: 10, minHeight: 48 }}>Log It</button>
-        </div>
-      </div>
-
-      {detail && <RecipeDetail recipe={detail} onLog={() => logRecipe(detail)} onClose={() => setDetail(null)} />}
-
-      {showForm && <RecipeForm onSubmit={props.onAddRecipe} onClose={() => setShowForm(false)} />}
-
-      {showPresets && (
-        <div style={overlay}>
-          <div style={Object.assign({}, sheet, { maxHeight: "80vh" })}>
-            <div style={sheetHead}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Quick Foods</h2>
-              <button onClick={() => setShowPresets(false)} style={xBtn}>✕</button>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              {FOOD_PRESETS.map((p, i) => (
-                <button key={i} onClick={() => logMeal(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", color: "#1a2332", padding: "16px 4px", width: "100%", textAlign: "left", minHeight: 52 }}>
-                  <span style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</span>
-                  <span style={{ fontSize: 13, color: "#9ca3af" }}>{p.p}g · {p.c}cal</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MacroPill(props) {
-  return (
-    <span style={{ fontSize: 12, fontWeight: 600, color: props.strong ? "#1a73e8" : "#6b7280", background: props.strong ? "#1a73e810" : "#f3f4f6", borderRadius: 8, padding: "5px 10px" }}>
-      {props.label ? props.label + " " : ""}{props.val}
-    </span>
-  );
-}
-
-// ─── RECIPE DETAIL ───
-function RecipeDetail(props) {
-  const r = props.recipe;
-  return (
-    <div style={overlay}>
-      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
-        <div style={sheetHead}>
-          <div>
-            <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0 }}>{r.name}</h2>
-            <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>{r.cat} · {r.time} min</div>
-          </div>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
-        </div>
-
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
-            {[{ l: "Protein", v: r.p + "g", strong: true }, { l: "Carbs", v: r.c + "g" }, { l: "Fat", v: r.f + "g" }, { l: "Calories", v: r.cals }].map((m, i) => (
-              <div key={i} style={{ background: m.strong ? "#1a73e810" : "#f9fafb", border: "1px solid " + (m.strong ? "#1a73e830" : "#eaeef3"), borderRadius: 12, padding: "12px 6px", textAlign: "center" }}>
-                <div style={{ fontSize: 17, fontWeight: 700, color: m.strong ? "#1a73e8" : "#1a2332" }}>{m.v}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 500, marginTop: 2 }}>{m.l}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={labelStyle}>Ingredients</div>
-          <div style={{ marginBottom: 20 }}>
-            {r.ingredients.map((ing, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 0", borderBottom: i < r.ingredients.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                <span style={{ color: "#1a73e8", fontWeight: 700, lineHeight: 1.4 }}>·</span>
-                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.4 }}>{ing}</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={labelStyle}>How to Make It</div>
-          <div style={{ marginBottom: 8 }}>
-            {r.steps.map((st, i) => (
-              <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 12 }}>
-                <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: "50%", background: "#1a73e8", color: "#fff", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
-                <span style={{ fontSize: 14, color: "#374151", lineHeight: 1.5, paddingTop: 2 }}>{st}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button onClick={props.onLog} style={{ width: "100%", background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>Log to Today ({r.p}g · {r.cals} cal)</button>
+      <svg viewBox={"0 0 " + W + " " + H} style={{ width: "100%", height: "auto", display: "block" }}>
+        <defs>
+          <linearGradient id="lcfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1a73e8" stopOpacity=".22" /><stop offset="100%" stopColor="#1a73e8" stopOpacity="0" /></linearGradient>
+        </defs>
+        <path d={area} fill="url(#lcfill)" />
+        <path d={line} fill="none" stroke="#1a73e8" strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.y)} r={i === bestI ? 4.5 : 2.6} fill={i === bestI ? "#f59e0b" : "#1a73e8"} stroke="#fff" strokeWidth={i === bestI ? 2 : 1} />)}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4 }}>
+        <span>{pts[0].label}</span><span>{pts[pts.length - 1].label}</span>
       </div>
     </div>
   );
 }
 
-// ─── RECIPE FORM (create your own) ───
-function RecipeForm(props) {
-  const [f, setF] = useState({ name: "", cat: "Lunch", time: "", p: "", c: "", fat: "", cals: "", blurb: "", ingredients: "", steps: "" });
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-  function set(k, v) { setF(Object.assign({}, f, { [k]: v })); }
-
-  async function submit() {
-    setErr("");
-    if (!f.name.trim()) { setErr("Give your recipe a name"); return; }
-    const ingredients = f.ingredients.split("\n").map((s) => s.trim()).filter(Boolean);
-    const steps = f.steps.split("\n").map((s) => s.trim()).filter(Boolean);
-    if (ingredients.length === 0) { setErr("Add at least one ingredient"); return; }
-    if (steps.length === 0) { setErr("Add at least one step"); return; }
-    const recipe = {
-      id: "custom-rec-" + Date.now(),
-      name: f.name.trim(),
-      cat: f.cat,
-      time: Number(f.time) || 0,
-      p: Number(f.p) || 0,
-      c: Number(f.c) || 0,
-      f: Number(f.fat) || 0,
-      cals: Number(f.cals) || 0,
-      blurb: f.blurb.trim() || "Your custom recipe.",
-      ingredients,
-      steps,
-      custom: true,
-    };
-    setBusy(true);
-    let ok = true;
-    if (props.onSubmit) ok = await props.onSubmit(recipe);
-    setBusy(false);
-    if (ok !== false) props.onClose();
-  }
-
+function BarChart(props) {
+  const bars = props.bars || [];
+  const max = Math.max(1, Math.max.apply(null, bars.map((b) => b.value)));
   return (
-    <div style={overlay}>
-      <div style={Object.assign({}, sheet, { maxHeight: "92vh" })}>
-        <div style={sheetHead}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>New Recipe</h2>
-          <button onClick={props.onClose} style={xBtn}>✕</button>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto" }}>
-          <div style={labelStyle}>Name</div>
-          <input style={Object.assign({}, fieldStyle, { marginBottom: 14 })} value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Buffalo Chicken Wrap" />
-
-          <div style={labelStyle}>Category</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-            {MEAL_CATS.map((g) => (
-              <button key={g} onClick={() => set("cat", g)} style={{ background: f.cat === g ? "#1a73e8" : "#fff", color: f.cat === g ? "#fff" : "#374151", border: f.cat === g ? "2px solid #1a73e8" : "2px solid #eaeef3", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 600, minHeight: 40 }}>{g}</button>
-            ))}
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 120 }}>
+      {bars.map((b, i) => {
+        const last = i === bars.length - 1;
+        const h = b.value > 0 ? Math.max(6, (b.value / max) * 96) : 3;
+        return (
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 5, minWidth: 0 }}>
+            {(last || b.value === max) && b.value > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: last ? "#1a73e8" : "#6b7280" }}>{props.format ? props.format(b.value) : b.value}</span>}
+            <div style={{ width: "100%", maxWidth: 30, height: h, borderRadius: 6, background: last ? "linear-gradient(180deg,#2b7cf0,#1a73e8)" : b.value > 0 ? "#c9dbf8" : "#eef1f5" }} />
+            <span style={{ fontSize: 10, color: last ? "#1a2332" : "#9ca3af", fontWeight: 600 }}>{b.label}</span>
           </div>
-
-          <div style={labelStyle}>Short Description</div>
-          <input style={Object.assign({}, fieldStyle, { marginBottom: 14 })} value={f.blurb} onChange={(e) => set("blurb", e.target.value)} placeholder="One line about the meal (optional)" />
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
-            <div>
-              <div style={labelStyle}>Protein (g)</div>
-              <input style={fieldStyle} type="number" inputMode="numeric" value={f.p} onChange={(e) => set("p", e.target.value)} placeholder="0" />
-            </div>
-            <div>
-              <div style={labelStyle}>Calories</div>
-              <input style={fieldStyle} type="number" inputMode="numeric" value={f.cals} onChange={(e) => set("cals", e.target.value)} placeholder="0" />
-            </div>
-            <div>
-              <div style={labelStyle}>Carbs (g)</div>
-              <input style={fieldStyle} type="number" inputMode="numeric" value={f.c} onChange={(e) => set("c", e.target.value)} placeholder="0" />
-            </div>
-            <div>
-              <div style={labelStyle}>Fat (g)</div>
-              <input style={fieldStyle} type="number" inputMode="numeric" value={f.fat} onChange={(e) => set("fat", e.target.value)} placeholder="0" />
-            </div>
-          </div>
-
-          <div style={labelStyle}>Prep Time (minutes)</div>
-          <input style={Object.assign({}, fieldStyle, { marginBottom: 14 })} type="number" inputMode="numeric" value={f.time} onChange={(e) => set("time", e.target.value)} placeholder="0" />
-
-          <div style={labelStyle}>Ingredients (one per line)</div>
-          <textarea style={Object.assign({}, fieldStyle, { marginBottom: 14, minHeight: 100, resize: "vertical", lineHeight: 1.5 })} value={f.ingredients} onChange={(e) => set("ingredients", e.target.value)} placeholder={"8 oz chicken breast\n1 cup rice\n1 tbsp olive oil"} />
-
-          <div style={labelStyle}>Steps (one per line)</div>
-          <textarea style={Object.assign({}, fieldStyle, { marginBottom: 8, minHeight: 100, resize: "vertical", lineHeight: 1.5 })} value={f.steps} onChange={(e) => set("steps", e.target.value)} placeholder={"Season and grill the chicken\nCook the rice\nPlate and serve"} />
-
-          {err && <div style={{ fontSize: 13, fontWeight: 600, color: "#dc2626", marginBottom: 8 }}>{err}</div>}
-        </div>
-        <button onClick={submit} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 52, marginTop: 8 }}>{busy ? "Saving..." : "Save Recipe"}</button>
-      </div>
+        );
+      })}
     </div>
   );
 }
 
-function Ring(props) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 12, fontWeight: 500, color: "#9ca3af", marginBottom: 10 }}>{props.label}</div>
-      <div style={{ position: "relative", width: 80, height: 80 }}>
-        <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="34" fill="none" stroke="#f3f4f6" strokeWidth="5" />
-          <circle cx="40" cy="40" r="34" fill="none" stroke={props.pct >= 100 ? "#22c55e" : "#1a73e8"} strokeWidth="5" strokeDasharray={props.pct * 2.14 + " 214"} strokeLinecap="round" transform="rotate(-90 40 40)" />
-        </svg>
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>{props.val}{props.unit}</span>
-          <span style={{ fontSize: 10, color: "#9ca3af" }}>/{props.tgt}</span>
-        </div>
-      </div>
-    </div>
-  );
+function Delta(props) {
+  const d = props.value;
+  if (d == null || !isFinite(d)) return <span style={{ fontSize: 11.5, fontWeight: 700, color: "#9ca3af" }}>vs prior 30d</span>;
+  const up = d > 0, flat = d === 0;
+  return <span style={{ fontSize: 11.5, fontWeight: 700, color: flat ? "#9ca3af" : up ? "#16a34a" : "#dc2626" }}>{flat ? "Same as prior 30d" : (up ? "+" : "") + d + "% vs prior 30d"}</span>;
 }
+function pctChange(cur, prev) { if (!prev) return cur ? null : 0; return Math.round(((cur - prev) / prev) * 100); }
 
-// ─── PROGRESS TAB ───
 function ProgressTab(props) {
-  const stats = computeGameStats(props.workouts, props.weekSchedule);
+  const { workouts, weekSchedule, social } = props;
+  const [view, setView] = useState("you");
+  const pending = social && social.state ? social.state.incoming.length : 0;
+  return (
+    <div>
+      <Segmented value={view} onChange={setView} options={[{ id: "you", label: "You" }, { id: "friends", label: "Friends", badge: pending }]} />
+      {view === "you" ? <YouProgress workouts={workouts} weekSchedule={weekSchedule} /> : <FriendsFeed social={social} />}
+    </div>
+  );
+}
+
+function YouProgress(props) {
+  const { workouts, weekSchedule } = props;
+  const stats = computeGameStats(workouts, weekSchedule);
   const grid = buildHabitGrid(stats.workoutDays, 10);
   const badges = achievementsFor(stats);
   const earnedCount = badges.filter((b) => b.earned).length;
-  const weekPct = stats.thisWeekScheduled > 0 ? (stats.thisWeekDone / stats.thisWeekScheduled) * 100 : 0;
+  const t = today();
+  const cur = windowTotals(workouts, shiftDay(t, -29), t);
+  const prev = windowTotals(workouts, shiftDay(t, -59), shiftDay(t, -30));
+  const prs = personalRecords(workouts);
+  const freshPrs = prs.filter((p) => p.fresh).length;
+  const weeks = weeklyTotals(workouts, 8);
+  const groups = groupSets(workouts, shiftDay(t, -29));
+  const groupMax = groups.length ? groups[0].sets : 1;
+  const lifts = loggedExercises(workouts);
+  const [exId, setExId] = useState(lifts.length ? lifts[0].id : null);
+  const [showAllPrs, setShowAllPrs] = useState(false);
+  const activeEx = exId && lifts.find((l) => l.id === exId) ? exId : (lifts.length ? lifts[0].id : null);
+  const hist = activeEx ? exerciseHistory(workouts, activeEx) : [];
+  const shortDate = (d) => { const p = d.split("-").map(Number); return p[1] + "/" + p[2]; };
+  const histPts = hist.slice(-16).map((h) => ({ y: h.best, label: shortDate(h.date) }));
+  const histBest = hist.reduce((m, h) => (h.best > m.best ? h : m), { best: 0 });
+  const histFirst = hist.length ? hist[0].best : 0;
+  const weekPct = stats.thisWeekScheduled > 0 ? Math.min(100, (stats.thisWeekDone / stats.thisWeekScheduled) * 100) : 0;
+
+  if (stats.total === 0) {
+    return (
+      <div style={Object.assign({}, cardStyle, { padding: 28, textAlign: "center" })}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#f0f5ff", margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18M5 16l4-4 4 4 6-8" /></svg>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>Your Progress Starts Here</div>
+        <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, margin: "8px 0 0" }}>Finish your first workout on the Train tab and your charts, records, and streaks show up here.</p>
+      </div>
+    );
+  }
+
+  const tiles = [
+    { v: cur.sessions, l: "Workouts", d: pctChange(cur.sessions, prev.sessions) },
+    { v: cur.sets, l: "Working Sets", d: pctChange(cur.sets, prev.sets) },
+    { v: fmtVolume(cur.volume), l: "Volume (lb)", d: pctChange(cur.volume, prev.volume) },
+    { v: freshPrs, l: "New PRs (14d)", d: undefined },
+  ];
 
   return (
     <div>
-      {/* Level hero */}
-      <div style={{ background: "linear-gradient(135deg,#1a73e8,#0c47b7)", borderRadius: 20, padding: 20, color: "#fff", marginBottom: 16, boxShadow: shadowPrimary }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, letterSpacing: ".04em" }}>LEVEL {stats.level}</span>
-          <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>{stats.total} workouts</span>
+      {/* Level + week */}
+      <div style={{ background: "linear-gradient(135deg,#1a73e8,#0c47b7)", borderRadius: 20, padding: 18, color: "#fff", marginBottom: 12, boxShadow: shadowPrimary }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.8, letterSpacing: ".06em" }}>LEVEL {stats.level}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.9, marginTop: 3 }}>{10 - stats.intoLevel} to Level {stats.level + 1}</div>
+          </div>
+          <div style={{ display: "flex", gap: 18, textAlign: "center" }}>
+            {[{ v: stats.streak, l: "Streak" }, { v: stats.perfectWeeks, l: "Perfect" }, { v: stats.total, l: "Total" }].map((s, i) => (
+              <div key={i}><div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{s.v}</div><div style={{ fontSize: 10.5, fontWeight: 600, opacity: 0.8, marginTop: 4 }}>{s.l}</div></div>
+            ))}
+          </div>
         </div>
-        <div style={{ height: 10, background: "rgba(255,255,255,.22)", borderRadius: 6, marginTop: 12, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: (stats.intoLevel * 10) + "%", background: "#fff", borderRadius: 6 }} />
+        <div style={{ height: 8, background: "rgba(255,255,255,.22)", borderRadius: 5, marginTop: 14, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: (stats.intoLevel * 10) + "%", background: "#fff", borderRadius: 5 }} />
         </div>
-        <div style={{ fontSize: 13, fontWeight: 500, opacity: 0.9, marginTop: 10 }}>{10 - stats.intoLevel} more {10 - stats.intoLevel === 1 ? "workout" : "workouts"} to Level {stats.level + 1}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, fontSize: 12.5, fontWeight: 600 }}>
+          <span style={{ opacity: 0.85 }}>This week</span>
+          <span>{stats.thisWeekScheduled > 0 ? stats.thisWeekDone + " of " + stats.thisWeekScheduled + " scheduled days" : "No schedule set"}</span>
+        </div>
+        {stats.thisWeekScheduled > 0 && <div style={{ height: 5, background: "rgba(255,255,255,.22)", borderRadius: 3, marginTop: 6, overflow: "hidden" }}><div style={{ height: "100%", width: weekPct + "%", background: weekPct >= 100 ? "#4ade80" : "#fff", borderRadius: 3 }} /></div>}
       </div>
 
-      {/* Stat tiles */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
-        {[
-          { v: stats.streak, l: stats.streak === 1 ? "Week Streak" : "Week Streak", accent: "#f59e0b" },
-          { v: stats.perfectWeeks, l: "Perfect Weeks", accent: "#22c55e" },
-          { v: stats.sets, l: "Total Sets", accent: "#1a73e8" },
-        ].map((s, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "18px 8px", textAlign: "center", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: s.accent }}>{s.v}</div>
-            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4, lineHeight: 1.2 }}>{s.l}</div>
+      {/* Last 30 days */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+        {tiles.map((s, i) => (
+          <div key={i} style={{ background: "#fff", borderRadius: 16, padding: "14px 14px 12px", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+            <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 700, letterSpacing: ".03em", textTransform: "uppercase" }}>{s.l}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#1a2332", margin: "4px 0 2px" }}>{s.v}</div>
+            {s.d !== undefined ? <Delta value={s.d} /> : <span style={{ fontSize: 11.5, fontWeight: 700, color: freshPrs ? "#f59e0b" : "#9ca3af" }}>{freshPrs ? "Keep it rolling" : "Last 30 days"}</span>}
           </div>
         ))}
       </div>
 
-      {/* This week */}
-      <div style={Object.assign({}, cardStyle, { marginBottom: 20, padding: 18 })}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>This Week</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: stats.thisWeekScheduled && stats.thisWeekDone >= stats.thisWeekScheduled ? "#22c55e" : "#9ca3af" }}>
-            {stats.thisWeekScheduled > 0 ? stats.thisWeekDone + " / " + stats.thisWeekScheduled : "No schedule set"}
-          </span>
-        </div>
-        {stats.thisWeekScheduled > 0 ? (
-          <div style={{ height: 8, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: weekPct + "%", background: weekPct >= 100 ? "#22c55e" : "#1a73e8", borderRadius: 5, transition: "width .3s ease" }} />
+      {/* Exercise progress */}
+      {lifts.length > 0 && (
+        <div style={Object.assign({}, cardStyle, { overflow: "visible" })}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontSize: 15, fontWeight: 800 }}>Strength Trend</span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>Estimated 1-rep max</span>
           </div>
-        ) : (
-          <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Set a weekly schedule on the Train tab to track perfect weeks and streaks.</p>
-        )}
+          <Dropdown value={activeEx} onChange={setExId} options={lifts.map((l) => ({ value: l.id, label: exLabel(l.id), meta: l.sessions + "x" }))} />
+          <div style={{ marginTop: 12 }}><LineChart points={histPts} /></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 12 }}>
+            {[
+              { v: histBest.best ? histBest.best + " lb" : "-", l: "Best e1RM" },
+              { v: histBest.top ? histBest.top.weight + " × " + histBest.top.reps : "-", l: "Best Set" },
+              { v: histFirst && histBest.best ? (histBest.best - histFirst >= 0 ? "+" : "") + (histBest.best - histFirst) + " lb" : "-", l: "Since First" },
+            ].map((s, i) => (
+              <div key={i} style={{ background: "#f7f9fc", borderRadius: 12, padding: "10px 6px", textAlign: "center" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1a2332" }}>{s.v}</div>
+                <div style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 700, marginTop: 2 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Weekly volume */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <span style={{ fontSize: 15, fontWeight: 800 }}>Weekly Volume</span>
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>lb lifted, last 8 weeks</span>
+        </div>
+        <BarChart bars={weeks.map((w) => ({ value: w.volume, label: w.label }))} format={fmtVolume} />
       </div>
 
-      {/* Consistency grid */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={labelStyle}>Last 10 Weeks</div>
-        <div style={Object.assign({}, cardStyle, { padding: 16 })}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 7, marginBottom: 8 }}>
+      {/* Personal records */}
+      {prs.length > 0 && (
+        <div style={cardStyle}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <span style={{ fontSize: 15, fontWeight: 800 }}>Personal Records</span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>{prs.length} lifts</span>
+          </div>
+          {(showAllPrs ? prs : prs.slice(0, 5)).map((p, i) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid #f3f4f6" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                  {p.fresh && <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 800, color: "#b45309", background: "#fef3c7", borderRadius: 6, padding: "2px 6px", letterSpacing: ".04em" }}>NEW</span>}
+                </div>
+                <div style={{ fontSize: 12.5, color: "#9ca3af", marginTop: 2 }}>{p.top.weight} × {p.top.reps} on {prettyShort(p.date)}</div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 800 }}>{p.best} lb</div>
+                {p.gain > 0 ? <div style={{ fontSize: 11.5, fontWeight: 700, color: "#16a34a" }}>+{p.gain} lb</div> : <div style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>e1RM</div>}
+              </div>
+            </div>
+          ))}
+          {prs.length > 5 && <button onClick={() => setShowAllPrs(!showAllPrs)} style={{ width: "100%", background: "none", border: "none", color: "#1a73e8", fontSize: 14, fontWeight: 700, padding: "10px 0 2px" }}>{showAllPrs ? "Show less" : "Show all " + prs.length}</button>}
+        </div>
+      )}
+
+      {/* Muscle balance + consistency side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 12, marginBottom: 12 }}>
+        <div style={Object.assign({}, cardStyle, { marginBottom: 0 })}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontSize: 15, fontWeight: 800 }}>Muscle Balance</span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>sets, 30 days</span>
+          </div>
+          {groups.length === 0 && <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>No sets in the last 30 days.</p>}
+          {groups.map((g) => (
+            <div key={g.group} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ width: 82, flexShrink: 0, fontSize: 12.5, fontWeight: 600, color: "#374151" }}>{g.group}</span>
+              <div style={{ flex: 1, height: 9, background: "#f1f3f6", borderRadius: 5, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: (g.sets / groupMax) * 100 + "%", background: "#1a73e8", borderRadius: 5 }} />
+              </div>
+              <span style={{ width: 26, flexShrink: 0, textAlign: "right", fontSize: 12.5, fontWeight: 700 }}>{g.sets}</span>
+            </div>
+          ))}
+        </div>
+        <div style={Object.assign({}, cardStyle, { marginBottom: 0 })}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontSize: 15, fontWeight: 800 }}>Consistency</span>
+            <span style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af" }}>last 10 weeks</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5, marginBottom: 6 }}>
             {DAY_ABBR.map((d, i) => <span key={i} style={{ fontSize: 10, fontWeight: 600, color: "#c7ccd4", textAlign: "center" }}>{d[0]}</span>)}
           </div>
           {grid.map((row, ri) => (
-            <div key={ri} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 7, marginBottom: ri < grid.length - 1 ? 7 : 0 }}>
-              {row.map((c, ci) => (
-                <div key={ci} style={{ aspectRatio: "1", borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", background: c.done ? "#22c55e" : c.future ? "transparent" : "#f1f3f6", border: c.isToday ? "2px solid #1a73e8" : c.future ? "1px dashed #e3e8ef" : "none" }}>
-                  {c.done && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
-                </div>
-              ))}
+            <div key={ri} style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5, marginBottom: ri < grid.length - 1 ? 5 : 0 }}>
+              {row.map((c, ci) => <div key={ci} style={{ height: 16, borderRadius: 4, background: c.done ? "#22c55e" : c.future ? "transparent" : "#f1f3f6", border: c.isToday ? "2px solid #1a73e8" : c.future ? "1px dashed #e3e8ef" : "none" }} />)}
             </div>
           ))}
         </div>
       </div>
 
       {/* Achievements */}
-      <div style={{ marginBottom: 8 }}>
+      <div style={cardStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={Object.assign({}, labelStyle, { marginBottom: 0 })}>Achievements</div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af" }}>{earnedCount} / {badges.length}</span>
+          <span style={{ fontSize: 15, fontWeight: 800 }}>Achievements</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#9ca3af" }}>{earnedCount} / {badges.length}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           {badges.map((b) => (
-            <div key={b.id} style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "14px 8px", textAlign: "center", boxShadow: b.earned ? shadowSm : "none", opacity: b.earned ? 1 : 0.55 }}>
-              <div style={{ width: 40, height: 40, margin: "0 auto 8px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: b.earned ? "linear-gradient(135deg,#f6c453,#e69a17)" : "#eef1f5" }}>
-                {b.earned ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 4H5a2 2 0 0 0 0 4h.5M17 4h2a2 2 0 0 1 0 4h-.5" /></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-                )}
+            <div key={b.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 6, background: b.earned ? "#fffbeb" : "#f7f9fc", borderRadius: 12, padding: "11px 6px", opacity: b.earned ? 1 : 0.6 }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: b.earned ? "linear-gradient(135deg,#f6c453,#e69a17)" : "#e5e9ef" }}>
+                {b.earned
+                  ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z" /></svg>
+                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1a2332", lineHeight: 1.2 }}>{b.label}</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3, lineHeight: 1.2 }}>{b.req}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 700, lineHeight: 1.15, textWrap: "balance" }}>{b.label}</div>
+              <div style={{ fontSize: 10, color: "#9ca3af", lineHeight: 1.2, textWrap: "balance" }}>{b.req}</div>
             </div>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {stats.total === 0 && <p style={{ color: "#9ca3af", fontSize: 14, textAlign: "center", padding: "24px 20px 0" }}>Log your first workout to start leveling up.</p>}
+function prettyShort(dateStr) {
+  const p = String(dateStr || "").split("-").map(Number);
+  if (p.length < 3) return dateStr || "";
+  return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString("en", { month: "short", day: "numeric" });
+}
+
+function Avatar(props) {
+  const size = props.size || 40;
+  const p = props.person || {};
+  const initial = (p.username || "?").charAt(0).toUpperCase();
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: "#1a2332", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: props.ring ? "2px solid #fff" : "none" }}>
+      {p.avatar ? <img src={p.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: size * 0.42, fontWeight: 800, color: "#fff" }}>{initial}</span>}
+    </div>
+  );
+}
+
+function FriendsFeed(props) {
+  const social = props.social;
+  const [manage, setManage] = useState(false);
+  const st = social.state;
+  const feed = social.feed;
+  useEffect(() => { social.loadSocial(); social.loadFeed(); }, []);
+
+  return (
+    <div>
+      {st.incoming.length > 0 && (
+        <div style={Object.assign({}, cardStyle, { background: "#f0f5ff", borderColor: "#dbe9fd" })}>
+          <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 8 }}>Friend Requests</div>
+          {st.incoming.map((r) => <RequestRow key={r.id} req={r} social={social} />)}
+        </div>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <div style={{ display: "flex", flex: 1, minWidth: 0, alignItems: "center" }}>
+          {st.friends.slice(0, 5).map((f, i) => <div key={f.id} style={{ marginLeft: i ? -10 : 0 }}><Avatar person={f} size={34} ring /></div>)}
+          <span style={{ marginLeft: st.friends.length ? 10 : 0, fontSize: 14, fontWeight: 700, color: "#374151" }}>{st.friends.length ? st.friends.length + (st.friends.length === 1 ? " friend" : " friends") : "No friends yet"}</span>
+        </div>
+        <button onClick={() => setManage(true)} style={{ flexShrink: 0, background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "10px 14px", fontSize: 13.5, fontWeight: 700, minHeight: 42, display: "flex", alignItems: "center", gap: 6 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6" /></svg>
+          Add Friends
+        </button>
+      </div>
+
+      {!feed.loaded && feed.loading && <div style={{ textAlign: "center", padding: 30, color: "#9ca3af", fontSize: 14 }}>Loading feed...</div>}
+      {feed.error && <div style={Object.assign({}, cardStyle, { textAlign: "center", color: "#dc2626", fontSize: 14 })}>Could not load the feed. <button onClick={social.loadFeed} style={{ background: "none", border: "none", color: "#1a73e8", fontWeight: 700, fontSize: 14 }}>Retry</button></div>}
+      {feed.loaded && feed.posts.length === 0 && (
+        <div style={Object.assign({}, cardStyle, { padding: 26, textAlign: "center" })}>
+          <div style={{ fontSize: 17, fontWeight: 800 }}>Your Feed Is Quiet</div>
+          <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, margin: "8px 0 0" }}>{st.friends.length ? "When you or your friends post a finished workout, it shows up here." : "Add friends by username, then post your workouts from the finish screen to see each other's training here."}</p>
+        </div>
+      )}
+      {feed.posts.map((p) => <PostCard key={p.id} post={p} social={social} />)}
+      {feed.loaded && feed.posts.length > 0 && (
+        <button onClick={social.loadFeed} style={{ width: "100%", background: "none", border: "none", color: "#1a73e8", fontSize: 14, fontWeight: 700, padding: "8px 0 4px" }}>{feed.loading ? "Refreshing..." : "Refresh"}</button>
+      )}
+      {manage && <FriendsSheet social={social} onClose={() => setManage(false)} />}
+    </div>
+  );
+}
+
+function RequestRow(props) {
+  const { req, social } = props;
+  const [busy, setBusy] = useState(false);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0" }}>
+      <Avatar person={req.person} size={38} />
+      <span style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>@{req.person.username}</span>
+      <button disabled={busy} onClick={async () => { setBusy(true); await social.removeFriendship(req.id, true); setBusy(false); }} style={{ flexShrink: 0, background: "#fff", color: "#6b7280", border: "1px solid " + BORDER, borderRadius: 10, padding: "8px 12px", fontSize: 13, fontWeight: 700, minHeight: 38 }}>Decline</button>
+      <button disabled={busy} onClick={async () => { setBusy(true); await social.acceptRequest(req.id); setBusy(false); }} style={{ flexShrink: 0, background: "#1a73e8", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 700, minHeight: 38 }}>Accept</button>
+    </div>
+  );
+}
+
+function PostCard(props) {
+  const { post, social } = props;
+  const s = post.summary || {};
+  const a = post.author || {};
+  const dur = s.durationSec ? fmtDur(s.durationSec) : "";
+  const meta = [s.date ? prettyShort(s.date) : "", dur, s.location || ""].filter(Boolean).join("  ·  ");
+  const stats = [{ v: s.sets || 0, l: "Sets" }];
+  if (s.vol) stats.push({ v: fmtVolume(s.vol), l: "Volume" });
+  if (s.pct != null && s.pct !== 0) stats.push({ v: (s.pct > 0 ? "+" : "") + s.pct + "%", l: "vs Last" });
+  if (dur) stats.push({ v: dur, l: "Time" });
+  const tiles = stats.slice(0, 4);
+  return (
+    <div style={Object.assign({}, cardStyle, { padding: 0 })}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 0" }}>
+        <Avatar person={a} size={40} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14.5, fontWeight: 800 }}>{post.mine ? "You" : "@" + (a.username || "lifter")}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 1 }}>{relTime(post.created_at)}</div>
+        </div>
+        {post.mine && <button onClick={() => social.deletePost(post)} aria-label="Delete post" style={closeBtn}>✕</button>}
+      </div>
+      <div style={{ padding: "10px 16px 0" }}>
+        <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.15 }}>{s.name || "Workout"}</div>
+        {meta && <div style={{ fontSize: 12.5, color: "#6b7280", marginTop: 3 }}>{meta}</div>}
+        {post.caption && <p style={{ fontSize: 14.5, color: "#1a2332", lineHeight: 1.45, margin: "10px 0 0", whiteSpace: "pre-wrap" }}>{post.caption}</p>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(" + tiles.length + ",1fr)", gap: 8, padding: "12px 16px 0" }}>
+        {tiles.map((x, i) => (
+          <div key={i} style={{ background: "#f7f9fc", borderRadius: 12, padding: "9px 6px", textAlign: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: x.l === "vs Last" ? (String(x.v).charAt(0) === "+" ? "#16a34a" : "#dc2626") : "#1a2332" }}>{x.v}</div>
+            <div style={{ fontSize: 10.5, color: "#9ca3af", fontWeight: 700, marginTop: 1 }}>{x.l}</div>
+          </div>
+        ))}
+      </div>
+      {(s.prs || []).length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 16px 0" }}>
+          {s.prs.map((p, i) => <span key={i} style={{ fontSize: 12, fontWeight: 700, color: "#b45309", background: "#fef3c7", borderRadius: 8, padding: "4px 8px" }}>PR {p.name}{p.weight ? " " + p.weight + "×" + p.reps : ""}</span>)}
+        </div>
+      )}
+      {(s.topLifts || []).length > 0 && (
+        <div style={{ padding: "8px 16px 0" }}>
+          {s.topLifts.slice(0, 4).map((l, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 13.5, padding: "6px 0", borderTop: i ? "1px solid #f3f4f6" : "none" }}>
+              <span style={{ fontWeight: 600, color: "#374151", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.name}</span>
+              <span style={{ fontWeight: 700, flexShrink: 0 }}>{l.weight ? l.weight + " × " + l.reps : l.sets + " sets"}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px 12px", marginTop: 6, borderTop: "1px solid #f3f4f6" }}>
+        <button onClick={() => social.toggleLike(post)} style={{ display: "flex", alignItems: "center", gap: 7, background: post.liked ? "#fff7ed" : "none", border: "none", borderRadius: 10, padding: "8px 10px", minHeight: 38, color: post.liked ? "#ea580c" : "#6b7280", fontSize: 13.5, fontWeight: 700 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={post.liked ? "#f97316" : "none"} stroke={post.liked ? "#f97316" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+          {post.likeCount > 0 ? post.likeCount + " " : ""}Props
+        </button>
+        {post.likers && post.likers.length > 0 && <span style={{ fontSize: 12, color: "#9ca3af", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>from {post.likers.slice(0, 3).join(", ")}{post.likers.length > 3 ? " +" + (post.likers.length - 3) : ""}</span>}
+      </div>
+    </div>
+  );
+}
+
+function FriendsSheet(props) {
+  const social = props.social;
+  const st = social.state;
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+
+  useEffect(() => {
+    const h = cleanUsername(q);
+    if (h.length < 2) { setResults([]); return; }
+    let live = true;
+    setSearching(true);
+    const t = setTimeout(async () => {
+      const r = await social.searchUsers(h);
+      if (live) { setResults(r); setSearching(false); }
+    }, 250);
+    return () => { live = false; clearTimeout(t); };
+  }, [q]);
+
+  function relation(uid) {
+    if (st.friends.some((f) => f.user_id === uid)) return "friend";
+    if (st.outgoing.some((f) => f.person.user_id === uid)) return "sent";
+    if (st.incoming.some((f) => f.person.user_id === uid)) return "incoming";
+    return "none";
+  }
+  async function add(username, uid) { setBusyId(uid); await social.sendFriendRequest(username); setBusyId(null); }
+
+  const smallBtn = { flexShrink: 0, borderRadius: 10, padding: "8px 12px", fontSize: 13, fontWeight: 700, minHeight: 38 };
+  return (
+    <div style={overlay}>
+      <div style={sheet}>
+        <div style={sheetHead}>
+          <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Friends</h2>
+          <button onClick={props.onClose} style={xBtn}>✕</button>
+        </div>
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 600, color: "#9ca3af" }}>@</span>
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by username" autoCapitalize="none" autoCorrect="off" style={Object.assign({}, fieldStyle, { paddingLeft: 30 })} />
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {cleanUsername(q).length >= 2 && (
+            <div style={{ marginBottom: 16 }}>
+              {searching && <div style={{ fontSize: 13, color: "#9ca3af", padding: "6px 2px" }}>Searching...</div>}
+              {!searching && results.length === 0 && <div style={{ fontSize: 13, color: "#9ca3af", padding: "6px 2px" }}>No one found with that username.</div>}
+              {results.map((u) => {
+                const rel = relation(u.user_id);
+                return (
+                  <div key={u.user_id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
+                    <Avatar person={u} size={38} />
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>@{u.username}</span>
+                    {rel === "friend" && <span style={{ fontSize: 12.5, fontWeight: 700, color: "#16a34a" }}>Friends</span>}
+                    {rel === "sent" && <span style={{ fontSize: 12.5, fontWeight: 700, color: "#9ca3af" }}>Requested</span>}
+                    {rel === "incoming" && <button onClick={() => { const r = st.incoming.find((x) => x.person.user_id === u.user_id); if (r) social.acceptRequest(r.id); }} style={Object.assign({}, smallBtn, { background: "#1a73e8", color: "#fff", border: "none" })}>Accept</button>}
+                    {rel === "none" && <button disabled={busyId === u.user_id} onClick={() => add(u.username, u.user_id)} style={Object.assign({}, smallBtn, { background: "#1a73e8", color: "#fff", border: "none" })}>{busyId === u.user_id ? "..." : "Add"}</button>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {st.incoming.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={labelStyle}>Requests</div>
+              {st.incoming.map((r) => <RequestRow key={r.id} req={r} social={social} />)}
+            </div>
+          )}
+
+          <div style={{ marginBottom: 16 }}>
+            <div style={labelStyle}>Your Friends ({st.friends.length})</div>
+            {st.friends.length === 0 && <p style={{ fontSize: 13.5, color: "#9ca3af", margin: 0 }}>Search a username above to send a request. Your username is @{st.me ? st.me.username : "..."}, share it so friends can find you.</p>}
+            {st.friends.map((f) => (
+              <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
+                <Avatar person={f} size={38} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>@{f.username}</span>
+                <button onClick={async () => { const yes = await appConfirm({ title: "Remove friend?", message: "@" + f.username + " will no longer see your posts, and you won't see theirs.", confirmLabel: "Remove", danger: true }); if (yes) social.removeFriendship(f.id); }} style={Object.assign({}, smallBtn, { background: "#fff", color: "#6b7280", border: "1px solid " + BORDER })}>Remove</button>
+              </div>
+            ))}
+          </div>
+
+          {st.outgoing.length > 0 && (
+            <div>
+              <div style={labelStyle}>Sent</div>
+              {st.outgoing.map((r) => (
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
+                  <Avatar person={r.person} size={38} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>@{r.person.username}</span>
+                  <button onClick={() => social.removeFriendship(r.id, true)} style={Object.assign({}, smallBtn, { background: "#fff", color: "#6b7280", border: "1px solid " + BORDER })}>Cancel</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -2177,8 +2466,6 @@ function ProgressTab(props) {
 function SettingsSheet(props) {
   const p = props.profile;
   const [weight, setWeight] = useState(String(p.weight || ""));
-  const [protein, setProtein] = useState(p.proteinTarget != null ? String(p.proteinTarget) : "");
-  const [calories, setCalories] = useState(p.calorieTarget != null ? String(p.calorieTarget) : "");
   const [rest, setRest] = useState(String(p.restSeconds || 120));
   const [building, setBuilding] = useState(false);
   const [planLib, setPlanLib] = useState(false);
@@ -2194,8 +2481,6 @@ function SettingsSheet(props) {
   function save() {
     props.onSave({
       weight: Number(weight) || DEFAULT_WEIGHT,
-      proteinTarget: protein.trim() === "" ? null : Number(protein),
-      calorieTarget: calories.trim() === "" ? null : Number(calories),
       restSeconds: Number(rest) || 0,
     });
   }
@@ -2211,14 +2496,6 @@ function SettingsSheet(props) {
           <div style={{ marginBottom: 16 }}>
             <div style={labelStyle}>Body Weight (lbs)</div>
             <input style={fieldStyle} type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={String(DEFAULT_WEIGHT)} />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <div style={labelStyle}>Protein Target (g)</div>
-            <input style={fieldStyle} type="number" inputMode="numeric" value={protein} onChange={(e) => setProtein(e.target.value)} placeholder={"Auto: " + props.derivedP + "g (1g/lb)"} />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <div style={labelStyle}>Calorie Target</div>
-            <input style={fieldStyle} type="number" inputMode="numeric" value={calories} onChange={(e) => setCalories(e.target.value)} placeholder={"Auto: " + props.derivedC + " (bw×16+300)"} />
           </div>
           <div style={{ marginBottom: 16 }}>
             <div style={labelStyle}>Default Rest Timer (seconds)</div>
@@ -2262,135 +2539,251 @@ function SettingsSheet(props) {
   );
 }
 
-// ─── LEARN TAB ───
-const COACH_SUGGESTIONS = [
-  "How much protein should I eat to build muscle?",
-  "How do I break through a plateau?",
-  "Is my training volume enough for growth?",
-  "What should I eat after a workout?",
-];
+// ─── COACH TAB (full-screen chat that knows your training log) ───
+function renderInline(text, keyBase) {
+  const out = [];
+  const re = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+  let last = 0, m, k = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith("**")) out.push(<strong key={keyBase + "b" + k++} style={{ fontWeight: 800 }}>{tok.slice(2, -2)}</strong>);
+    else out.push(<code key={keyBase + "c" + k++} style={{ background: "#eef1f5", borderRadius: 5, padding: "1px 5px", fontSize: "0.92em" }}>{tok.slice(1, -1)}</code>);
+    last = m.index + tok.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
 
-function ChatCoach() {
+function CoachMarkdown(props) {
+  const lines = String(props.text || "").replace(/\r/g, "").split("\n");
+  const blocks = [];
+  let list = null;
+  const flush = () => { if (list) { blocks.push(list); list = null; } };
+  lines.forEach((raw) => {
+    const line = raw.trimEnd();
+    const bullet = line.match(/^\s*[-*•]\s+(.*)$/);
+    const num = line.match(/^\s*(\d+)[.)]\s+(.*)$/);
+    const head = line.match(/^\s*#{1,4}\s+(.*)$/);
+    if (bullet) { if (!list || list.type !== "ul") { flush(); list = { type: "ul", items: [] }; } list.items.push(bullet[1]); return; }
+    if (num) { if (!list || list.type !== "ol") { flush(); list = { type: "ol", items: [] }; } list.items.push(num[2]); return; }
+    flush();
+    if (!line.trim()) { blocks.push({ type: "gap" }); return; }
+    if (head) { blocks.push({ type: "h", text: head[1] }); return; }
+    blocks.push({ type: "p", text: line });
+  });
+  flush();
+  const cleaned = blocks.filter((b, i) => !(b.type === "gap" && (i === 0 || i === blocks.length - 1 || (blocks[i - 1] && blocks[i - 1].type === "gap"))));
+  return (
+    <div>
+      {cleaned.map((b, i) => {
+        if (b.type === "gap") return <div key={i} style={{ height: 8 }} />;
+        if (b.type === "h") return <div key={i} style={{ fontSize: 15, fontWeight: 800, margin: "4px 0 4px" }}>{renderInline(b.text, i)}</div>;
+        if (b.type === "p") return <div key={i}>{renderInline(b.text, i)}</div>;
+        const Tag = b.type === "ol" ? "ol" : "ul";
+        return (
+          <Tag key={i} style={{ margin: "4px 0", paddingLeft: 20 }}>
+            {b.items.map((it, j) => <li key={j} style={{ margin: "3px 0" }}>{renderInline(it, i + "-" + j)}</li>)}
+          </Tag>
+        );
+      })}
+    </div>
+  );
+}
+
+function coachPrompts(workouts) {
+  const lifts = loggedExercises(workouts);
+  const top = lifts.length ? exLabel(lifts[0].id) : null;
+  if (!workouts || !workouts.length) {
+    return ["Build me a 4 day split", "How many sets per muscle a week?", "How do I warm up for heavy lifts?", "How much protein do I need?"];
+  }
+  return [
+    "How did my last week go?",
+    top ? "Am I progressing on " + top + "?" : "Am I progressing?",
+    "What should I hit next workout?",
+    "Is any muscle group falling behind?",
+  ];
+}
+
+function CoachTab(props) {
+  const { workouts, profile, splits, weekSchedule } = props;
   const [messages, setMessages] = useState(() => {
     try { const d = localStorage.getItem("ff-chat"); return d ? JSON.parse(d) : []; } catch (e) { return []; }
   });
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [error, setError] = useState(null);
   const scrollRef = useRef(null);
+  const abortRef = useRef(null);
+  const taRef = useRef(null);
 
   useEffect(() => {
-    try { localStorage.setItem("ff-chat", JSON.stringify(messages.slice(-50))); } catch (e) {}
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, loading]);
+    try { localStorage.setItem("ff-chat", JSON.stringify(messages.filter((m) => m.content).slice(-60))); } catch (e) {}
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, streaming, error]);
 
-  async function send(text) {
-    const content = (text != null ? text : input).trim();
-    if (!content || loading) return;
-    setInput("");
-    const next = messages.concat([{ role: "user", content }]);
-    setMessages(next);
-    setLoading(true);
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(120, ta.scrollHeight) + "px";
+  }, [input]);
+
+  async function run(history) {
+    setError(null);
+    setStreaming(true);
+    setMessages(history.concat([{ role: "assistant", content: "" }]));
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    let acc = "";
     try {
       const sess = await supabase.auth.getSession();
       const token = sess && sess.data && sess.data.session ? sess.data.session.access_token : "";
       const resp = await fetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ messages: next.map((m) => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+          context: coachContext(workouts, profile, splits, weekSchedule),
+          today: new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+        }),
+        signal: ctrl.signal,
       });
-      if (!resp.ok) throw new Error("coach " + resp.status);
-      const data = await resp.json();
-      const reply = data && data.reply ? String(data.reply) : "Sorry, I couldn't come up with an answer. Try rephrasing?";
-      setMessages((cur) => cur.concat([{ role: "assistant", content: reply }]));
+      if (!resp.ok) {
+        let msg = "The coach is unavailable right now. Try again in a moment.";
+        try { const j = await resp.json(); if (j && j.error) msg = j.error; } catch (e) {}
+        if (resp.status === 401) msg = "Your session expired. Sign out and back in to use the coach.";
+        throw new Error(msg);
+      }
+      const reader = resp.body && resp.body.getReader ? resp.body.getReader() : null;
+      if (!reader) {
+        acc = await resp.text();
+        setMessages(history.concat([{ role: "assistant", content: acc }]));
+      } else {
+        const dec = new TextDecoder();
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          acc += dec.decode(value, { stream: true });
+          const snap = acc;
+          setMessages(history.concat([{ role: "assistant", content: snap }]));
+        }
+      }
+      if (!acc.trim()) throw new Error("The coach didn't answer. Try asking again.");
     } catch (e) {
-      setMessages((cur) => cur.concat([{ role: "assistant", content: "I'm having trouble reaching the coach right now. Please try again in a moment." }]));
+      if (e && e.name === "AbortError") {
+        setMessages(acc.trim() ? history.concat([{ role: "assistant", content: acc }]) : history);
+      } else {
+        setMessages(acc.trim() ? history.concat([{ role: "assistant", content: acc }]) : history);
+        setError((e && e.message) || "The coach is unavailable right now.");
+      }
     } finally {
-      setLoading(false);
+      abortRef.current = null;
+      setStreaming(false);
     }
   }
 
-  function onKey(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }
-  function clearChat() { setMessages([]); try { localStorage.removeItem("ff-chat"); } catch (e) {} }
+  function send(text) {
+    const content = (text != null ? text : input).trim();
+    if (!content || streaming) return;
+    setInput("");
+    run(messages.filter((m) => m.content).concat([{ role: "user", content }]));
+  }
+  function retry() {
+    const hist = messages.filter((m) => m.content);
+    if (hist.length && hist[hist.length - 1].role === "user") run(hist);
+  }
+  function stop() { if (abortRef.current) abortRef.current.abort(); }
+  async function newChat() {
+    if (streaming) stop();
+    if (messages.length) {
+      const yes = await appConfirm({ title: "Start a new chat?", message: "This clears the current conversation.", confirmLabel: "New chat" });
+      if (!yes) return;
+    }
+    setMessages([]); setError(null);
+    try { localStorage.removeItem("ff-chat"); } catch (e) {}
+  }
+  function onKey(e) {
+    if (e.key === "Enter" && !e.shiftKey && window.matchMedia && window.matchMedia("(hover: hover)").matches) { e.preventDefault(); send(); }
+  }
 
-  const userBubble = { background: "linear-gradient(135deg,#1a73e8,#1565d8)", color: "#fff", borderBottomRightRadius: 5 };
-  const botBubble = { background: "#f3f4f6", color: "#1a2332", borderBottomLeftRadius: 5 };
+  const prompts = coachPrompts(workouts);
+  const name = profile && profile.username ? profile.username : "";
+  const userBubble = { background: "linear-gradient(135deg,#1a73e8,#1565d8)", color: "#fff", borderBottomRightRadius: 6, whiteSpace: "pre-wrap" };
+  const botBubble = { background: "#fff", color: "#1a2332", border: "1px solid " + BORDER, borderBottomLeftRadius: 6, boxShadow: shadowSm };
 
   return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 186px)", minHeight: 380 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+          <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: shadowPrimary }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5h11M6.5 17.5h11M3 9.5v5M21 9.5v5M6.5 4v16M17.5 4v16" /></svg>
           </div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#1a2332", lineHeight: 1.1 }}>Coach</div>
-            <div style={{ fontSize: 12, color: "#9ca3af" }}>Ask anything about training & nutrition</div>
+            <div style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.1 }}>Coach</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{workouts && workouts.length ? "Reads your training log" : "Training, programming, recovery"}</div>
           </div>
         </div>
-        {messages.length > 0 && <button onClick={clearChat} style={{ background: "none", border: "none", color: "#9ca3af", fontSize: 13, fontWeight: 600, padding: 4 }}>Clear</button>}
+        {messages.length > 0 && (
+          <button onClick={newChat} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid " + BORDER, borderRadius: 10, padding: "8px 12px", fontSize: 13, fontWeight: 700, color: "#374151", minHeight: 38, boxShadow: shadowSm }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+            New
+          </button>
+        )}
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 18, boxShadow: shadowSm, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div ref={scrollRef} style={{ padding: 16, maxHeight: "46vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
-          {messages.length === 0 && !loading && (
-            <div style={{ padding: "4px 0" }}>
-              <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, marginTop: 0, marginBottom: 14 }}>I can help with form, programming, nutrition, and recovery. I stick to fitness, so for medical concerns please see a professional.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {COACH_SUGGESTIONS.map((q, i) => (
-                  <button key={i} onClick={() => send(q)} style={{ textAlign: "left", background: "#f7f9fc", border: "1px solid " + BORDER, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: "#1a2332", fontWeight: 500 }}>{q}</button>
-                ))}
-              </div>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12, padding: "2px 2px 12px", WebkitOverflowScrolling: "touch" }}>
+        {messages.length === 0 && (
+          <div style={{ margin: "auto 0", padding: "8px 0" }}>
+            <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.2, textWrap: "balance" }}>{name ? "Hey " + name + ", what are we working on?" : "What are we working on?"}</div>
+            <p style={{ fontSize: 14.5, color: "#6b7280", lineHeight: 1.5, margin: "8px 0 18px", textWrap: "pretty" }}>Ask about your progress, your next session, form, or a plan. I read your actual log, so the answers are about your numbers.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {prompts.map((q, i) => (
+                <button key={i} onClick={() => send(q)} style={{ textAlign: "left", background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "13px 14px", fontSize: 14, color: "#1a2332", fontWeight: 600, lineHeight: 1.35, boxShadow: shadowSm, minHeight: 64 }}>{q}</button>
+              ))}
             </div>
-          )}
-          {messages.map((m, i) => (
+          </div>
+        )}
+        {messages.map((m, i) => {
+          const isLast = i === messages.length - 1;
+          if (m.role === "assistant" && !m.content && isLast && streaming) {
+            return (
+              <div key={i} style={{ display: "flex" }}>
+                <div style={Object.assign({ borderRadius: 18, padding: "14px 16px", display: "flex", gap: 5 }, botBubble)}>
+                  {[0, 1, 2].map((d) => <span key={d} style={{ width: 7, height: 7, borderRadius: "50%", background: "#9ca3af", display: "inline-block", animation: "coachdot 1s " + (d * 0.15) + "s infinite ease-in-out" }} />)}
+                </div>
+              </div>
+            );
+          }
+          return (
             <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-              <div style={Object.assign({ maxWidth: "85%", padding: "11px 14px", borderRadius: 16, fontSize: 14, lineHeight: 1.55, whiteSpace: "pre-wrap" }, m.role === "user" ? userBubble : botBubble)}>{m.content}</div>
-            </div>
-          ))}
-          {loading && (
-            <div style={{ display: "flex", justifyContent: "flex-start" }}>
-              <div style={{ background: "#f3f4f6", borderRadius: 16, borderBottomLeftRadius: 5, padding: "14px 16px", display: "flex", gap: 5 }}>
-                {[0, 1, 2].map((i) => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#9ca3af", display: "inline-block", animation: "coachdot 1s " + (i * 0.15) + "s infinite ease-in-out" }} />)}
+              <div style={Object.assign({ maxWidth: "88%", padding: "11px 14px", borderRadius: 18, fontSize: 14.5, lineHeight: 1.55, overflowWrap: "anywhere" }, m.role === "user" ? userBubble : botBubble)}>
+                {m.role === "user" ? m.content : <CoachMarkdown text={m.content} />}
               </div>
             </div>
-          )}
-        </div>
-        <div style={{ borderTop: "1px solid " + BORDER, padding: 10, display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} rows={1} placeholder="Ask the coach..." style={{ flex: 1, resize: "none", border: "none", outline: "none", background: "transparent", fontSize: 15, color: "#1a2332", padding: "9px 6px", maxHeight: 120, fontFamily: "inherit" }} />
-          <button onClick={() => send()} disabled={loading || !input.trim()} aria-label="send" style={{ flexShrink: 0, width: 40, height: 40, borderRadius: "50%", border: "none", background: loading || !input.trim() ? "#c7d6f0" : "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-          </button>
-        </div>
+          );
+        })}
+        {error && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 14, padding: "11px 14px" }}>
+            <span style={{ flex: 1, fontSize: 13.5, color: "#b91c1c", fontWeight: 600 }}>{error}</span>
+            <button onClick={retry} style={{ flexShrink: 0, background: "#fff", border: "1px solid #fecaca", borderRadius: 10, padding: "7px 12px", fontSize: 13, fontWeight: 700, color: "#b91c1c", minHeight: 36 }}>Retry</button>
+          </div>
+        )}
       </div>
-    </div>
-  );
-}
 
-function LearnTab() {
-  const [open, setOpen] = useState(null);
-  function toggle(id) { setOpen(open === id ? null : id); }
-
-  const sections = [
-    { id: "overload", t: "Progressive Overload", c: "The engine of all muscle growth. Your body only adapts when forced to handle increasing demands.\n\nDOUBLE PROGRESSION (what this app uses):\n\u2022 Pick a rep range (8-12 for hypertrophy)\n\u2022 Start at 8 reps with a challenging weight\n\u2022 Add reps each session until you hit 12 at RIR 0-1\n\u2022 Increase weight 5lbs (upper) or 10lbs (lower)\n\u2022 Reset to 8 reps and repeat\n\nRIR (Reps in Reserve):\n\u2022 RIR 3 = could do 3 more (warm-up zone)\n\u2022 RIR 2 = could do 2 more (stimulus begins)\n\u2022 RIR 1 = could do 1 more (sweet spot)\n\u2022 RIR 0 = failure (last set only)\n\nResearch shows RIR 1-3 produces the same hypertrophy as failure with less fatigue.\n\nPLATEAU PROTOCOL:\n3+ sessions stalled \u2192 deload week at 60% \u2192 come back and push." },
-    { id: "volume", t: "Training Volume", c: "Volume (sets per muscle per week) is the #1 driver of hypertrophy.\n\nOPTIMAL RANGES:\n\u2022 10-20 sets per muscle group per week\n\u2022 Under 10 = leaving gains on the table\n\u2022 Over 20 = diminishing returns\n\nFREQUENCY:\n\u2022 Hit each muscle 2-3x per week\n\u2022 MPS elevated only 24-48 hours post-training\n\nSPLIT OPTIONS:\n\u2022 3 days: Full Body x 3\n\u2022 4 days: Upper / Lower / Upper / Lower\n\u2022 5 days: Push / Pull / Legs / Upper / Lower\n\u2022 6 days: PPL / PPL" },
-    { id: "aesthetics", t: "Training for Aesthetics", c: "Visual balance and proportion over raw size.\n\nPRIORITY ORDER:\n1. Shoulders (width = aesthetics)\n2. Back (V-taper)\n3. Upper Chest (fullness)\n4. Arms (proportional)\n5. Legs (sweep and shape)\n6. Core (low BF% + direct work)\n\nEXERCISE SELECTION:\n\u2022 Compounds first, isolation after\n\u2022 Stretched-position exercises are superior (incline curls, RDLs, overhead extensions)\n\u2022 Machines/cables often give better tension than free weights for isolation\n\nREP RANGES:\n\u2022 6-12 for compounds\n\u2022 10-20 for isolation\n\u2022 Rest: 2-3 min compounds, 60-90s isolation" },
-    { id: "nutrition", t: "Nutrition for Muscle", c: "Training = stimulus. Nutrition = raw materials.\n\nPROTEIN:\n\u2022 1g per pound of bodyweight daily\n\u2022 Spread across 3-5 meals (20-40g each)\n\u2022 Post-workout within 2 hours\n\u2022 30-40g casein before bed\n\u2022 Total daily protein matters more than timing\n\nCALORIES:\n\u2022 Surplus: maintenance + 200-400 cal/day\n\u2022 Maintenance = bodyweight x 14-16\n\u2022 Faster gains = mostly fat, not muscle\n\u2022 Cutting: maintenance - 500 (keep protein at 1g/lb)\n\nTOP SOURCES (per 4oz):\n\u2022 Chicken breast: 31g\n\u2022 Steak sirloin: 28g\n\u2022 Salmon: 25g\n\u2022 Whey scoop: 25g\n\u2022 Greek yogurt (1 cup): 17g\n\u2022 Eggs (1 large): 6g" },
-    { id: "recovery", t: "Recovery and Deloads", c: "You grow during recovery, not in the gym.\n\nSLEEP:\n\u2022 7-9 hours minimum (non-negotiable)\n\u2022 Growth hormone peaks during deep sleep\n\u2022 Poor sleep reduces MPS and increases cortisol\n\nDELOAD PROTOCOL:\n\u2022 Every 4-6 weeks of hard training\n\u2022 Reduce to 60% of working weight\n\u2022 Keep showing up (maintain frequency)\n\u2022 Signs you need one: persistent soreness, performance drops, poor sleep\n\nRECOVERY BY MUSCLE:\n\u2022 Small (biceps, triceps, delts): 24-36 hours\n\u2022 Medium (chest, back): 36-48 hours\n\u2022 Large (quads, glutes, hams): 48-72 hours" },
-  ];
-
-  return (
-    <div>
-      <ChatCoach />
-      <div style={labelStyle}>Training Knowledge</div>
-      {sections.map((s) => (
-        <div key={s.id} style={{ background: "#fff", border: "1px solid #eaeef3", borderRadius: 12, marginBottom: 8, overflow: "hidden" }}>
-          <button onClick={() => toggle(s.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", padding: 16, width: "100%", textAlign: "left", fontSize: 15, fontWeight: 600, color: "#1a2332" }}>
-            {s.t}
-            <span style={{ transform: open === s.id ? "rotate(180deg)" : "none", transition: "transform .2s", color: "#9ca3af", fontSize: 18 }}>{"\u25BE"}</span>
+      <div style={{ flexShrink: 0, background: "#fff", border: "1px solid " + BORDER, borderRadius: 18, boxShadow: shadowSm, padding: 6, display: "flex", gap: 6, alignItems: "flex-end" }}>
+        <textarea ref={taRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} rows={1} placeholder="Ask your coach..." style={{ flex: 1, resize: "none", border: "none", outline: "none", boxShadow: "none", background: "transparent", fontSize: 15, color: "#1a2332", padding: "10px 10px", maxHeight: 120, lineHeight: 1.4, fontFamily: "inherit" }} />
+        {streaming ? (
+          <button onClick={stop} aria-label="Stop" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: "50%", border: "none", background: "#1a2332", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ width: 13, height: 13, borderRadius: 3, background: "#fff", display: "block" }} />
           </button>
-          {open === s.id && <pre style={{ padding: "0 16px 16px", fontSize: 13, color: "#6b7280", lineHeight: 1.8, whiteSpace: "pre-wrap", fontFamily: "inherit", margin: 0 }}>{s.c}</pre>}
-        </div>
-      ))}
+        ) : (
+          <button onClick={() => send()} disabled={!input.trim()} aria-label="Send" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: "50%", border: "none", background: !input.trim() ? "#c7d6f0" : "linear-gradient(135deg,#1a73e8,#0c47b7)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -2536,13 +2929,20 @@ function WeekBoard(props) {
   );
 }
 
-// ─── PROFILE TAB (avatar + username + stats) ───
+// ─── PROFILE TAB (avatar + username + friends + stats) ───
 function ProfileTab(props) {
-  const { profile, workouts, weekSchedule, onSave, onSignOut } = props;
-  const [username, setUsername] = useState(profile.username || "");
+  const { profile, workouts, weekSchedule, onSave, onSignOut, social } = props;
+  const st = social.state;
+  const handle = st.me ? st.me.username : (profile.username || "");
+  const [username, setUsername] = useState(handle);
   const [busy, setBusy] = useState(false);
+  const [manage, setManage] = useState(false);
   const fileRef = useRef(null);
   const stats = computeGameStats(workouts, weekSchedule);
+  const prs = personalRecords(workouts);
+
+  useEffect(() => { social.loadSocial(); }, []);
+  useEffect(() => { setUsername(handle); }, [handle]);
 
   function pickPhoto() { if (fileRef.current) fileRef.current.click(); }
   function onFile(e) {
@@ -2566,19 +2966,24 @@ function ProfileTab(props) {
     reader.readAsDataURL(file);
     e.target.value = "";
   }
-  async function saveName() { setBusy(true); await onSave({ username: (username || "").trim() }, "Profile saved"); setBusy(false); }
+  async function saveName() {
+    setBusy(true);
+    await social.setHandle(username);
+    setBusy(false);
+  }
 
-  const initial = (profile.username || "").trim().charAt(0).toUpperCase() || "?";
+  const initial = (handle || "?").charAt(0).toUpperCase();
+  const cleaned = cleanUsername(username);
+  const changed = cleaned && cleaned !== cleanUsername(handle);
   const stat = [
     { v: stats.total, l: "Workouts" },
-    { v: stats.streak, l: "Week Streak" },
-    { v: stats.sets, l: "Total Sets" },
+    { v: st.friends.length, l: "Friends" },
+    { v: prs.length, l: "PRs Tracked" },
   ];
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 24px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 20px" }}>
         <button onClick={pickPhoto} aria-label="Change photo" style={{ position: "relative", width: 104, height: 104, borderRadius: "50%", border: "none", padding: 0, background: "#1a2332", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", boxShadow: "0 6px 20px rgba(16,24,40,.18)" }}>
           {profile.avatar ? <img src={profile.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 42, fontWeight: 800, color: "#fff" }}>{initial}</span>}
           <span style={{ position: "absolute", right: 4, bottom: 4, width: 30, height: 30, borderRadius: "50%", background: "#1a73e8", border: "3px solid #f5f7fa", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -2586,32 +2991,46 @@ function ProfileTab(props) {
           </span>
         </button>
         <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: "none" }} />
-        <div style={{ fontSize: 22, fontWeight: 800, marginTop: 14, color: "#1a2332" }}>{profile.username ? "@" + profile.username : "Add a username"}</div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", marginTop: 3 }}>Level {stats.level}</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginTop: 14 }}>{handle ? "@" + handle : "Add a username"}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af", marginTop: 3 }}>Level {stats.level}  ·  {stats.streak} week streak</div>
       </div>
 
-      {/* Stats strip (no colored boxes) */}
-      <div style={{ display: "flex", background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: "18px 0", marginBottom: 24 }}>
+      <div style={{ display: "flex", background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: "16px 0", marginBottom: 12 }}>
         {stat.map((s, i) => (
           <div key={i} style={{ flex: 1, textAlign: "center", borderLeft: i > 0 ? "1px solid #f0f2f5" : "none" }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: "#1a2332" }}>{s.v}</div>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af", marginTop: 4, letterSpacing: ".02em" }}>{s.l}</div>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>{s.v}</div>
+            <div style={{ fontSize: 11.5, fontWeight: 600, color: "#9ca3af", marginTop: 3 }}>{s.l}</div>
           </div>
         ))}
       </div>
 
-      {/* Username */}
-      <div style={{ background: "#fff", border: "1px solid " + BORDER, borderRadius: 16, boxShadow: shadowSm, padding: 18, marginBottom: 16 }}>
-        <div style={labelStyle}>Username</div>
-        <div style={{ position: "relative" }}>
-          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 600, color: "#9ca3af" }}>@</span>
-          <input style={Object.assign({}, fieldStyle, { paddingLeft: 30 })} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" autoCapitalize="none" autoCorrect="off" />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))", gap: 12, marginBottom: 12 }}>
+        <div style={Object.assign({}, cardStyle, { marginBottom: 0 })}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontSize: 15, fontWeight: 800 }}>Friends</span>
+            {st.incoming.length > 0 && <span style={{ fontSize: 11.5, fontWeight: 800, color: "#fff", background: "#ef4444", borderRadius: 9, padding: "2px 8px" }}>{st.incoming.length} new</span>}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", minHeight: 38, marginBottom: 12 }}>
+            {st.friends.length === 0 && <span style={{ fontSize: 13.5, color: "#9ca3af" }}>Add friends to see each other's workouts.</span>}
+            {st.friends.slice(0, 7).map((f, i) => <div key={f.id} style={{ marginLeft: i ? -10 : 0 }}><Avatar person={f} size={36} ring /></div>)}
+            {st.friends.length > 7 && <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 700, color: "#6b7280" }}>+{st.friends.length - 7}</span>}
+          </div>
+          <button onClick={() => setManage(true)} style={{ width: "100%", background: "#f0f5ff", color: "#1a73e8", border: "1px solid #dbe9fd", borderRadius: 12, padding: "12px", fontSize: 14, fontWeight: 700, minHeight: 46 }}>{st.incoming.length ? "Review Requests" : "Find Friends"}</button>
         </div>
-        <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "10px 0 14px", lineHeight: 1.45 }}>This is the name shown on the workouts you share. You choose what to include each time you post.</p>
-        <button onClick={saveName} disabled={busy} style={{ width: "100%", background: busy ? "#9cb8e8" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "15px", fontSize: 15, fontWeight: 700, minHeight: 50 }}>{busy ? "Saving..." : "Save Profile"}</button>
+
+        <div style={Object.assign({}, cardStyle, { marginBottom: 0 })}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>Username</div>
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, fontWeight: 600, color: "#9ca3af" }}>@</span>
+            <input style={Object.assign({}, fieldStyle, { paddingLeft: 30, padding: "12px 16px 12px 30px" })} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" autoCapitalize="none" autoCorrect="off" />
+          </div>
+          <p style={{ fontSize: 12.5, color: "#9ca3af", margin: "8px 0 12px", lineHeight: 1.45 }}>Friends find you by this. Letters, numbers, dots, dashes, underscores.</p>
+          <button onClick={saveName} disabled={busy || !changed} style={{ width: "100%", background: busy || !changed ? "#c7d6f0" : "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "12px", fontSize: 14, fontWeight: 700, minHeight: 46 }}>{busy ? "Saving..." : "Save Username"}</button>
+        </div>
       </div>
 
-      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "#fff", color: "#dc2626", border: "1px solid " + BORDER, borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, minHeight: 54, boxShadow: shadowSm }}>Sign Out</button>}
+      {onSignOut && <button onClick={onSignOut} style={{ width: "100%", background: "#fff", color: "#dc2626", border: "1px solid " + BORDER, borderRadius: 16, padding: "15px", fontSize: 15, fontWeight: 700, minHeight: 52, boxShadow: shadowSm }}>Sign Out</button>}
+      {manage && <FriendsSheet social={social} onClose={() => setManage(false)} />}
     </div>
   );
 }
@@ -2638,6 +3057,9 @@ function WorkoutShareModal(props) {
   const [places, setPlaces] = useState([]);
   const [geoBusy, setGeoBusy] = useState(false);
   const [working, setWorking] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [posted, setPosted] = useState(false);
   const durText = fmtDur(data.durationSec);
   const pctText = data.pct != null && data.pct > 0 ? "+" + data.pct + "%" : (data.pct != null ? data.pct + "%" : null);
 
@@ -2765,6 +3187,23 @@ function WorkoutShareModal(props) {
     setWorking(false);
   }
 
+  async function postToFriends() {
+    if (posting || posted || !props.onPost) return;
+    setPosting(true);
+    const summary = {
+      name: data.name, date: data.date, sets: data.sets, groups: data.groups || [],
+      durationSec: cfg.duration ? data.durationSec || null : null,
+      location: cfg.location && locationText ? locationText : null,
+      vol: cfg.volume ? data.vol : null,
+      pct: cfg.volume ? data.pct : null,
+      topLifts: cfg.topSets ? (data.topLifts || []).map((l) => ({ name: l.name, sets: l.sets, weight: cfg.weights ? l.weight : 0, reps: cfg.weights ? l.reps : 0 })) : [],
+      prs: (data.prs || []).map((x) => ({ name: x.name, weight: cfg.weights ? x.weight : 0, reps: cfg.weights ? x.reps : 0 })),
+    };
+    const ok = await props.onPost(summary, caption, data.workoutId);
+    setPosting(false);
+    if (ok) setPosted(true);
+  }
+
   const toggles = [
     { key: "duration", label: "Duration", disabled: !durText },
     { key: "location", label: "Location", disabled: false },
@@ -2857,7 +3296,18 @@ function WorkoutShareModal(props) {
           )}
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        {props.onPost && (
+          <div style={{ marginTop: 12 }}>
+            {!posted && <input value={caption} onChange={(e) => setCaption(e.target.value.slice(0, 500))} placeholder="Add a caption for your friends (optional)" style={Object.assign({}, fieldStyle, { padding: "12px 14px", marginBottom: 8 })} />}
+            <button onClick={postToFriends} disabled={posting || posted} style={{ width: "100%", background: posted ? "#f0fdf4" : "#1a2332", color: posted ? "#16a34a" : "#fff", border: posted ? "1px solid #bbf7d0" : "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 52, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              {posted
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>}
+              {posted ? "Posted to Friends" : posting ? "Posting..." : "Post to Friends"}
+            </button>
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button onClick={props.onClose} style={{ background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Done</button>
           <button onClick={save} disabled={working} style={{ background: "#fff", color: "#1a73e8", border: "1px solid #dbe9fd", borderRadius: 12, padding: "14px 16px", fontSize: 14, fontWeight: 700, minHeight: 52 }}>Save</button>
           <button onClick={share} disabled={working} style={{ flex: 1, background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, minHeight: 52, boxShadow: shadowPrimary, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
