@@ -447,7 +447,10 @@ function coachContext(workouts, profile, splits, weekSchedule) {
       lines.push("- " + w.date + " (" + weekdayLabel(w.date) + "): " + parts.join("; "));
     }
   }
-  return lines.join("\n").slice(0, 11500);
+  const byGroup = {};
+  for (const e of allExercises()) { (byGroup[e.group] = byGroup[e.group] || []).push(e.name); }
+  lines.push("APP EXERCISES: " + Object.keys(byGroup).map((g) => g + ": " + byGroup[g].join(", ")).join(" | "));
+  return lines.join("\n").slice(0, 13500);
 }
 
 function e1rm(weight, reps) {
@@ -2601,7 +2604,7 @@ function coachPrompts(workouts) {
     "How did my last week go?",
     top ? "Am I progressing on " + top + "?" : "Am I progressing?",
     "What should I hit next workout?",
-    "Is any muscle group falling behind?",
+    "What does the research say about training to failure?",
   ];
 }
 
@@ -2618,7 +2621,7 @@ function CoachTab(props) {
   const taRef = useRef(null);
 
   useEffect(() => {
-    try { localStorage.setItem("ff-chat", JSON.stringify(messages.filter((m) => m.content).slice(-60))); } catch (e) {}
+    try { localStorage.setItem("ff-chat", JSON.stringify(messages.filter((m) => m.content).map((m) => ({ role: m.role, content: m.content, sources: m.sources || undefined })).slice(-60))); } catch (e) {}
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, streaming, error]);
@@ -2656,26 +2659,40 @@ function CoachTab(props) {
         if (resp.status === 401) msg = "Your session expired. Sign out and back in to use the coach.";
         throw new Error(msg);
       }
+      const reply = { role: "assistant", content: "", sources: [], searches: [], searching: false };
+      const push = () => { acc = reply.content; setMessages(history.concat([Object.assign({}, reply)])); };
+      const handle = (line) => {
+        if (!line.trim()) return;
+        let ev;
+        try { ev = JSON.parse(line); } catch (e) { reply.content += line; return; }
+        if (ev.t === "text") { reply.content += ev.v; reply.searching = false; }
+        else if (ev.t === "search") { reply.searches = reply.searches.concat([ev.v]); reply.searching = true; }
+        else if (ev.t === "sources") reply.sources = Array.isArray(ev.v) ? ev.v : [];
+        else if (ev.t === "error") throw new Error(ev.v);
+      };
       const reader = resp.body && resp.body.getReader ? resp.body.getReader() : null;
       if (!reader) {
-        acc = await resp.text();
-        setMessages(history.concat([{ role: "assistant", content: acc }]));
+        (await resp.text()).split("\n").forEach(handle);
+        push();
       } else {
         const dec = new TextDecoder();
+        let buf = "";
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
-          acc += dec.decode(value, { stream: true });
-          const snap = acc;
-          setMessages(history.concat([{ role: "assistant", content: snap }]));
+          buf += dec.decode(value, { stream: true });
+          let i;
+          while ((i = buf.indexOf("\n")) >= 0) { handle(buf.slice(0, i)); buf = buf.slice(i + 1); }
+          push();
         }
+        if (buf.trim()) { handle(buf); push(); }
       }
       if (!acc.trim()) throw new Error("The coach didn't answer. Try asking again.");
     } catch (e) {
       if (e && e.name === "AbortError") {
-        setMessages(acc.trim() ? history.concat([{ role: "assistant", content: acc }]) : history);
+        setMessages((cur) => (acc.trim() ? cur : history));
       } else {
-        setMessages(acc.trim() ? history.concat([{ role: "assistant", content: acc }]) : history);
+        setMessages((cur) => (acc.trim() ? cur : history));
         setError((e && e.message) || "The coach is unavailable right now.");
       }
     } finally {
@@ -2737,7 +2754,7 @@ function CoachTab(props) {
         {messages.length === 0 && (
           <div style={{ margin: "auto 0", padding: "8px 0" }}>
             <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.2, textWrap: "balance" }}>{name ? "Hey " + name + ", what are we working on?" : "What are we working on?"}</div>
-            <p style={{ fontSize: 14.5, color: "#6b7280", lineHeight: 1.5, margin: "8px 0 18px", textWrap: "pretty" }}>Ask about your progress, your next session, form, or a plan. I read your actual log, so the answers are about your numbers.</p>
+            <p style={{ fontSize: 14.5, color: "#6b7280", lineHeight: 1.5, margin: "8px 0 18px", textWrap: "pretty" }}>Ask about your progress, your next session, form, or the research. I read your actual log and can look up current studies, with sources.</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {prompts.map((q, i) => (
                 <button key={i} onClick={() => send(q)} style={{ textAlign: "left", background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, padding: "13px 14px", fontSize: 14, color: "#1a2332", fontWeight: 600, lineHeight: 1.35, boxShadow: shadowSm, minHeight: 64 }}>{q}</button>
@@ -2747,6 +2764,16 @@ function CoachTab(props) {
         )}
         {messages.map((m, i) => {
           const isLast = i === messages.length - 1;
+          if (m.role === "assistant" && !m.content && isLast && streaming && m.searches && m.searches.length) {
+            return (
+              <div key={i} style={{ display: "flex" }}>
+                <div style={Object.assign({ borderRadius: 18, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10, maxWidth: "88%" }, botBubble)}>
+                  <span style={{ width: 16, height: 16, flexShrink: 0, border: "2px solid #dbe9fd", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+                  <span style={{ fontSize: 13.5, color: "#6b7280", minWidth: 0 }}>Searching the web for <strong style={{ color: "#1a2332", fontWeight: 700 }}>{m.searches[m.searches.length - 1]}</strong></span>
+                </div>
+              </div>
+            );
+          }
           if (m.role === "assistant" && !m.content && isLast && streaming) {
             return (
               <div key={i} style={{ display: "flex" }}>
@@ -2760,6 +2787,27 @@ function CoachTab(props) {
             <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
               <div style={Object.assign({ maxWidth: "88%", padding: "11px 14px", borderRadius: 18, fontSize: 14.5, lineHeight: 1.55, overflowWrap: "anywhere" }, m.role === "user" ? userBubble : botBubble)}>
                 {m.role === "user" ? m.content : <CoachMarkdown text={m.content} />}
+                {m.role === "assistant" && m.searching && isLast && streaming && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 13, color: "#6b7280" }}>
+                    <span style={{ width: 14, height: 14, flexShrink: 0, border: "2px solid #dbe9fd", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+                    <span>Searching the web for <strong style={{ color: "#1a2332" }}>{m.searches[m.searches.length - 1]}</strong></span>
+                  </div>
+                )}
+                {m.role === "assistant" && m.sources && m.sources.length > 0 && (
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0f2f5" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", letterSpacing: ".04em", textTransform: "uppercase", marginBottom: 6 }}>Sources</div>
+                    {m.sources.map((src, j) => {
+                      let host = "";
+                      try { host = new URL(src.url).hostname.replace(/^www\./, ""); } catch (e) {}
+                      return (
+                        <a key={j} href={src.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "baseline", gap: 6, padding: "4px 0", fontSize: 13, color: "#1a73e8", textDecoration: "none", lineHeight: 1.35 }}>
+                          <span style={{ flexShrink: 0, fontWeight: 700, color: "#9ca3af" }}>{j + 1}.</span>
+                          <span style={{ minWidth: 0 }}><span style={{ fontWeight: 600 }}>{src.title}</span>{host && <span style={{ color: "#9ca3af" }}>{"  " + host}</span>}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           );
