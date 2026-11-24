@@ -3,262 +3,186 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Forward Fitness | Beat your last workout, every time</title>
-<meta name="description" content="Forward Fitness loads your last numbers, tells you what to hit next, and logs every set. Progressive overload without the spreadsheet." />
+<title>Forward Fitness | Beat Your Last Workout, Every Time</title>
+<meta name="description" content="Forward Fitness loads your last numbers, tells you what to hit next, and logs every set. Track PRs, train with friends and ask a coach that reads your log. Free." />
 <meta property="og:title" content="Forward Fitness" />
-<meta property="og:description" content="Progressive overload without the spreadsheet. Beat your last workout, every time." />
+<meta property="og:description" content="Beat your last workout, every time. Free workout tracker with progressive overload, PRs, friends and a coach." />
+<meta name="theme-color" content="#0b1a33" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,800;125,900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="/icons/icon-192.png" />
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav-bar" id="navbar">
   <nav class="nav">
-    <a href="#top" class="brand">
-      <img src="/icons/icon-192.png" class="mark" alt="" />
-      Forward Fitness
-    </a>
+    <a href="#top" class="brand"><img src="/icons/icon-192.png" class="mark" alt="" /><span>Forward<em>Fitness</em></span></a>
     <div class="nav-links" id="navlinks">
-      <a href="#features">Features</a>
+      <a href="#train">Train</a>
       <a href="#progress">Progress</a>
+      <a href="#friends">Friends</a>
       <a href="#coach">Coach</a>
-      <a href="#how">How it works</a>
       <a href="#faq">FAQ</a>
-      <a href="onboarding.html" class="btn btn-primary nav-cta">Start training</a>
+      <a href="/train/">Sign In</a>
+      <a href="onboarding.html" class="btn btn-primary">Start Free</a>
     </div>
-    <button class="nav-toggle" id="navtoggle" aria-label="Menu">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <button class="nav-toggle" id="navtoggle" aria-label="Menu" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
   </nav>
 </div>
 
 <!-- HERO -->
 <header class="hero" id="top">
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
-      <span class="eyebrow">Built for progressive overload</span>
-      <h1>Beat your last workout.<br><span class="accent">Every time.</span></h1>
-      <p class="lead">It loads your last numbers, tells you what to hit next, and logs every set. Progressive overload without the spreadsheet, and the whole app is free.</p>
-      <div class="hero-cta">
-        <a href="onboarding.html" class="btn btn-primary">Start training
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  <div class="hero-photo"><img src="https://images.pexels.com/photos/7674495/pexels-photo-7674495.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2000" srcset="https://images.pexels.com/photos/7674495/pexels-photo-7674495.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=800 800w, https://images.pexels.com/photos/7674495/pexels-photo-7674495.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1400 1400w, https://images.pexels.com/photos/7674495/pexels-photo-7674495.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2000 2000w" sizes="100vw" alt="A woman setting up for a heavy barbell deadlift" fetchpriority="high" /></div>
+  <div class="wrap hero-inner">
+    <div class="hero-copy on-dark">
+      <h1 class="display rise">Beat Your Last Workout. Every Time.</h1>
+      <p class="lead rise" style="animation-delay:.12s">Forward Fitness puts last session's numbers on every set and tells you what to hit next. Log fast, watch your PRs climb, and bring your friends along.</p>
+      <div class="hero-cta rise" style="animation-delay:.22s">
+        <a href="onboarding.html" class="btn btn-primary">Start Training Free
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
-        <a href="#features" class="btn btn-ghost">See how it works</a>
+        <a href="/train/" class="btn btn-ghost">I Have an Account</a>
       </div>
-      <div class="hero-note">
-        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Free, no card</span>
-        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> No ads</span>
-        <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Works offline</span>
+      <div class="hero-proof rise" style="animation-delay:.32s">
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Free, no card</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>No ads</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Works offline</span>
       </div>
     </div>
-
-    <div class="hero-stage">
-      <!-- TODAY screen -->
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen">
-          <div class="scr">
-            <div class="scr-head">
-              <div class="scr-title">Forward Fitness</div>
-              <div class="scr-gear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-            </div>
-            <div class="scr-body">
-              <div class="today">
-                <div class="meta">
-                  <div class="day">TODAY · WEDNESDAY</div>
-                  <div class="name">Chest / Back</div>
-                  <div class="tags"><span>Chest</span><span>Back</span><span>Core</span></div>
-                </div>
-                <div class="play"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
-              </div>
-              <div class="lbl">This week</div>
-              <div class="week-row on"><span class="d">Wed</span><span class="w">Chest / Back</span><span class="badge">TODAY</span></div>
-              <div class="week-row"><span class="d">Thu</span><span class="w">Arms</span></div>
-              <div class="week-row"><span class="d">Fri</span><span class="w">Legs</span></div>
-              <div class="week-row"><span class="d">Sat</span><span class="w">Shoulders</span></div>
-              <div class="week-row"><span class="d">Sun</span><span class="w" style="color:var(--faint);font-weight:400">Rest</span></div>
-            </div>
-            <div class="scr-nav">
-              <div class="on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7"/></svg>Train</div>
-              <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Progress</div>
-              <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg>Coach</div>
-              <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>Profile</div>
-            </div>
-          </div>
-        </div>
+    <div class="set-card rise" id="setcard" aria-label="Example: deadlift went from 185 to 195 pounds, a new personal record">
+      <div class="top"><span class="ex">Deadlift</span><span class="tag">Set 3 of 4</span></div>
+      <div class="cmp">
+        <div><small>Last time</small><b>185 x 5</b></div>
+        <div class="now"><small>Today</small><b><span id="setnum">185</span> x 5</b></div>
       </div>
+      <div class="pr"><i>&#9733;</i>New personal record</div>
     </div>
   </div>
 </header>
 
-<!-- FEATURES -->
-<section class="section" id="features">
+<!-- LIFTERS -->
+<section class="section" id="lifters">
   <div class="wrap">
-    <div class="section-head reveal">
-      <span class="eyebrow">Why it works</span>
-      <h2>If the numbers go up, you're growing.</h2>
-      <p class="lead">Getting bigger and stronger comes down to one thing: beating last time, over and over. Forward Fitness keeps last session's numbers in front of you on every set, so you always have a target to beat and proof when you hit it. No more wondering whether it's working.</p>
+    <div class="section-top">
+      <h2 class="display">Built for Whoever Shows Up.</h2>
+      <p class="lead">Barbells, dumbbells, kettlebells or a bench in the garage. Forward Fitness tracks whatever you actually do, from your first month to your tenth year.</p>
     </div>
+    <div class="lifters">
+      <figure class="lifter"><img src="https://images.pexels.com/photos/4720236/pexels-photo-4720236.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900" alt="An older man doing push-ups on kettlebells" loading="lazy" /><figcaption>Strong at every age</figcaption></figure>
+      <figure class="lifter"><img src="https://images.pexels.com/photos/2247179/pexels-photo-2247179.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900" alt="A woman doing a one-arm dumbbell row" loading="lazy" /><figcaption>Dumbbell days count too</figcaption></figure>
+      <figure class="lifter"><img src="https://images.pexels.com/photos/6550851/pexels-photo-6550851.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900" alt="A man pressing a dumbbell overhead" loading="lazy" /><figcaption>Every set, saved for next time</figcaption></figure>
+      <figure class="lifter"><img src="https://images.pexels.com/photos/5327467/pexels-photo-5327467.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900" alt="A man doing barbell curls in a dark gym" loading="lazy" /><figcaption>Years in and still adding weight</figcaption></figure>
+    </div>
+  </div>
+</section>
 
-    <!-- Feature 1: logging / overload -->
-    <div class="feat">
-      <div class="feat-copy reveal">
-        <span class="eyebrow">Progressive overload</span>
-        <h3>The numbers come to you.</h3>
-        <p>Every exercise loads exactly what you lifted last time. Hit your reps with a rep in reserve, and it tells you to add weight. Grind them out, and it tells you to chase the rep. You just train.</p>
-        <ul class="feat-list">
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Last session's weight and reps, pre-filled</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>A clear "do this next" recommendation per lift</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Check off each set, with a rest timer that starts itself</li>
-        </ul>
-      </div>
-      <div class="feat-art reveal d1">
-        <div class="phone phone--sm">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="scr">
-              <div class="scr-head"><div class="scr-title" style="font-size:14px">Active Workout</div><div style="font-size:11px;color:var(--muted);font-weight:600">Discard</div></div>
-              <div class="scr-body">
-                <div class="ex">
-                  <h4>Barbell Overhead Press</h4>
-                  <div class="grp">Shoulders</div>
-                  <div class="set"><span class="n">1</span><span class="cell">95</span><span class="cell">8</span><span class="check done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></div>
-                  <div class="set"><span class="n">2</span><span class="cell">95</span><span class="cell">8</span><span class="check done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></div>
-                  <div class="set"><span class="n">3</span><span class="cell">95</span><span class="cell" style="color:var(--faint)">·</span><span class="check todo"></span></div>
-                  <div class="rec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg> Add 5 lbs next time. Last set had reps in reserve.</div>
-                </div>
-                <div class="restbar"><span>Rest</span><span class="t">1:24</span></div>
-              </div>
-            </div>
+<!-- TRAIN -->
+<section class="section" id="train">
+  <div class="wrap feat">
+    <div class="feat-copy">
+      <h2 class="display">The Numbers Come to You.</h2>
+      <p class="lead">Open today's workout and every exercise already shows what you lifted last time. Hit your reps with one left in the tank and it tells you to add weight. Grind them out and it tells you to chase a rep. You just lift.</p>
+      <ul class="feat-list">
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Last session's weight and reps, filled in</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>A clear next step for every lift</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Check off a set and the rest timer starts itself</li>
+      </ul>
+    </div>
+    <div class="feat-art">
+      <div class="combo">
+        <div class="shot"><img src="https://images.pexels.com/photos/3837757/pexels-photo-3837757.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" alt="A man benching a loaded barbell" loading="lazy" /></div>
+        <div class="phone"><div class="phone-in">
+        <div class="ph-top"><i></i></div>
+        <div class="ph-head"><span>Chest and Back</span><em>24:10</em></div>
+        <div class="ph-body">
+          <div class="ph-card">
+            <div class="ph-title">Bench Press</div>
+            <div class="ph-sub">4 sets of 6 to 10 reps</div>
+            <div class="sets-head"><span>Set</span><span>Lbs</span><span>Reps</span><span></span></div>
+            <div class="set-row done"><span class="n">1</span><span class="v">185</span><span class="v">9</span><span class="ck"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></div>
+            <div class="set-row done"><span class="n">2</span><span class="v">185</span><span class="v">8</span><span class="ck"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span></div>
+            <div class="set-row"><span class="n">3</span><span class="v">185</span><span class="v">8</span><span class="ck"></span></div>
+            <div class="set-row"><span class="n">4</span><span class="v">185</span><span class="v">8</span><span class="ck"></span></div>
+            <div class="last"><span>Last time <b>180 x 8</b></span><span class="pill-up">+5 lb</span></div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Feature 2: routine / editable -->
-    <div class="feat flip">
-      <div class="feat-copy reveal">
-        <span class="eyebrow">Your routine</span>
-        <h3>Plan the week. Change it whenever.</h3>
-        <p>Assign a workout to each day, and the home screen always shows today front and center. Edit any workout's exercises and order in seconds, so what you load is exactly what you actually do.</p>
-        <ul class="feat-list">
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>A weekly schedule you set once and tweak anytime</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Reorder, add, or swap exercises mid-workout</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Start from proven splits, or build your own</li>
-        </ul>
-      </div>
-      <div class="feat-art reveal d1">
-        <div class="phone phone--sm">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="scr">
-              <div class="scr-head"><div class="scr-title" style="font-size:14px">Weekly Schedule</div><div class="scr-gear"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div></div>
-              <div class="scr-body" style="gap:9px">
-                <div class="week-row"><span class="d">Mon</span><span class="w">Push</span></div>
-                <div class="week-row"><span class="d">Tue</span><span class="w">Pull</span></div>
-                <div class="week-row on"><span class="d">Wed</span><span class="w">Shoulders / Legs</span><span class="badge">TODAY</span></div>
-                <div class="week-row"><span class="d">Thu</span><span class="w" style="color:var(--faint);font-weight:400">Rest</span></div>
-                <div class="week-row"><span class="d">Fri</span><span class="w">Push</span></div>
-                <div class="week-row"><span class="d">Sat</span><span class="w">Pull</span></div>
-                <div class="week-row"><span class="d">Sun</span><span class="w" style="color:var(--faint);font-weight:400">Rest</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      </div></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PHOTO BAND -->
-<section class="wrap" style="padding:8px 24px 0">
-  <div class="photoband reveal">
-    <img src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=70&w=1600&h=600&fit=crop&auto=format" alt="Lifter gripping a loaded barbell" />
-    <div class="cap">
-      <b>Show up. Beat your numbers. Repeat.</b>
-      <span>The whole app is built around the one thing that actually grows muscle: doing a little more than last time.</span>
+<!-- PROGRESS -->
+<section class="section tint" id="progress">
+  <div class="wrap feat flip">
+    <div class="feat-copy">
+      <h2 class="display">Proof It's Working.</h2>
+      <p class="lead">See your strength climb lift by lift, how much work you put in each week, and every personal record the moment you hit it. Thirty-day stats show exactly how you compare to last month.</p>
+      <ul class="feat-list">
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Strength trend for any lift you pick</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Personal records, flagged as they happen</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Levels, streaks and achievements that keep you showing up</li>
+      </ul>
+    </div>
+    <div class="feat-art">
+      <div class="phone"><div class="phone-in">
+        <div class="ph-top"><i></i></div>
+        <div class="ph-head"><span>Progress</span><em>Level 12</em></div>
+        <div class="ph-body">
+          <div class="tiles">
+            <div class="tile"><small>Workouts</small><b>14</b><i>+3 vs last month</i></div>
+            <div class="tile"><small>Volume</small><b>86k</b><i>+12%</i></div>
+            <div class="tile"><small>New PRs</small><b>6</b><i>+2</i></div>
+            <div class="tile"><small>Streak</small><b>5 wk</b><i>Best yet</i></div>
+          </div>
+          <div class="ph-card">
+            <div class="ph-title">Bench Press</div>
+            <div class="ph-sub">Estimated 1-rep max</div>
+            <svg class="chart" id="chart" viewBox="0 0 260 110" aria-hidden="true">
+              <defs><linearGradient id="cg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1a73e8" stop-opacity=".22"/><stop offset="1" stop-color="#1a73e8" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0 30H260M0 60H260M0 90H260" stroke="#edf1f7" stroke-width="1"/>
+              <path class="area" d="M6 92 L42 86 L78 80 L114 82 L150 66 L186 58 L222 44 L254 26 L254 108 L6 108Z" fill="url(#cg)"/>
+              <path class="line" d="M6 92 L42 86 L78 80 L114 82 L150 66 L186 58 L222 44 L254 26" fill="none" stroke="#1a73e8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle class="peak" cx="254" cy="26" r="5.5" fill="#fff" stroke="#1a73e8" stroke-width="3"/>
+            </svg>
+          </div>
+          <div class="ph-card">
+            <div class="pr-row"><div><b>Bench Press</b><span class="new">New</span><small>235 x 5</small></div><b>274</b></div>
+            <div class="pr-row"><div><b>Squat</b><span class="new">New</span><small>285 x 6</small></div><b>342</b></div>
+          </div>
+        </div>
+      </div></div>
     </div>
   </div>
 </section>
 
-<!-- DARK: gamification -->
-<section class="section dark" id="progress">
-  <div class="wrap">
-    <div class="feat" id="progressfeat">
-      <div class="feat-art reveal">
-        <div class="phone">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="scr">
-              <div class="scr-head"><div class="scr-title">Progress</div></div>
-              <div class="scr-body" style="gap:14px">
-                <div class="level">
-                  <div class="row"><span>LEVEL 7</span><span>64 workouts</span></div>
-                  <div class="bar"><i></i></div>
-                  <div style="font-size:11px;font-weight:600;opacity:.9;margin-top:9px">6 more workouts to Level 8</div>
-                </div>
-                <div class="stats3">
-                  <div class="stat"><b style="color:var(--gold2)">6</b><span>Week<br>streak</span></div>
-                  <div class="stat"><b style="color:var(--green)">11</b><span>Perfect<br>weeks</span></div>
-                  <div class="stat"><b style="color:var(--blue)">812</b><span>Total<br>sets</span></div>
-                </div>
-                <div class="grid-card">
-                  <div class="grid-head"><span>Last 4 weeks</span><span class="legend">Mon start</span></div>
-                  <div class="weekdays"><i>M</i><i>T</i><i>W</i><i>T</i><i>F</i><i>S</i><i>S</i></div>
-                  <div class="habit">
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox"></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox"></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox"></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox"></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox"></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox"></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
-                    <div class="cellbox future"></div>
-                    <div class="cellbox future"></div>
-                    <div class="cellbox future"></div>
-                    <div class="cellbox future"></div>
-                  </div>
-                </div>
-                <div class="badges">
-                  <div class="bdg"><div class="m"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 4H5a2 2 0 0 0 0 4M17 4h2a2 2 0 0 1 0 4"/></svg></div><b>Committed</b></div>
-                  <div class="bdg"><div class="m"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div><b>On Fire</b></div>
-                  <div class="bdg locked"><div class="m"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><b>Centurion</b></div>
-                </div>
-              </div>
-            </div>
-          </div>
+<!-- FRIENDS -->
+<section class="section navy" id="friends">
+  <div class="wrap feat on-dark">
+    <div class="feat-copy">
+      <h2 class="display">Lift Together, Even Apart.</h2>
+      <p class="lead">Add your friends by username, post your workout when you finish, and see what everyone else lifted today. A little friendly pressure goes a long way on leg day.</p>
+      <ul class="feat-list">
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>A feed of your friends' workouts and PRs</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Give props when someone shows up</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Only friends see your posts, and you choose what's shared</li>
+      </ul>
+    </div>
+    <div class="feat-art">
+      <div class="duo">
+        <div class="a"><img src="https://images.pexels.com/photos/4853273/pexels-photo-4853273.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200" alt="Two friends laughing between sets at the gym" loading="lazy" /></div>
+        <div class="b"><img src="https://images.pexels.com/photos/4853277/pexels-photo-4853277.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=700" alt="A man smiling mid-lift while his friend watches" loading="lazy" /></div>
+        <div class="ph-card post">
+          <div class="post-head"><span class="av">JM</span><div><div class="post-name">@jmarsh</div><div class="post-time">12 minutes ago</div></div></div>
+          <div class="post-w">Leg Day</div>
+          <div class="post-stats"><div>52m<small>Time</small></div><div>21<small>Sets</small></div><div>18k<small>Volume</small></div></div>
+          <span class="pr-chip">PR: Squat 315 x 3</span>
+          <span class="props"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>8 props</span>
         </div>
-      </div>
-      <div class="feat-copy reveal d1">
-        <span class="eyebrow">Stay consistent</span>
-        <h3>Progress that pulls you back.</h3>
-        <p>Showing up is the whole game, so the app makes it visible. Level up with every workout, keep your streak of perfect weeks alive, and watch the grid fill in green. It turns "I should train" into "I'm not breaking the streak."</p>
-        <ul class="feat-list">
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>A checkmark for every day you train</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Perfect-week streaks for hitting your schedule</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Levels and badges that mark real milestones</li>
-        </ul>
       </div>
     </div>
   </div>
@@ -266,195 +190,100 @@
 
 <!-- COACH -->
 <section class="section" id="coach">
-  <div class="wrap">
-    <div class="feat">
-      <div class="feat-copy reveal">
-        <span class="eyebrow">Ask the coach</span>
-        <h3>Every training question, answered.</h3>
-        <p>Ask about programming, protein, recovery, or why a lift stalled, and get a clear answer grounded in sports science instead of gym myth. It pulls up current studies when it matters, comes with starter questions so you always know what to ask, and stays strictly on training, sending you to a professional for anything medical.</p>
-        <ul class="feat-list">
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Evidence-based answers, not gym myths</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Looks up current research and data on demand</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Starter prompts for plateaus, nutrition, and technique</li>
-          <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Stays on training, never plays doctor</li>
-        </ul>
-      </div>
-      <div class="feat-art reveal d1">
-        <div class="phone phone--sm">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="scr">
-              <div class="scr-head"><div class="scr-title" style="font-size:14px">Coach</div></div>
-              <div class="scr-body">
-                <div class="chat">
-                  <div class="chips">
-                    <span>Best rep range for size?</span>
-                    <span>How much protein?</span>
-                    <span>Why has my bench stalled?</span>
-                  </div>
-                  <div class="bub me">Is training to failure worth it?</div>
-                  <div class="bub ai">For size, stopping 1 to 2 reps short of failure drives most of the growth with far less fatigue. The research is consistent: how close you get matters more than hitting failure every set. Want a full breakdown?</div>
-                </div>
-                <div class="chat-in"><span>Ask about training...</span><span class="send" style="flex:0 0 auto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></span></div>
-              </div>
+  <div class="wrap feat flip">
+    <div class="feat-copy">
+      <h2 class="display">A Coach That Knows Your Numbers.</h2>
+      <p class="lead">Ask why a lift stalled, how much protein you need, or how to set up your next block. The coach reads your training log, answers with real sports science, and looks up current research when it helps, with sources you can check.</p>
+      <ul class="feat-list">
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Answers based on what you actually lifted</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Searches current research and shows its sources</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Stays on training and sends medical questions to a professional</li>
+      </ul>
+    </div>
+    <div class="feat-art">
+      <div class="phone"><div class="phone-in">
+        <div class="ph-top"><i></i></div>
+        <div class="ph-head"><span>Coach</span><em>New Chat</em></div>
+        <div class="ph-body">
+          <div class="chat">
+            <div class="bub me">My bench has been stuck at 185 for three weeks. What should I change?</div>
+            <div class="bub ai">You've hit 185 x 8 in your last three sessions, so you're ready for more. Two options:
+              <ul><li>Go to 190 and accept 6 reps, then build back to 8</li><li>Add a fourth set to give it more volume</li></ul>
+              <div class="srcs"><div>Volume and strength gains <span>pubmed.ncbi.nlm.nih.gov</span></div><div>Progression models <span>journals.lww.com</span></div></div>
             </div>
+            <div class="bub me">How much protein should I eat?</div>
+            <div class="searching"><i></i>Searching current research</div>
           </div>
         </div>
-      </div>
+      </div></div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS / onboarding teaser -->
-<section class="section" id="how" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<!-- HOW -->
+<section class="section tint" id="how">
   <div class="wrap">
-    <div class="section-head reveal">
-      <span class="eyebrow">What happens when you start</span>
-      <h2>From zero to your first set in a minute.</h2>
-      <p class="lead">A short setup, then the app does the heavy lifting. Here's the whole flow.</p>
-    </div>
+    <h2 class="display" style="max-width:16ch">From Sign Up to First Set in a Minute.</h2>
     <div class="steps">
-      <div class="step reveal">
-        <div class="num">STEP 01</div>
-        <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-        <h3>Set your week</h3>
-        <p>Tell us your goal and how many days you train. We build a starting schedule you can change anytime.</p>
-      </div>
-      <div class="step reveal d1">
-        <div class="num">STEP 02</div>
-        <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5v14l11-7z"/></svg></div>
-        <h3>Start today's workout</h3>
-        <p>The home screen shows today's session. Tap once and every exercise is ready with your numbers.</p>
-      </div>
-      <div class="step reveal d2">
-        <div class="num">STEP 03</div>
-        <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg></div>
-        <h3>Beat your numbers</h3>
-        <p>Log your sets, follow the recommendation, and let the streak and levels keep you coming back.</p>
-      </div>
-    </div>
-    <div class="reveal" style="text-align:center;margin-top:48px">
-      <a href="onboarding.html" class="btn btn-primary">Set up my week
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
+      <div class="step"><h3>Set Your Week</h3><p>Pick your goal and how many days you train. You get a starting schedule you can change anytime.</p></div>
+      <div class="step"><h3>Start Today's Workout</h3><p>The home screen shows today's session. One tap and every exercise is ready with your numbers.</p></div>
+      <div class="step"><h3>Beat Your Numbers</h3><p>Log your sets, follow the next step, and let your PRs, streaks and friends keep you coming back.</p></div>
     </div>
   </div>
 </section>
 
 <!-- FAQ -->
 <section class="section" id="faq">
+  <div class="wrap faq-grid">
+    <div>
+      <h2 class="display">Straight Answers.</h2>
+      <p class="lead">Still deciding? Here's what people ask before their first workout.</p>
+      <div class="hero-cta"><a href="onboarding.html" class="btn btn-primary">Start Training Free</a></div>
+    </div>
+    <div class="faq">
+      <details><summary>Is it really free?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">Yes. Logging, progressive overload, progress tracking, friends and the coach are all free. No subscription, no ads and no card to start.</div></details>
+      <details><summary>Do I need a gym?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">No. Build workouts from whatever you have, a full gym, a pair of dumbbells at home or just bodyweight. The app tracks what you actually do.</div></details>
+      <details><summary>How does it know what I should lift next?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">It saves every set and shows last time's numbers as you train. Based on how those sets went, it suggests adding weight or chasing another rep. You always have the final say.</div></details>
+      <details><summary>Can I use my own routine?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">Yes. Set your weekly schedule, build custom workouts, and reorder or swap exercises anytime, even mid-session. Or start from a preset split and make it yours.</div></details>
+      <details><summary>Who can see my workouts?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">Only you, unless you post one. Posts are visible to friends you've accepted, and you choose which stats are included before sharing.</div></details>
+      <details><summary>Does it work offline?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">Yes. Log your workout with no signal and it syncs when you're back online. A dead zone in the gym basement is never a problem.</div></details>
+      <details><summary>What devices does it run on?<span class="pm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary><div class="ans">Any phone or computer with a browser. Add it to your home screen and it opens like a regular app, with your history wherever you sign in.</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final-photo">
+  <img src="https://images.pexels.com/photos/7674494/pexels-photo-7674494.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=2000" alt="" loading="lazy" />
   <div class="wrap">
-    <div class="section-head reveal">
-      <span class="eyebrow">FAQ</span>
-      <h2>Good questions, straight answers.</h2>
-    </div>
-    <div class="faq-list reveal">
-      <details class="faq">
-        <summary>Is Forward Fitness really free?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">Yes. Every feature is free: the workout logging, the progressive overload, the progress tracking, and the coach. No subscription, no paywall, no ads, and no card to get started.</div>
-      </details>
-      <details class="faq">
-        <summary>Do I need a gym or special equipment?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">No. You build your workouts from whatever exercises you want, whether that's a full gym, a pair of dumbbells at home, or bodyweight. The app tracks whatever you actually do.</div>
-      </details>
-      <details class="faq">
-        <summary>How does it know what I should lift next?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">It saves what you did last time and puts it in front of you on every set. Based on how those sets went, it suggests when to add weight or chase another rep. You always have the final say.</div>
-      </details>
-      <details class="faq">
-        <summary>Can I use my own routine or split?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">Yes. Set your weekly schedule, build custom workouts, and reorder or swap exercises anytime, even in the middle of a session. Or start from a preset split and make it your own.</div>
-      </details>
-      <details class="faq">
-        <summary>What can I ask the coach?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">Anything about training, programming, nutrition, recovery, or technique. You get evidence-based answers, and it can look up current research when it helps. For anything medical, it points you to a professional.</div>
-      </details>
-      <details class="faq">
-        <summary>Does it work offline?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">Yes. You can log your workouts without a connection, so a dead signal in the gym basement is never a problem.</div>
-      </details>
-      <details class="faq">
-        <summary>What devices does it work on?
-          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
-        <div class="ans">It runs in your browser and installs to your phone or desktop like a normal app, so your workouts and history follow you everywhere.</div>
-      </details>
+    <h2 class="display">Stronger Than Last Week Starts Today.</h2>
+    <p class="lead">Set up your week in under a minute and let Forward Fitness handle the progression.</p>
+    <div class="hero-cta">
+      <a href="onboarding.html" class="btn btn-primary">Start Training Free
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="/train/" class="btn btn-ghost">Sign In</a>
     </div>
   </div>
 </section>
 
-<!-- FREE -->
-<section class="section freebar" style="padding-bottom:0">
-  <div class="wrap reveal">
-    <span class="pill">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-      Free, the whole thing
-    </span>
-    <h2>No subscription. No paywall.</h2>
-    <p>Every feature is free, from progressive overload to the coach to the progress tracking. No locked tiers, no ads, no card to start. We'll keep it that way.</p>
-  </div>
-</section>
-
-<!-- FINAL CTA -->
-<section class="section cta-final">
-  <div class="wrap">
-    <div class="cta-card has-photo reveal">
-      <h2>Stronger than last week.<br>Starts today.</h2>
-      <p>Set up your week in under a minute, then let Forward Fitness handle the progression. Free to start, no card.</p>
-      <a href="onboarding.html" class="btn btn-white">Start training</a>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
 <footer class="footer">
   <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <div class="brand">
-          <img src="/icons/icon-192.png" class="mark" alt="" />
-          Forward Fitness
-        </div>
-        <p>Progressive overload without the spreadsheet. Train, track, and keep showing up.</p>
-      </div>
-      <div class="footer-links">
-        <div class="footer-col">
-          <h5>Product</h5>
-          <a href="#features">Features</a>
-          <a href="#progress">Progress</a>
-          <a href="#coach">Coach</a>
-          <a href="#faq">FAQ</a>
-          <a href="onboarding.html">Get started</a>
-        </div>
-        <div class="footer-col">
-          <h5>App</h5>
-          <a href="/train/">Open the app</a>
-          <a href="#how">How it works</a>
-        </div>
-      </div>
-    </div>
-    <div class="footer-base">
-      <span>© <span id="year"></span> Forward Fitness</span>
-      <span>Made for people who lift.</span>
-    </div>
+    <a href="#top" class="brand"><img src="/icons/icon-192.png" class="mark" alt="" /><span>Forward<em>Fitness</em></span></a>
+    <nav>
+      <a href="#train">Train</a>
+      <a href="#progress">Progress</a>
+      <a href="#friends">Friends</a>
+      <a href="#coach">Coach</a>
+      <a href="#faq">FAQ</a>
+      <a href="/train/">Open the App</a>
+    </nav>
+    <span>&copy; <span id="year"></span> Forward Fitness</span>
   </div>
 </footer>
 
 <script>
-  // Remove any leftover root-scoped service worker from before the app moved to /train,
-  // so it can't intercept this marketing site. The /train worker is left untouched.
+  // Remove any leftover root-scoped service worker from before the app moved to /train.
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function (regs) {
       regs.forEach(function (r) {

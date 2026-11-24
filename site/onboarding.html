@@ -6,7 +6,7 @@
 <title>Get started | Forward Fitness</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,800;125,900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="/icons/icon-192.png" />
 <style>
@@ -20,9 +20,9 @@
   .ob-step { display: none; animation: obIn .45s cubic-bezier(.22,1,.36,1); }
   .ob-step.active { display: block; }
   @keyframes obIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-  .ob-kicker { font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--blue); text-transform: uppercase; }
-  .ob-q { font-family: var(--font-display); font-size: clamp(26px, 6vw, 34px); font-weight: 800; letter-spacing: -.02em; margin: 10px 0 6px; }
-  .ob-sub { color: var(--ink-soft); font-size: 16px; margin: 0 0 26px; }
+  .ob-kicker { font-size: 14px; font-weight: 800; color: var(--blue); }
+  .ob-q { font-family: var(--font-display); font-stretch: 125%; font-size: clamp(28px, 6.4vw, 38px); font-weight: 900; line-height: 1.02; letter-spacing: -.025em; text-wrap: balance; margin: 10px 0 10px; }
+  .ob-sub { text-wrap: pretty; color: var(--ink-soft); font-size: 16px; margin: 0 0 26px; }
   .opts { display: grid; gap: 12px; }
   .opts.cols { grid-template-columns: 1fr 1fr; }
   .opt {
@@ -37,7 +37,7 @@
   .opt.sel .ico { background: var(--blue); color: #fff; }
   .opt .txt { flex: 1; min-width: 0; }
   .opt .txt b { display: block; font-size: 16px; font-weight: 700; }
-  .opt .txt small { color: var(--faint); font-size: 13px; font-weight: 500; }
+  .opt .txt small { text-wrap: pretty; color: var(--faint); font-size: 13px; font-weight: 500; }
   .opt .rad { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: grid; place-items: center; }
   .opt.sel .rad { border-color: var(--blue); background: var(--blue); color: #fff; }
   .opt:not(.sel) .rad svg { display: none; }
@@ -67,10 +67,7 @@
 <body>
 
 <div class="ob-top">
-  <a href="index.html" class="brand" style="font-size:18px">
-    <img src="/icons/icon-192.png" class="mark" alt="" />
-    Forward Fitness
-  </a>
+  <a href="index.html" class="brand" style="font-size:18px"><img src="/icons/icon-192.png" class="mark" alt="" /><span>Forward<em style="color:var(--blue)">Fitness</em></span></a>
   <a href="#" id="skip" class="skip">Skip</a>
 </div>
 
@@ -80,22 +77,22 @@
   <!-- STEP 1: goal -->
   <div class="ob-step active" data-key="goal">
     <div class="ob-kicker">Step 1 of 3</div>
-    <h1 class="ob-q">What's your main goal?</h1>
+    <h1 class="ob-q">What's Your Main Goal?</h1>
     <p class="ob-sub">We'll shape your starting plan around it. You can change everything later.</p>
     <div class="opts" data-opts>
       <button class="opt" data-val="muscle">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5l11 11M21 21l-1-1M3 3l1 1M18 22l4-4M2 6l4-4M3 10l5 5M14 21l7-7"/></svg></span>
-        <span class="txt"><b>Build muscle</b><small>Hypertrophy focus, moderate reps</small></span>
+        <span class="txt"><b>Build Muscle</b><small>Hypertrophy focus, moderate reps</small></span>
         <span class="rad"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
       </button>
       <button class="opt" data-val="strength">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg></span>
-        <span class="txt"><b>Get stronger</b><small>Add weight to the bar over time</small></span>
+        <span class="txt"><b>Get Stronger</b><small>Add weight to the bar over time</small></span>
         <span class="rad"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
       </button>
       <button class="opt" data-val="consistency">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></span>
-        <span class="txt"><b>Stay consistent</b><small>Build the habit and keep showing up</small></span>
+        <span class="txt"><b>Stay Consistent</b><small>Build the habit and keep showing up</small></span>
         <span class="rad"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
       </button>
     </div>
@@ -104,17 +101,17 @@
   <!-- STEP 2: experience -->
   <div class="ob-step" data-key="level">
     <div class="ob-kicker">Step 2 of 3</div>
-    <h1 class="ob-q">How long have you been lifting?</h1>
+    <h1 class="ob-q">How Long Have You Been Lifting?</h1>
     <p class="ob-sub">This sets how aggressively we suggest adding weight.</p>
     <div class="opts" data-opts>
       <button class="opt" data-val="new">
         <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M5 5l2.5 2.5M16.5 16.5L19 19M2 12h4M18 12h4M5 19l2.5-2.5M16.5 7.5L19 5"/></svg></span>
-        <span class="txt"><b>New to it</b><small>Under 6 months</small></span>
+        <span class="txt"><b>New to It</b><small>Under 6 months</small></span>
         <span class="rad"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
       </button>
       <button class="opt" data-val="some">
         <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg></span>
-        <span class="txt"><b>Some experience</b><small>6 months to 2 years</small></span>
+        <span class="txt"><b>Some Experience</b><small>6 months to 2 years</small></span>
         <span class="rad"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
       </button>
       <button class="opt" data-val="experienced">
@@ -128,7 +125,7 @@
   <!-- STEP 3: days -->
   <div class="ob-step" data-key="days">
     <div class="ob-kicker">Step 3 of 3</div>
-    <h1 class="ob-q">How many days a week?</h1>
+    <h1 class="ob-q">How Many Days a Week?</h1>
     <p class="ob-sub">We'll lay out a weekly schedule to match.</p>
     <div class="opts cols" data-opts>
       <button class="opt" data-val="3"><span class="txt"><b>3 days</b><small>Full body or split</small></span></button>
@@ -141,7 +138,7 @@
   <!-- ACCOUNT -->
   <div class="ob-step" data-key="account">
     <div class="ob-kicker">Last step</div>
-    <h1 class="ob-q">Create your account</h1>
+    <h1 class="ob-q">Create Your Account</h1>
     <p class="ob-sub">Pick a username and password. You'll use these to log in.</p>
     <div class="summary">
       <div class="line"><span>Goal</span><b id="s-goal">Not set</b></div>

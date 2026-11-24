@@ -14,8 +14,8 @@ function cleanUsername(u) { return (u || "").trim().toLowerCase().replace(/[^a-z
   var skip = document.getElementById("skip");
 
   var labels = {
-    goal: { muscle: "Build muscle", strength: "Get stronger", consistency: "Stay consistent" },
-    level: { new: "New to it", some: "Some experience", experienced: "Experienced" },
+    goal: { muscle: "Build Muscle", strength: "Get Stronger", consistency: "Stay Consistent" },
+    level: { new: "New to It", some: "Some Experience", experienced: "Experienced" },
     days: { "3": "3 days", "4": "4 days", "5": "5 days", "6": "6 days" }
   };
 
