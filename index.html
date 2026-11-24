@@ -20,14 +20,7 @@
   </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/src/pwaBoot.js"></script>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Worker is pinned to /train so it can never touch the marketing site at the root.
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/train/sw.js', { scope: '/train/' });
-        });
-      }
-    </script>
   </body>
 </html>
