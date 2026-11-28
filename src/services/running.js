@@ -3,7 +3,7 @@
 import { supabase } from '../supabaseClient'
 import {
   buildPlan, trainingPaces, evaluateRun, impliedVdot, decideVdotUpdate, assessMissed, vdotFromRace,
-  builderOptions, planningLevel, planToRows, planAdjustments, repaceSessions, rebuildStartVolume,
+  builderOptions, planningLevel, planToRows, checkMoves, weekdayIndex, planAdjustments, repaceSessions, rebuildStartVolume,
   addDays, daysBetween, RUN_TYPES,
 } from '../lib/running'
 
@@ -227,8 +227,12 @@ export function runningCoachContext(state) {
   lines.push('Current fitness (VDOT): ' + Number(plan.current_vdot).toFixed(1) + '. Run days per week: ' + (goal.setup.days || '?') + '. Experience: ' + (goal.setup.level || '?') + (goal.setup.injury === 'recent' ? ', coming back from injury' : '') + '.')
   const p = plan.paces || {}
   lines.push('Training paces: easy ' + pace(p.easy) + '; marathon ' + pace(p.marathon) + '; threshold ' + pace(p.threshold) + '; interval ' + pace(p.interval) + '; repetition ' + pace(p.repetition) + '.')
-  const upcoming = sessions.filter((s) => s.date >= today && s.type !== 'strength').slice(0, 10)
-  if (upcoming.length) lines.push('Next sessions: ' + upcoming.map((s) => s.date + ' ' + s.type + (s.distance_m ? ' ' + km(s.distance_m) : '') + (s.status !== 'planned' ? ' (' + s.status + ')' : '')).join('; '))
+  const planStart = (goal.setup && goal.setup.planStart) || (plan.phases && plan.phases.start) || today
+  const upcoming = sessions.filter((s) => s.date >= addDays(today, -1) && s.date <= addDays(today, 14))
+  if (upcoming.length) {
+    lines.push('Plan weeks start on ' + ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][weekdayIndex(planStart)] + 's. Sessions for the next two weeks (id in brackets):')
+    lines.push(upcoming.map((s) => '[' + s.id.slice(0, 8) + '] ' + s.date + ' ' + s.type + (s.distance_m ? ' ' + km(s.distance_m) : '') + (s.status !== 'planned' ? ' (' + s.status + ')' : '')).join('; '))
+  }
   const recent = runs.slice(0, 10)
   if (recent.length) lines.push('Recent runs, newest first: ' + recent.map((r) => r.date + ' ' + km(r.distance_m) + ' in ' + clock(Number(r.duration_s)) + (r.rpe != null ? ' effort ' + Number(r.rpe) : '') + (r.pain && r.pain !== 'none' ? ' pain ' + r.pain : '') + (r.notes ? ' "' + String(r.notes).slice(0, 80) + '"' : '')).join('; '))
   const ch = changes.slice(0, 5)
@@ -307,4 +311,30 @@ export async function todayRunnerStrength(date) {
 export async function markRunnerStrengthDone(date) {
   const s = await todayRunnerStrength(date)
   if (s && s.status !== 'done') check(await supabase.from('iron_run_plan_sessions').update({ status: 'done' }).eq('id', s.id))
+}
+
+/**
+ * Check a coach proposal to move sessions. moves use the short ids the coach sees in its context.
+ * Returns { ok, errors, preview, moves } with full session ids.
+ */
+export function checkProposal(state, proposal) {
+  if (!state || !state.goal || !state.plan) return { ok: false, errors: ['You have no active running plan.'], preview: [], moves: [] }
+  const today = todayStr()
+  const planStart = (state.goal.setup && state.goal.setup.planStart) || (state.plan.phases && state.plan.phases.start) || today
+  const moves = (proposal.moves || []).map((m) => {
+    const s = state.sessions.find((x) => x.id.startsWith(String(m.session_id || '').slice(0, 8)) && String(m.session_id || '').length >= 6)
+    return { id: s ? s.id : String(m.session_id || ''), toDate: String(m.new_date || '') }
+  })
+  const r = checkMoves(state.sessions, moves, { today, goalDate: state.goal.goal_date, planStart })
+  return Object.assign({ moves }, r)
+}
+
+/** Apply a checked coach proposal and record why in the plan history. */
+export async function applyProposal(proposal) {
+  const state = await loadRunning()
+  const r = checkProposal(state, proposal)
+  if (!r.ok) return r
+  for (const m of r.moves) check(await supabase.from('iron_run_plan_sessions').update({ date: m.toDate }).eq('id', m.id))
+  await logChange(state.plan.id, 'moved', 'Moved at your request: ' + String(proposal.summary || 'your coach rearranged this week.').slice(0, 300))
+  return r
 }

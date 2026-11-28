@@ -63,9 +63,42 @@ async function verifyUser(req) {
   }
 }
 
-function callAnthropic(key, model, system, messages, withSearch) {
+// Lets the coach propose moving running sessions. The app checks every proposal with the
+// running engine and only applies it when the runner taps Apply.
+const PROPOSE_TOOL = {
+  name: "propose_plan_change",
+  description: "Propose moving one or more upcoming running sessions to new dates when the runner asks to rearrange their week. The app checks the change against the training rules and the runner must tap Apply. Use session ids from the RUNNING PLAN data.",
+  strict: true,
+  input_schema: {
+    type: "object",
+    properties: {
+      summary: { type: "string", description: "One short plain sentence describing the change, for the plan history." },
+      moves: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { session_id: { type: "string" }, new_date: { type: "string", description: "YYYY-MM-DD" } },
+          required: ["session_id", "new_date"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["summary", "moves"],
+    additionalProperties: false,
+  },
+};
+
+const PROPOSE_RULES = `
+
+## Changing their running plan
+When they ask to move a run, call propose_plan_change instead of only describing it. Before the call, write one or two short sentences explaining the change. Moves must stay within the same plan week, can't go into the past or past race day, can't put two runs on one day, and must keep an easy day or rest between hard days (threshold, intervals, fast reps, race pace, time trials, long runs). If what they ask breaks a rule, suggest the closest move that works. The app double-checks every proposal and they tap Apply to confirm.`;
+
+function callAnthropic(key, model, system, messages, withSearch, withPlan) {
   const body = { model, max_tokens: 1500, system, messages, stream: true };
-  if (withSearch) body.tools = [WEB_SEARCH];
+  const tools = [];
+  if (withSearch) tools.push(WEB_SEARCH);
+  if (withPlan) tools.push(PROPOSE_TOOL);
+  if (tools.length) body.tools = tools;
   return fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
@@ -91,7 +124,8 @@ export default async function handler(req, res) {
 
   const context = typeof body.context === "string" ? body.context.slice(0, 18000) : "";
   const today = typeof body.today === "string" ? body.today.slice(0, 40) : "";
-  const system = SYSTEM + (today ? "\n\nToday is " + today + "." : "") + (context ? "\n\nTRAINING DATA:\n" + context : "\n\nTRAINING DATA: none logged yet.");
+  const withPlan = body.runningPlan === true;
+  const system = SYSTEM + (withPlan ? PROPOSE_RULES : "") + (today ? "\n\nToday is " + today + "." : "") + (context ? "\n\nTRAINING DATA:\n" + context : "\n\nTRAINING DATA: none logged yet.");
 
   // Try each model with web search, then fall back to no search if the account
   // can't use the tool, so the coach always answers.
@@ -100,7 +134,7 @@ export default async function handler(req, res) {
   outer: for (const withSearch of [true, false]) {
     for (const model of MODELS) {
       try {
-        const r = await callAnthropic(key, model, system, messages, withSearch);
+        const r = await callAnthropic(key, model, system, messages, withSearch, withPlan);
         if (r.ok) { upstream = r; break outer; }
         lastErr = (await r.text()).slice(0, 300);
       } catch (e) {
@@ -121,6 +155,7 @@ export default async function handler(req, res) {
     sources.push({ url, title: String(title || url).slice(0, 140) });
   };
   const toolInput = {}; // index -> partial JSON of a server_tool_use block
+  const proposalInput = {}; // index -> partial JSON of a propose_plan_change call
 
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
@@ -143,11 +178,20 @@ export default async function handler(req, res) {
         if (evt.type === "content_block_start" && evt.content_block) {
           const b = evt.content_block;
           if (b.type === "server_tool_use") toolInput[evt.index] = "";
+          else if (b.type === "tool_use" && b.name === "propose_plan_change") proposalInput[evt.index] = "";
         } else if (evt.type === "content_block_delta" && evt.delta) {
           const d = evt.delta;
           if (d.type === "text_delta") send("text", d.text);
           else if (d.type === "input_json_delta" && toolInput[evt.index] !== undefined) toolInput[evt.index] += d.partial_json || "";
+          else if (d.type === "input_json_delta" && proposalInput[evt.index] !== undefined) proposalInput[evt.index] += d.partial_json || "";
           else if (d.type === "citations_delta" && d.citation) addSource(d.citation.url, d.citation.title);
+        } else if (evt.type === "content_block_stop" && proposalInput[evt.index] !== undefined) {
+          // The app validates the proposal with the running engine before offering Apply.
+          try {
+            const p = JSON.parse(proposalInput[evt.index] || "{}");
+            if (p && Array.isArray(p.moves)) send("proposal", { summary: String(p.summary || "").slice(0, 300), moves: p.moves.slice(0, 7).map((m) => ({ session_id: String(m.session_id || "").slice(0, 40), new_date: String(m.new_date || "").slice(0, 10) })) });
+          } catch (e) { /* incomplete proposal: ignore */ }
+          delete proposalInput[evt.index];
         } else if (evt.type === "content_block_stop" && toolInput[evt.index] !== undefined) {
           try { const q = JSON.parse(toolInput[evt.index] || "{}").query; if (q) send("search", String(q).slice(0, 120)); } catch (e) {}
           delete toolInput[evt.index];

@@ -5,6 +5,7 @@ import { appConfirm, useNoZoom, ConfirmHost } from "./ui/confirm";
 import { Segmented, Dropdown, LineChart, BarChart } from "./ui/components";
 import RunTab from "./screens/RunTab";
 import { loadRunning, runningCoachContext, todayRunnerStrength, markRunnerStrengthDone, RUNNER_STRENGTH } from "./services/running";
+import ProposalCard from "./screens/ProposalCard";
 import { createAccount } from "./services/signup";
 
 // ─── Config ───
@@ -2487,10 +2488,12 @@ function CoachTab(props) {
   const taRef = useRef(null);
   // The running plan, if any, so the coach can answer running questions from the engine's numbers.
   const [runCtx, setRunCtx] = useState("");
-  useEffect(() => { loadRunning().then((st) => setRunCtx(runningCoachContext(st))).catch(() => {}); }, []);
+  const [hasPlan, setHasPlan] = useState(false);
+  const refreshRunCtx = () => loadRunning().then((st) => { setRunCtx(runningCoachContext(st)); setHasPlan(!!(st && st.plan)); }).catch(() => {});
+  useEffect(() => { refreshRunCtx(); }, []);
 
   useEffect(() => {
-    try { localStorage.setItem("ff-chat", JSON.stringify(messages.filter((m) => m.content).map((m) => ({ role: m.role, content: m.content, sources: m.sources || undefined })).slice(-60))); } catch (e) {}
+    try { localStorage.setItem("ff-chat", JSON.stringify(messages.filter((m) => m.content).map((m) => ({ role: m.role, content: m.content, sources: m.sources || undefined, proposal: m.proposal || undefined })).slice(-60))); } catch (e) {}
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, streaming, error]);
@@ -2518,7 +2521,8 @@ function CoachTab(props) {
         body: JSON.stringify({
           messages: history.map((m) => ({ role: m.role, content: m.content })),
           context: (runCtx ? "RUNNING PLAN (from the app's running engine; these numbers are facts):\n" + runCtx + "\n\nLIFTING:\n" : "") + coachContext(workouts, profile, splits, weekSchedule),
-          today: new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+          today: new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (" + today() + ")",
+          runningPlan: hasPlan,
         }),
         signal: ctrl.signal,
       });
@@ -2537,6 +2541,7 @@ function CoachTab(props) {
         if (ev.t === "text") { reply.content += ev.v; reply.searching = false; }
         else if (ev.t === "search") { reply.searches = reply.searches.concat([ev.v]); reply.searching = true; }
         else if (ev.t === "sources") reply.sources = Array.isArray(ev.v) ? ev.v : [];
+        else if (ev.t === "proposal" && ev.v) { reply.proposal = ev.v; if (!reply.content.trim()) reply.content = "Here's the change I'd make to your week."; }
         else if (ev.t === "error") throw new Error(ev.v);
       };
       const reader = resp.body && resp.body.getReader ? resp.body.getReader() : null;
@@ -2656,6 +2661,7 @@ function CoachTab(props) {
             <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
               <div style={Object.assign({ maxWidth: "88%", padding: "11px 14px", borderRadius: 18, fontSize: 14.5, lineHeight: 1.55, overflowWrap: "anywhere" }, m.role === "user" ? userBubble : botBubble)}>
                 {m.role === "user" ? m.content : <CoachMarkdown text={m.content} />}
+                {m.role === "assistant" && m.proposal && !(isLast && streaming) && <ProposalCard proposal={m.proposal} onApplied={refreshRunCtx} />}
                 {m.role === "assistant" && m.searching && isLast && streaming && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 13, color: "#6b7280" }}>
                     <span style={{ width: 14, height: 14, flexShrink: 0, border: "2px solid #dbe9fd", borderTopColor: "#1a73e8", borderRadius: "50%", animation: "spin .7s linear infinite" }} />

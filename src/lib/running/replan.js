@@ -2,7 +2,7 @@
 // writes it. Dates are local 'YYYY-MM-DD' strings throughout.
 
 import { raceTimeFromVdot } from './vdot.js'
-import { QUALITY_TYPES, RUN_TYPES } from './guardrails.js'
+import { QUALITY_TYPES, RUN_TYPES, HARD_TYPES } from './guardrails.js'
 
 // ─── Dates ───
 export function parseDate(s) {
@@ -188,4 +188,49 @@ export function builderOptions(goal, { vdot, startWeeklyM, today }) {
       strength: setup.strength !== false,
     },
   }
+}
+
+/**
+ * Check moving planned sessions to new dates (the coach proposes, the runner applies).
+ * sessions: the plan's session rows ({ id, date, type, status }).
+ * moves: [{ id, toDate }]. ctx: { today, goalDate, planStart }.
+ * Moves stay inside their plan week so weekly volume and recovery weeks are untouched.
+ * Returns { ok, errors, preview: [{ id, type, from, to }] }.
+ */
+export function checkMoves(sessions, moves, { today, goalDate, planStart }) {
+  const errors = []
+  const preview = []
+  const byId = new Map(sessions.map((s) => [s.id, s]))
+  const moved = new Map()
+  const weekOfDate = (d) => Math.floor(daysBetween(planStart, d) / 7)
+  if (!moves.length) errors.push('No change was proposed.')
+  for (const m of moves) {
+    const s = byId.get(m.id)
+    if (!s) { errors.push('That session is not in your plan.'); continue }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(m.toDate))) { errors.push('The new date is not valid.'); continue }
+    if (s.type === 'race') { errors.push('Race day stays where it is.'); continue }
+    if (s.status !== 'planned') { errors.push('Only sessions you haven\'t done yet can move.'); continue }
+    if (m.toDate < today) { errors.push('Sessions can\'t move into the past.'); continue }
+    if (m.toDate > goalDate) { errors.push('Sessions can\'t move past race day.'); continue }
+    if (weekOfDate(m.toDate) !== weekOfDate(s.date)) { errors.push('Moves stay within the same week, so your weekly build and recovery stay safe.'); continue }
+    moved.set(s.id, m.toDate)
+    preview.push({ id: s.id, type: s.type, from: s.date, to: m.toDate })
+  }
+  if (errors.length) return { ok: false, errors: Array.from(new Set(errors)), preview }
+
+  const after = sessions
+    .filter((s) => s.status !== 'skipped')
+    .map((s) => (moved.has(s.id) ? Object.assign({}, s, { date: moved.get(s.id) }) : s))
+  const runsByDate = new Map()
+  for (const s of after) {
+    if (!RUN_TYPES.has(s.type)) continue
+    runsByDate.set(s.date, (runsByDate.get(s.date) || 0) + 1)
+  }
+  for (const [d, n] of runsByDate) if (n > 1 && Array.from(moved.values()).includes(d)) errors.push('That would put two runs on the same day.')
+  const hard = after.filter((s) => HARD_TYPES.has(s.type)).map((s) => s.date).sort()
+  for (let i = 1; i < hard.length; i++) {
+    const touches = Array.from(moved.values()).some((d) => d === hard[i] || d === hard[i - 1])
+    if (touches && daysBetween(hard[i - 1], hard[i]) <= 1) errors.push('That would put two hard days back to back. Keep an easy day or rest between them.')
+  }
+  return { ok: errors.length === 0, errors: Array.from(new Set(errors)), preview }
 }

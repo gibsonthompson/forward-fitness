@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planCalendar, planDayForWeekday, weekdayIndex, addDays, daysBetween, planToRows, planAdjustments, rebuildStartVolume, daysSinceLastRun, racePace, repaceSessions } from '../replan.js'
+import { planCalendar, planDayForWeekday, weekdayIndex, addDays, daysBetween, planToRows, planAdjustments, rebuildStartVolume, daysSinceLastRun, racePace, repaceSessions, checkMoves } from '../replan.js'
 import { buildPlan } from '../builder.js'
 import { trainingPaces, raceTimeFromVdot } from '../vdot.js'
 
@@ -118,5 +118,46 @@ describe('rebuild helpers', () => {
   it('counts days since the last run', () => {
     expect(daysSinceLastRun(runs, '2026-11-28')).toBe(1)
     expect(daysSinceLastRun([], '2026-11-28')).toBeNull()
+  })
+})
+
+describe('checkMoves', () => {
+  // Plan week runs Sun Nov 22 to Sat Nov 28; next week starts Sun Nov 29.
+  const ctx = { today: '2026-11-24', goalDate: '2027-03-13', planStart: '2026-11-22' }
+  const sessions = [
+    { id: 'e1', date: '2026-11-24', type: 'easy', status: 'planned' },
+    { id: 't1', date: '2026-11-26', type: 'threshold', status: 'planned' },
+    { id: 's1', date: '2026-11-26', type: 'strength', status: 'planned' },
+    { id: 'l1', date: '2026-11-28', type: 'long', status: 'planned' },
+    { id: 'd0', date: '2026-11-23', type: 'interval', status: 'done' },
+    { id: 'r', date: '2027-03-13', type: 'race', status: 'planned' },
+  ]
+  it('allows a safe move within the week', () => {
+    const r = checkMoves(sessions, [{ id: 't1', toDate: '2026-11-25' }], ctx)
+    expect(r.ok).toBe(true)
+    expect(r.preview).toEqual([{ id: 't1', type: 'threshold', from: '2026-11-26', to: '2026-11-25' }])
+  })
+  it('blocks hard days back to back', () => {
+    const r = checkMoves(sessions, [{ id: 't1', toDate: '2026-11-27' }], ctx)
+    expect(r.ok).toBe(false)
+    expect(r.errors[0]).toMatch(/back to back/)
+  })
+  it('blocks two runs on one day', () => {
+    expect(checkMoves(sessions, [{ id: 'e1', toDate: '2026-11-26' }], ctx).errors[0]).toMatch(/two runs/)
+  })
+  it('keeps moves inside the week, in the future, and away from race day', () => {
+    expect(checkMoves(sessions, [{ id: 'l1', toDate: '2026-11-29' }], ctx).errors[0]).toMatch(/same week/)
+    expect(checkMoves(sessions, [{ id: 'e1', toDate: '2026-11-23' }], ctx).errors[0]).toMatch(/past/)
+    expect(checkMoves(sessions, [{ id: 'r', toDate: '2027-03-12' }], ctx).errors[0]).toMatch(/Race day/)
+    expect(checkMoves(sessions, [{ id: 'd0', toDate: '2026-11-25' }], ctx).errors[0]).toMatch(/haven't done/)
+    expect(checkMoves(sessions, [{ id: 'nope', toDate: '2026-11-25' }], ctx).errors[0]).toMatch(/not in your plan/)
+  })
+  it('lets strength move freely and swaps work when both move', () => {
+    expect(checkMoves(sessions, [{ id: 's1', toDate: '2026-11-25' }], ctx).ok).toBe(true)
+    // Swapping the easy run and the threshold run is fine when the threshold lands clear of
+    // the interval session already done on the 23rd...
+    expect(checkMoves(sessions, [{ id: 'e1', toDate: '2026-11-26' }, { id: 't1', toDate: '2026-11-25' }], ctx).ok).toBe(true)
+    // ...and blocked when it would follow that interval day directly.
+    expect(checkMoves(sessions, [{ id: 'e1', toDate: '2026-11-26' }, { id: 't1', toDate: '2026-11-24' }], ctx).ok).toBe(false)
   })
 })
