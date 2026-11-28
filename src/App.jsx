@@ -5,6 +5,7 @@ import { appConfirm, useNoZoom, ConfirmHost } from "./ui/confirm";
 import { Segmented, Dropdown, LineChart, BarChart } from "./ui/components";
 import RunTab from "./screens/RunTab";
 import { loadRunning, runningCoachContext } from "./services/running";
+import { createAccount } from "./services/signup";
 
 // ─── Config ───
 const DEFAULT_WEIGHT = 180;
@@ -552,12 +553,10 @@ function AuthScreen() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password: pw, options: { data: { username: u } } });
+        // Created already confirmed by the ff-signup edge function, then signed in.
+        await createAccount(u, pw);
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
-        if (!data.session) {
-          // Only happens if email confirmation is still enabled on the project.
-          setMsg({ type: "err", text: "Signups are blocked by an email-confirmation setting. Turn off Confirm Email in Supabase Auth settings." });
-        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;

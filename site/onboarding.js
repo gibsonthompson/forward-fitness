@@ -79,6 +79,7 @@ function cleanUsername(u) { return (u || "").trim().toLowerCase().replace(/[^a-z
   var pEl = document.getElementById("ob-password");
   var signinLink = document.getElementById("ob-signin");
   var sbClient = null;
+  var sbConfig = null;
   function setErr(t) { errEl.textContent = t || ""; }
 
   async function getClient() {
@@ -88,6 +89,7 @@ function cleanUsername(u) { return (u || "").trim().toLowerCase().replace(/[^a-z
     if (!res.ok) throw new Error("noconfig");
     var cfg = await res.json();
     if (!cfg.url || !cfg.anonKey) throw new Error("noconfig");
+    sbConfig = cfg;
     sbClient = window.supabase.createClient(cfg.url, cfg.anonKey);
     return sbClient;
   }
@@ -109,12 +111,20 @@ function cleanUsername(u) { return (u || "").trim().toLowerCase().replace(/[^a-z
     try {
       var sb = await getClient();
       var email = u + "@" + USERNAME_DOMAIN;
-      var out = await sb.auth.signUp({ email: email, password: pw, options: { data: { username: u } } });
-      if (out.error) throw out.error;
-      if (!out.data || !out.data.session) {
-        setErr("Almost there. Turn off Confirm Email in your Supabase Auth settings to finish signup.");
-        createBtn.disabled = false; createBtn.innerHTML = original; return;
+      // The ff-signup edge function creates the account already confirmed (no email is sent),
+      // then we sign in so the app opens with the session in place.
+      var res = await fetch(sbConfig.url + "/functions/v1/ff-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: sbConfig.anonKey, Authorization: "Bearer " + sbConfig.anonKey },
+        body: JSON.stringify({ username: u, password: pw })
+      });
+      if (!res.ok) {
+        var body = {};
+        try { body = await res.json(); } catch (e2) {}
+        throw new Error(res.status === 409 ? "already registered" : (body.error || "Something went wrong. Please try again."));
       }
+      var out = await sb.auth.signInWithPassword({ email: email, password: pw });
+      if (out.error) throw out.error;
       goToApp();
     } catch (err) {
       var m = (err && err.message) || "";
