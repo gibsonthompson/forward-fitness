@@ -4,7 +4,7 @@ import { shadowSm, shadowPrimary, BORDER, cardStyle, inputStyle, fieldStyle, lab
 import { appConfirm, useNoZoom, ConfirmHost } from "./ui/confirm";
 import { Segmented, Dropdown, LineChart, BarChart } from "./ui/components";
 import RunTab from "./screens/RunTab";
-import { loadRunning, runningCoachContext } from "./services/running";
+import { loadRunning, runningCoachContext, todayRunnerStrength, markRunnerStrengthDone, RUNNER_STRENGTH } from "./services/running";
 import { createAccount } from "./services/signup";
 
 // ─── Config ───
@@ -37,6 +37,8 @@ const EXERCISES = [
   { id: "leg-curl", name: "Leg Curl", group: "Hamstrings", area: "lower" },
   { id: "hip-thrust", name: "Hip Thrust", group: "Glutes", area: "lower" },
   { id: "calf-raise", name: "Calf Raise", group: "Calves", area: "lower" },
+  { id: "bulgarian-split-squat", name: "Bulgarian Split Squat", group: "Quads", area: "lower" },
+  { id: "box-jump", name: "Box Jump", group: "Quads", area: "lower" },
   { id: "barbell-curl", name: "Barbell Curl", group: "Biceps", area: "upper" },
   { id: "rope-curl", name: "Rope Curl", group: "Biceps", area: "upper" },
   { id: "db-curl", name: "DB Curl", group: "Biceps", area: "upper" },
@@ -700,6 +702,7 @@ function Main(props) {
       setWorkouts((prev) => prev.concat([{ id: res.data.id, date: res.data.date, exercises: res.data.exercises }]));
       localStorage.removeItem("ff-draft");
       flash("Workout saved!");
+      markRunnerStrengthDone(workout.date).catch(() => {}); // counts for the running plan's strength day
       return res.data.id || true;
     } catch (e) {
       flash("Save failed: " + e.message, "err");
@@ -1091,6 +1094,9 @@ function WorkoutTab(props) {
   const [shareData, setShareData] = useState(null); // finished-workout summary to share
   const [showAllRecent, setShowAllRecent] = useState(false);
   const [startedAt, setStartedAt] = useState(() => { try { const d = JSON.parse(localStorage.getItem("ff-draft") || "null"); return d && d.startedAt ? d.startedAt : null; } catch (e) { return null; } });
+  // Strength day from the running plan, if there is one today.
+  const [runnerStrength, setRunnerStrength] = useState(null);
+  useEffect(() => { todayRunnerStrength(today()).then(setRunnerStrength).catch(() => {}); }, [workouts.length]);
 
   useEffect(() => {
     if (workout.exercises.length > 0) localStorage.setItem("ff-draft", JSON.stringify(Object.assign({}, workout, { splitId: activeSplitId, startedAt })));
@@ -1280,6 +1286,16 @@ function WorkoutTab(props) {
                 </div>
               )}
             </div>
+
+            {/* Strength day from the running plan */}
+            {runnerStrength && (
+              <div style={{ marginBottom: 18, borderRadius: 20, padding: 20, background: "#fff", border: "1px solid " + BORDER, boxShadow: shadowSm }}>
+                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#9ca3af" }}>From Your Running Plan</span>
+                <span style={{ display: "block", fontSize: 20, fontWeight: 800, marginTop: 4, color: "#1a2332" }}>{runnerStrength.status === "done" ? "Strength Done Today" : "Strength for Runners"}</span>
+                <p style={{ fontSize: 13.5, color: "#6b7280", margin: "6px 0 14px", lineHeight: 1.5, textWrap: "pretty" }}>{runnerStrength.status === "done" ? "Nice. Heavy legs today means a stronger, cheaper stride on your next run." : "Squats, Romanian deadlifts, split squats, calf raises and a few box jumps. Go heavy with good form, and keep jumps crisp."}</p>
+                {runnerStrength.status !== "done" && <button onClick={() => loadSplit({ id: null, name: "Strength for Runners", exercises: RUNNER_STRENGTH })} style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 12, padding: "12px 18px", fontSize: 14.5, fontWeight: 700, minHeight: 46, boxShadow: shadowPrimary }}>Start Strength Workout</button>}
+              </div>
+            )}
 
             {/* This Week (always open, drag a workout onto a day to schedule) */}
             {onSaveSchedule && (

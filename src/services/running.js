@@ -291,3 +291,20 @@ export async function personalizePlan() {
   await logChange(plan.id, 'personalized', note)
   return note
 }
+
+/** Exercises for the running plan's strength days: heavy lower body plus some plyometrics. */
+export const RUNNER_STRENGTH = ['squat', 'rdl', 'bulgarian-split-squat', 'calf-raise', 'box-jump']
+
+/** Today's planned strength session from the active running plan, or null. */
+export async function todayRunnerStrength(date) {
+  const plans = check(await supabase.from('iron_run_plans').select('id').eq('active', true).limit(1))
+  if (!plans.length) return null
+  const rows = check(await supabase.from('iron_run_plan_sessions').select('id,date,status').eq('plan_id', plans[0].id).eq('type', 'strength').eq('date', date).limit(1))
+  return rows[0] || null
+}
+
+/** Mark the running plan's strength session on a date as done (after a lifting workout is saved). */
+export async function markRunnerStrengthDone(date) {
+  const s = await todayRunnerStrength(date)
+  if (s && s.status !== 'done') check(await supabase.from('iron_run_plan_sessions').update({ status: 'done' }).eq('id', s.id))
+}
