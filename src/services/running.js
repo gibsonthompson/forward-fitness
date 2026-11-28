@@ -3,9 +3,11 @@
 import { supabase } from '../supabaseClient'
 import {
   buildPlan, trainingPaces, evaluateRun, impliedVdot, decideVdotUpdate, assessMissed, vdotFromRace,
-  planCalendar, planDayForWeekday, planToRows, planAdjustments, repaceSessions, rebuildStartVolume,
+  builderOptions, planningLevel, planToRows, planAdjustments, repaceSessions, rebuildStartVolume,
   addDays, daysBetween, RUN_TYPES,
 } from '../lib/running'
+
+export { planningLevel }
 
 export function todayStr() {
   const d = new Date()
@@ -32,25 +34,9 @@ export async function loadRunning() {
   return { goal, plan, sessions: check(sessions), runs, estimates, changes: check(changes) }
 }
 
-/** The level the builder plans with. A recent injury gets the most conservative progression. */
-export function planningLevel(setup) {
-  return setup.injury === 'recent' ? 'beginner' : setup.level
-}
-
 function buildFor(goal, { vdot, startWeeklyM, today }) {
-  const setup = goal.setup || {}
-  const cal = planCalendar(goal.goal_date, today)
-  const plan = buildPlan({
-    vdot,
-    goalDistanceM: Number(goal.distance_m),
-    weeks: cal.weeks,
-    level: planningLevel(setup),
-    startWeeklyM,
-    days: setup.days,
-    longRunDay: planDayForWeekday(setup.longWeekday ?? 6, cal.start),
-    strength: setup.strength !== false,
-  })
-  return { cal, plan }
+  const { cal, opts } = builderOptions(goal, { vdot, startWeeklyM, today })
+  return { cal, plan: buildPlan(opts) }
 }
 
 function phasesJson(plan, cal) {
@@ -256,4 +242,52 @@ function clock(totalS) {
   const m = Math.floor((s % 3600) / 60)
   const sec = String(s % 60).padStart(2, '0')
   return h ? h + ':' + String(m).padStart(2, '0') + ':' + sec : m + ':' + sec
+}
+
+/**
+ * Ask the AI coach to personalize a freshly built plan (api/run-plan.js). Runs in the background
+ * after setup. Only applies while the plan is untouched (version 1), so it never overwrites
+ * adjustments made after logged runs. Returns the coach's note, or null when the code-built plan
+ * stays (not configured, timed out, or no valid proposal).
+ */
+export async function personalizePlan() {
+  const state = await loadRunning()
+  const { goal, plan } = state
+  if (!goal || !plan || (plan.version || 1) !== 1 || (plan.phases && plan.phases.source === 'ai')) return null
+  const sess = await supabase.auth.getSession()
+  const token = sess && sess.data && sess.data.session ? sess.data.session.access_token : ''
+  const today = todayStr()
+  let out
+  try {
+    const res = await fetch('/api/run-plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({
+        goal: { distance_m: goal.distance_m, target_time_s: goal.target_time_s, goal_date: goal.goal_date, setup: goal.setup },
+        vdot: Number(plan.current_vdot),
+        startWeeklyM: (goal.setup && goal.setup.weeklyM) || 0,
+        today,
+      }),
+    })
+    if (!res.ok) return null
+    out = await res.json()
+  } catch (e) {
+    return null
+  }
+  if (!out || out.source !== 'ai' || !Array.isArray(out.weeks)) return null
+
+  // Re-check: the user may have logged a run while the coach was working.
+  const fresh = check(await supabase.from('iron_run_plans').select('version').eq('id', plan.id).single())
+  if ((fresh.version || 1) !== 1) return null
+  const { cal } = builderOptions(goal, { vdot: Number(plan.current_vdot), startWeeklyM: 0, today })
+  const doneToday = state.sessions.some((s) => s.date === today && s.status === 'done')
+  const fromDate = doneToday ? addDays(today, 1) : today
+  const aiPlan = { weeks: out.weeks, paces: out.paces }
+  const rows = planToRows(aiPlan, { start: cal.start, fromDate, vdot: Number(plan.current_vdot), goalDistanceM: Number(goal.distance_m) })
+  check(await supabase.from('iron_run_plan_sessions').delete().eq('plan_id', plan.id).eq('status', 'planned').gte('date', fromDate))
+  await insertSessions(plan.id, rows)
+  check(await supabase.from('iron_run_plans').update({ phases: Object.assign(phasesJson(aiPlan, cal), { source: 'ai' }), version: 2 }).eq('id', plan.id))
+  const note = out.note || 'Your coach personalized your plan.'
+  await logChange(plan.id, 'personalized', note)
+  return note
 }

@@ -6,7 +6,7 @@ import {
   assessGoal, predictRace, trainingPaces, formatClock, formatPace, KM_PER_MI, weeklyLoads, QUALITY_TYPES,
   addDays, daysBetween, weekdayIndex, parseDate, daysSinceLastRun, MARATHON_M, HALF_M, racePace,
 } from "../lib/running";
-import { loadRunning, createGoalAndPlan, logRun, deleteRun, endGoal, adjustAfterGap, vdotFromAssessment, todayStr, planningLevel } from "../services/running";
+import { loadRunning, createGoalAndPlan, logRun, deleteRun, endGoal, adjustAfterGap, vdotFromAssessment, todayStr, planningLevel, personalizePlan } from "../services/running";
 
 const ACCENT = "#1a73e8";
 const INK = "#1a2332";
@@ -130,6 +130,17 @@ export default function RunTab(props) {
   const [result, setResult] = useState(null);
   const [showPlan, setShowPlan] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [personalizing, setPersonalizing] = useState(false);
+
+  // After setup, the AI coach personalizes the code-built plan in the background.
+  async function personalize() {
+    setPersonalizing(true);
+    try {
+      const note = await personalizePlan();
+      if (note) { await refresh(); props.flash("Your coach personalized your plan"); }
+    } catch (e) { console.warn("personalize", e); }
+    setPersonalizing(false);
+  }
 
   async function refresh() {
     try { setError(false); setState(await loadRunning()); }
@@ -148,7 +159,7 @@ export default function RunTab(props) {
   }
   if (!state) return <div style={Object.assign({}, cardStyle, { padding: 40 })}><Spinner /></div>;
 
-  const setupView = setup && <RunSetup previous={state.goal} onClose={() => setSetup(false)} onDone={async () => { setSetup(false); await refresh(); window.scrollTo({ top: 0, behavior: "smooth" }); props.flash("Your plan is ready"); }} />;
+  const setupView = setup && <RunSetup previous={state.goal} onClose={() => setSetup(false)} onDone={async () => { setSetup(false); await refresh(); window.scrollTo({ top: 0, behavior: "smooth" }); props.flash("Your plan is ready"); personalize(); }} />;
 
   if (!state.goal || !state.plan) {
     return (
@@ -188,6 +199,12 @@ export default function RunTab(props) {
 
   return (
     <div>
+      {personalizing && (
+        <div style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: 12, padding: "12px 16px" })}>
+          <div style={{ width: 16, height: 16, border: "2px solid #eaeef3", borderTopColor: ACCENT, borderRadius: "50%", animation: "spin .7s linear infinite", flexShrink: 0 }} />
+          <span style={{ fontSize: 14, color: MUTED }}>Your coach is personalizing your plan. You can start using it now.</span>
+        </div>
+      )}
       <GoalHero goal={goal} vdot={vdot} today={today} planStart={planStart} measured={estimates.some((e) => e.source !== "setup" && e.created_at >= goal.created_at) || !(goal.setup && goal.setup.assessment && goal.setup.assessment.kind === "new")} />
       {showGap && (
         <div style={Object.assign({}, cardStyle, { borderColor: "#fde68a", background: "#fffbeb" })}>

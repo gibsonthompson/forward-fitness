@@ -2,13 +2,62 @@
   "buildCommand": "vite build && cp -r site/. dist/",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/train", "destination": "/train/", "permanent": false }
+    {
+      "source": "/train",
+      "destination": "/train/",
+      "permanent": false
+    }
   ],
   "headers": [
-    { "source": "/train/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
-    { "source": "/train/version.json", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
-    { "source": "/train/", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
-    { "source": "/train/index.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
-    { "source": "/train/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
-  ]
+    {
+      "source": "/train/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/train/version.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/train/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/train/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/train/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/run-plan.js": {
+      "maxDuration": 60
+    }
+  }
 }

@@ -162,3 +162,30 @@ export function daysSinceLastRun(runs, today) {
   const last = runs.reduce((m, r) => (r.date > m ? r.date : m), runs[0].date)
   return daysBetween(last, today)
 }
+
+/** The level the builder plans with. A recent injury gets the most conservative progression. */
+export function planningLevel(setup) {
+  return setup && setup.injury === 'recent' ? 'beginner' : (setup && setup.level) || 'intermediate'
+}
+
+/**
+ * Builder options for a goal, shared by the app and the AI plan endpoint so both build the
+ * identical baseline. goal = { distance_m, goal_date, setup }.
+ */
+export function builderOptions(goal, { vdot, startWeeklyM, today }) {
+  const setup = goal.setup || {}
+  const cal = planCalendar(goal.goal_date, today)
+  return {
+    cal,
+    opts: {
+      vdot,
+      goalDistanceM: Number(goal.distance_m),
+      weeks: cal.weeks,
+      level: planningLevel(setup),
+      startWeeklyM,
+      days: setup.days,
+      longRunDay: planDayForWeekday(setup.longWeekday ?? 6, cal.start),
+      strength: setup.strength !== false,
+    },
+  }
+}
