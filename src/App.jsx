@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
+import { shadowSm, shadowPrimary, BORDER, cardStyle, inputStyle, fieldStyle, labelStyle, colStyle, closeBtn, overlay, sheet, sheetHead, xBtn, primaryBtn } from "./ui/theme";
+import { appConfirm, useNoZoom, ConfirmHost } from "./ui/confirm";
+import { Segmented, Dropdown, LineChart, BarChart } from "./ui/components";
+import RunTab from "./screens/RunTab";
+import { loadRunning, runningCoachContext } from "./services/running";
 
 // ─── Config ───
 const DEFAULT_WEIGHT = 180;
@@ -498,60 +503,6 @@ function platesPerSide(weight) {
     while (perSide >= p - 0.001) { out.push(p); perSide = Math.round((perSide - p) * 100) / 100; }
   }
   return out;
-}
-
-// ─── CUSTOM CONFIRM DIALOG (replaces native confirm) ───
-let _confirm = null;
-function appConfirm(opts) {
-  if (_confirm) return _confirm(opts || {});
-  return Promise.resolve(typeof window !== "undefined" ? window.confirm((opts && opts.message) || "") : false);
-}
-// Disable pinch / double-tap zoom while a modal editor is open (native-app feel).
-// iOS Safari ignores viewport user-scalable=no, so we also block the gesture events directly.
-function useNoZoom() {
-  useEffect(() => {
-    const vp = document.querySelector('meta[name="viewport"]');
-    const prev = vp ? vp.getAttribute("content") : null;
-    if (vp) vp.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no");
-
-    const stop = (e) => { e.preventDefault(); };
-    const onTouchMove = (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); };
-
-    document.addEventListener("gesturestart", stop, { passive: false });
-    document.addEventListener("gesturechange", stop, { passive: false });
-    document.addEventListener("gestureend", stop, { passive: false });
-    document.addEventListener("touchmove", onTouchMove, { passive: false });
-
-    return () => {
-      if (vp && prev != null) vp.setAttribute("content", prev);
-      document.removeEventListener("gesturestart", stop);
-      document.removeEventListener("gesturechange", stop);
-      document.removeEventListener("gestureend", stop);
-      document.removeEventListener("touchmove", onTouchMove);
-    };
-  }, []);
-}
-
-function ConfirmHost() {
-  const [state, setState] = useState(null);
-  useEffect(() => {
-    _confirm = (opts) => new Promise((resolve) => setState(Object.assign({}, opts, { resolve })));
-    return () => { _confirm = null; };
-  }, []);
-  if (!state) return null;
-  function close(val) { const r = state.resolve; setState(null); if (r) r(val); }
-  return (
-    <div style={Object.assign({}, overlay, { alignItems: "center", padding: 24, zIndex: 300 })} onClick={() => close(false)}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, padding: 24, width: "100%", maxWidth: 360, boxShadow: shadowLg, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" }}>
-        {state.title && <div style={{ fontSize: 18, fontWeight: 700, color: "#1a2332", marginBottom: 8 }}>{state.title}</div>}
-        {state.message && <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.5, marginBottom: 22 }}>{state.message}</div>}
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => close(false)} style={{ flex: 1, background: "#f3f4f6", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 600, color: "#374151", minHeight: 48 }}>{state.cancelLabel || "Cancel"}</button>
-          <button onClick={() => close(true)} style={{ flex: 1, background: state.danger ? "#dc2626" : "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, minHeight: 48, boxShadow: state.danger ? "none" : shadowPrimary }}>{state.confirmLabel || "Confirm"}</button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ─── AUTH GATE ───
@@ -1063,6 +1014,7 @@ function Main(props) {
 
       <div style={{ padding: "16px 20px" }}>
         {tab === "workout" && <WorkoutTab workouts={workouts} onSave={saveWorkout} onUpdate={updateWorkout} onDelete={deleteWorkout} flash={flash} startRest={startRest} restSeconds={profile.restSeconds} onCreateExercise={addCustomExercise} splits={currentSplits} weekSchedule={profile.weekSchedule || []} onSaveSchedule={saveSchedule} onSyncSplit={syncSplitFromWorkout} profile={profile} onSaveProfile={updateProfile} onPost={createPost} />}
+        {tab === "run" && <RunTab flash={flash} />}
         {tab === "progress" && <ProgressTab workouts={workouts} weekSchedule={profile.weekSchedule || []} social={social} />}
         {tab === "coach" && <CoachTab workouts={workouts} profile={profile} splits={currentSplits} weekSchedule={profile.weekSchedule || []} />}
         {tab === "profile" && <ProfileTab profile={profile} workouts={workouts} weekSchedule={profile.weekSchedule || []} onSave={updateProfile} onSignOut={onSignOut} social={social} />}
@@ -1073,6 +1025,7 @@ function Main(props) {
       <nav style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 520, display: "flex", background: "rgba(255,255,255,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderTop: "1px solid " + BORDER, boxShadow: "0 -2px 16px rgba(16,24,40,.06)", padding: "6px 0 max(8px,env(safe-area-inset-bottom))", zIndex: 100 }}>
         {[
           { id: "workout", label: "Train", d: "M3 12h4l3-9 4 18 3-9h4" },
+          { id: "run", label: "Run", d: "M14.5 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 21l3-6 3 3v4M6 12l3-3 4 1 3 4 3 1" },
           { id: "progress", label: "Progress", d: "M3 20h18M5 16l4-4 4 4 6-8" },
           { id: "coach", label: "Coach", d: "M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" },
           { id: "profile", label: "Profile", d: "M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
@@ -1914,108 +1867,6 @@ function EditWorkoutModal(props) {
 }
 
 // ─── PROGRESS TAB (You + Friends) ───
-function Segmented(props) {
-  return (
-    <div style={{ display: "flex", background: "#eef1f5", borderRadius: 14, padding: 4, marginBottom: 16 }}>
-      {props.options.map((o) => {
-        const on = props.value === o.id;
-        return (
-          <button key={o.id} onClick={() => props.onChange(o.id)} style={{ flex: 1, border: "none", borderRadius: 11, padding: "10px 8px", minHeight: 42, background: on ? "#fff" : "transparent", color: on ? "#1a2332" : "#6b7280", fontSize: 14, fontWeight: 700, boxShadow: on ? shadowSm : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
-            {o.label}
-            {o.badge > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{o.badge}</span>}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// Themed dropdown (no native select).
-function Dropdown(props) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!open) return;
-    function off(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
-    document.addEventListener("pointerdown", off);
-    return () => document.removeEventListener("pointerdown", off);
-  }, [open]);
-  const cur = props.options.find((o) => o.value === props.value);
-  return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(!open)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#f7f9fc", border: "1px solid " + (open ? "#1a73e8" : "#e3e8ef"), borderRadius: 12, padding: "11px 14px", minHeight: 46, fontSize: 15, fontWeight: 700, color: "#1a2332", textAlign: "left" }}>
-        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cur ? cur.label : "Choose"}</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform .15s" }}><path d="M6 9l6 6 6-6" /></svg>
-      </button>
-      {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 30, background: "#fff", border: "1px solid " + BORDER, borderRadius: 14, boxShadow: shadowMd, maxHeight: 280, overflowY: "auto", padding: 4 }}>
-          {props.options.map((o) => {
-            const on = o.value === props.value;
-            return (
-              <button key={o.value} onClick={() => { props.onChange(o.value); setOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: on ? "#f0f5ff" : "transparent", border: "none", borderRadius: 10, padding: "11px 12px", fontSize: 14.5, fontWeight: on ? 700 : 500, color: on ? "#1a73e8" : "#1a2332", textAlign: "left" }}>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.label}</span>
-                {o.meta && <span style={{ flexShrink: 0, fontSize: 12, color: "#9ca3af", fontWeight: 600 }}>{o.meta}</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LineChart(props) {
-  const pts = props.points || [];
-  const W = 320, H = 130, PL = 6, PR = 6, PT = 14, PB = 8;
-  if (pts.length < 2) {
-    return <div style={{ height: H, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "0 20px" }}>{pts.length === 1 ? "One session so far. Log it again to see a trend." : "No sessions yet."}</div>;
-  }
-  const ys = pts.map((p) => p.y);
-  let lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
-  if (hi === lo) { hi += 5; lo -= 5; }
-  const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
-  const x = (i) => PL + (i * (W - PL - PR)) / (pts.length - 1);
-  const y = (v) => PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB);
-  const line = pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.y).toFixed(1)).join(" ");
-  const area = line + " L" + x(pts.length - 1).toFixed(1) + " " + (H - PB) + " L" + x(0).toFixed(1) + " " + (H - PB) + " Z";
-  const bestI = ys.indexOf(Math.max.apply(null, ys));
-  return (
-    <div>
-      <svg viewBox={"0 0 " + W + " " + H} style={{ width: "100%", height: "auto", display: "block" }}>
-        <defs>
-          <linearGradient id="lcfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1a73e8" stopOpacity=".22" /><stop offset="100%" stopColor="#1a73e8" stopOpacity="0" /></linearGradient>
-        </defs>
-        <path d={area} fill="url(#lcfill)" />
-        <path d={line} fill="none" stroke="#1a73e8" strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
-        {pts.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.y)} r={i === bestI ? 4.5 : 2.6} fill={i === bestI ? "#f59e0b" : "#1a73e8"} stroke="#fff" strokeWidth={i === bestI ? 2 : 1} />)}
-      </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#9ca3af", fontWeight: 600, marginTop: 4 }}>
-        <span>{pts[0].label}</span><span>{pts[pts.length - 1].label}</span>
-      </div>
-    </div>
-  );
-}
-
-function BarChart(props) {
-  const bars = props.bars || [];
-  const max = Math.max(1, Math.max.apply(null, bars.map((b) => b.value)));
-  return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 120 }}>
-      {bars.map((b, i) => {
-        const last = i === bars.length - 1;
-        const h = b.value > 0 ? Math.max(6, (b.value / max) * 96) : 3;
-        return (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 5, minWidth: 0 }}>
-            {(last || b.value === max) && b.value > 0 && <span style={{ fontSize: 10, fontWeight: 700, color: last ? "#1a73e8" : "#6b7280" }}>{props.format ? props.format(b.value) : b.value}</span>}
-            <div style={{ width: "100%", maxWidth: 30, height: h, borderRadius: 6, background: last ? "linear-gradient(180deg,#2b7cf0,#1a73e8)" : b.value > 0 ? "#c9dbf8" : "#eef1f5" }} />
-            <span style={{ fontSize: 10, color: last ? "#1a2332" : "#9ca3af", fontWeight: 600 }}>{b.label}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function Delta(props) {
   const d = props.value;
   if (d == null || !isFinite(d)) return <span style={{ fontSize: 11.5, fontWeight: 700, color: "#9ca3af" }}>vs prior 30d</span>;
@@ -2619,6 +2470,9 @@ function CoachTab(props) {
   const scrollRef = useRef(null);
   const abortRef = useRef(null);
   const taRef = useRef(null);
+  // The running plan, if any, so the coach can answer running questions from the engine's numbers.
+  const [runCtx, setRunCtx] = useState("");
+  useEffect(() => { loadRunning().then((st) => setRunCtx(runningCoachContext(st))).catch(() => {}); }, []);
 
   useEffect(() => {
     try { localStorage.setItem("ff-chat", JSON.stringify(messages.filter((m) => m.content).map((m) => ({ role: m.role, content: m.content, sources: m.sources || undefined })).slice(-60))); } catch (e) {}
@@ -2648,7 +2502,7 @@ function CoachTab(props) {
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
           messages: history.map((m) => ({ role: m.role, content: m.content })),
-          context: coachContext(workouts, profile, splits, weekSchedule),
+          context: (runCtx ? "RUNNING PLAN (from the app's running engine; these numbers are facts):\n" + runCtx + "\n\nLIFTING:\n" : "") + coachContext(workouts, profile, splits, weekSchedule),
           today: new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
         }),
         signal: ctrl.signal,
@@ -3367,27 +3221,3 @@ function WorkoutShareModal(props) {
     </div>
   );
 }
-
-
-// ─── SHARED STYLES ───
-
-// Elevation scale: tight ambient-occlusion shadow + softer ambient shadow, consistent downward light.
-const shadowSm = "0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.05)";
-const shadowMd = "0 2px 4px rgba(16,24,40,.05), 0 10px 24px rgba(16,24,40,.09)";
-const shadowLg = "0 -2px 8px rgba(16,24,40,.04), 0 -16px 48px rgba(16,24,40,.18)";
-const shadowPrimary = "0 2px 6px rgba(26,115,232,.28), 0 8px 20px rgba(26,115,232,.22)";
-const shadowCard = "0 8px 24px rgba(16,24,40,.14), 0 24px 60px rgba(16,24,40,.20)";
-const BORDER = "#eaeef3";
-
-const cardStyle = { background: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, border: "1px solid " + BORDER, boxShadow: shadowSm, overflow: "hidden" };
-const inputStyle = { background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 10, color: "#1a2332", padding: "10px 4px", fontSize: 16, fontWeight: 600, textAlign: "center", outline: "none", width: "100%", minWidth: 0, minHeight: 44 };
-const fieldStyle = { background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 12, color: "#1a2332", padding: "14px 16px", fontSize: 16, outline: "none", width: "100%", boxSizing: "border-box" };
-const labelStyle = { fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 12, letterSpacing: ".02em", textTransform: "uppercase" };
-const colStyle = { fontSize: 11, fontWeight: 500, color: "#9ca3af", textAlign: "center" };
-const navBtnStyle = { background: "#fff", border: "1px solid " + BORDER, borderRadius: 12, width: 40, height: 40, fontSize: 20, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: shadowSm };
-const closeBtn = { background: "none", border: "none", color: "#d1d5db", fontSize: 20, padding: 8, minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center" };
-const overlay = { position: "fixed", inset: 0, background: "rgba(16,24,40,.42)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" };
-const sheet = { background: "#fff", borderRadius: 22, padding: "20px", width: "100%", maxWidth: 480, maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: shadowCard, animation: "popIn .2s cubic-bezier(.22,1,.36,1)" };
-const sheetHead = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 };
-const xBtn = { background: "#f3f4f6", border: "none", borderRadius: 50, width: 36, height: 36, fontSize: 18, color: "#6b7280", display: "flex", alignItems: "center", justifyContent: "center" };
-const primaryBtn = { width: "100%", background: "linear-gradient(180deg,#2b7cf0,#1a73e8)", color: "#fff", border: "none", borderRadius: 14, padding: "18px", fontSize: 16, fontWeight: 700, minHeight: 56, boxShadow: shadowPrimary };
