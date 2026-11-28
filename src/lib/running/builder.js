@@ -55,6 +55,7 @@ export const PURPOSE = {
   'race-pace': 'Running at your goal race pace so it feels familiar on race day.',
   race: 'Race day. Start controlled, settle into goal pace, and finish strong.',
   strength: 'Heavy lower body plus a little jumping. Strength work makes every stride cheaper.',
+  'time-trial': 'A short all-out test after an easy warm-up. Your result resets every pace in your plan so they match the runner you are now.',
 }
 
 /**
@@ -131,6 +132,7 @@ export function buildPlan(opts) {
   const taperF = taperFactors(goalDistanceM)
   const taperStart = phases.indexOf('taper')
   const phaseWeek = {}
+  let lastTT = null
 
   for (let i = 0; i < phases.length; i++) {
     const phase = phases[i]
@@ -158,6 +160,13 @@ export function buildPlan(opts) {
     const prev = out[out.length - 1]
     const avoidDay0 = !!prev && prev.sessions.some((x) => x.day === 6 && HARD_TYPES.has(x.type))
     const week = isRaceWeek ? raceWeek(vol, daysFor(Math.max(vol, goalDistanceM)), level, goalDistanceM, raceTime, paces) : normalWeek({ vol, runDays, L, level, phase, weekInPhase: phaseWeek[phase], recovery, goalDistanceM, longCapM: LONG_CAP_M[b], avoidDay0 })
+    // Re-test fitness every ~6 weeks from week 4, during base and build only and never within
+    // 3 weeks of the taper (Daniels: re-test every 4 to 8 weeks).
+    // Recovery weeks are allowed: fresh legs give the truest result.
+    const ttAllowed = !isRaceWeek && (phase === 'base' || phase === 'build') && i >= 3 && (taperStart < 0 || i <= taperStart - 3)
+    if (opts.timeTrials !== false && ttAllowed && (lastTT == null || i - lastTT >= 6)) {
+      if (addTimeTrial(week.sessions, { L, avoidDay0, goalDistanceM, vol })) lastTT = i
+    }
     if (strength) addStrength(week.sessions)
     const actual = weekDistanceM(week)
     volumes.push(actual)
@@ -199,7 +208,7 @@ function buildNormalWeek({ vol, runDays, L, level, phase, weekInPhase, recovery,
   const hard = hasLong ? [L] : []
   const qDays = []
   const candidates = [...others].sort((a, c) => circ(c, L) - circ(a, L))
-  for (const t of wanted) {
+  for (let k = 0; k < wanted.length; k++) {
     const d = candidates.find((x) => !qDays.includes(x) && !(avoidDay0 && x === 0) && hard.every((h) => circ(h, x) >= 2) && qDays.every((q) => circ(q, x) >= 2))
     if (d == null) break
     qDays.push(d)
@@ -347,11 +356,53 @@ function raceWeek(vol, runDays, level, goalDistanceM, raceTime, paces) {
 }
 
 /** Two strength sessions a week, on quality days (hard days hard) or on days that don't precede a key run. */
+/**
+ * Put a time trial in the week, replacing the first quality session (keeping the week's spacing)
+ * or an easy day that is clear of every hard day. The test is sized to fit inside the run it
+ * replaces, so weekly volume never grows. Returns false when nothing fits.
+ */
+function addTimeTrial(sessions, { L, avoidDay0, goalDistanceM, vol }) {
+  const hardDays = sessions.filter((s) => HARD_TYPES.has(s.type)).map((s) => s.day)
+  const quality = sessions.find((s) => QUALITY_TYPES.has(s.type))
+  const easy = sessions
+    .filter((s) => (s.type === 'easy' || s.type === 'strides') && !(avoidDay0 && s.day === 0) && hardDays.every((h) => circ(h, s.day) >= 2))
+    .sort((a, c) => circ(c.day, L) - circ(a.day, L))[0]
+  const target = quality || easy
+  if (!target) return false
+  const ladder = [5000, 3000, 1600, 1000].filter((m) => m <= Math.max(1600, goalDistanceM) && (vol < 6000 ? m <= 1000 : vol < 12000 ? m <= 1600 : vol < 25000 ? m <= 3000 : true))
+  // Room for the test: the replaced run plus whatever the week's other easy runs can spare
+  // while staying at least 800 m. Weekly volume never grows.
+  const donors = sessions.filter((s) => s !== target && (s.type === 'easy' || s.type === 'strides'))
+  const spare = donors.reduce((t, s) => t + Math.max(0, s.distanceM - 800), 0)
+  const minWarm = (m) => (m >= 3000 ? 1600 : 800)
+  const testM = ladder.find((m) => m + minWarm(m) <= target.distanceM + spare)
+  if (!testM) return false
+  let need = Math.max(0, testM + minWarm(testM) - target.distanceM)
+  for (const d of donors) {
+    if (need <= 0) break
+    const take = Math.min(need, Math.max(0, d.distanceM - 800))
+    d.distanceM = round100(d.distanceM - take)
+    need -= take
+  }
+  const total = Math.max(target.distanceM, testM + minWarm(testM))
+  const easyM = total - testM
+  const i = sessions.indexOf(target)
+  sessions[i] = {
+    day: target.day,
+    type: 'time-trial',
+    distanceM: round100(total),
+    structure: { testM, warmupM: round100(easyM * 0.6), cooldownM: round100(easyM * 0.4) },
+    purpose: PURPOSE['time-trial'],
+  }
+  return true
+}
+
 function addStrength(sessions) {
   const runs = sessions.filter((s) => s.type !== 'strength')
   const key = new Set(runs.filter((s) => QUALITY_TYPES.has(s.type) || s.type === 'long').map((s) => s.day))
   if (runs.some((s) => s.type === 'race')) return // no heavy lifting in race week
-  const quality = runs.filter((s) => QUALITY_TYPES.has(s.type)).map((s) => s.day)
+  // No heavy lifting on a test day.
+  const quality = runs.filter((s) => QUALITY_TYPES.has(s.type) && s.type !== 'time-trial').map((s) => s.day)
   const ok = (d) => !key.has(d + 1) && !key.has(d) && !(d === 6 && key.has(0))
   // Heavy lower-body days need a day between them.
   const picks = []

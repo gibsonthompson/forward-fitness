@@ -54,7 +54,8 @@ export function evaluateRun({ session, run, vdot, paces, recentHardFlags = 0 }) 
   }
 
   // A race or time trial gives a direct fitness reading.
-  if ((type === 'race' || type === 'time-trial') && run.distanceM >= 1500 && run.durationS >= 210) {
+  // The VDOT equations hold for efforts of about 3.5 minutes and longer.
+  if ((type === 'race' || type === 'time-trial') && run.distanceM >= 1000 && run.durationS >= 210) {
     const newVdot = vdotFromRace(run.distanceM, run.durationS)
     actions.push({
       type: 'recompute-vdot',

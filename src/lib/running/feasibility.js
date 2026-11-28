@@ -47,7 +47,9 @@ export function assessGoal({ currentVdot, goalDistanceM, goalTimeS, weeks, level
   const cautious = currentVdot + Math.min(Math.max(gap, 0), plausibleGain * 0.4)
   const fast = predictRace(best, goalDistanceM, { weeklyKm })
   const slow = predictRace(cautious, goalDistanceM, { weeklyKm })
-  const predictedAtGoal = { low: fast.low, mid: (fast.mid + slow.mid) / 2, high: slow.high }
+  // The fast end is the full plausible gain itself, not a spread below it, so an out-of-reach goal
+  // is never shown inside the range.
+  const predictedAtGoal = { low: fast.mid, mid: (fast.mid + slow.mid) / 2, high: slow.high }
 
   let steppingStone = null
   if (status === 'unrealistic') {

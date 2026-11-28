@@ -63,11 +63,38 @@ describe.each(PERSONAS)('$name', (p) => {
   it('describes the structure of every quality session', () => {
     for (const w of plan.weeks) {
       for (const s of w.sessions) {
-        if (QUALITY_TYPES.has(s.type) && s.type !== 'race') {
+        if (s.type === 'time-trial') expect(s.structure.testM).toBeGreaterThan(0)
+        else if (QUALITY_TYPES.has(s.type) && s.type !== 'race') {
           expect(s.structure.reps).toBeGreaterThan(0)
           expect(s.work.distanceM).toBe(s.structure.reps * s.structure.repM)
         }
       }
+    }
+  })
+})
+
+describe('time trials', () => {
+  it('re-tests fitness from week 4, every ~6 weeks, never near the race', () => {
+    const plan = buildPlan({ vdot: 40, goalDistanceM: 10000, weeks: 20, level: 'intermediate', startWeeklyM: 25000, days: 4 })
+    const weeks = plan.weeks.map((w, i) => (w.sessions.some((s) => s.type === 'time-trial') ? i : -1)).filter((i) => i >= 0)
+    expect(weeks[0]).toBe(3)
+    for (let k = 1; k < weeks.length; k++) expect(weeks[k] - weeks[k - 1]).toBeGreaterThanOrEqual(6)
+    const taper = plan.weeks.findIndex((w) => w.phase === 'taper')
+    expect(Math.max(...weeks)).toBeLessThanOrEqual(taper - 3)
+    for (const i of weeks) {
+      const tt = plan.weeks[i].sessions.find((s) => s.type === 'time-trial')
+      expect(tt.structure.testM + tt.structure.warmupM + tt.structure.cooldownM).toBeLessThanOrEqual(tt.distanceM + 100)
+      expect(plan.weeks[i].sessions.some((s) => s.type === 'strength' && s.day === tt.day)).toBe(false)
+    }
+  })
+
+  it('gives brand-new runners a short first test', () => {
+    for (const weeks of [12, 13, 16]) {
+      const plan = buildPlan({ vdot: 22, goalDistanceM: 5000, weeks, level: 'beginner', startWeeklyM: 0, days: 3 })
+      const first = plan.weeks.findIndex((w) => w.sessions.some((s) => s.type === 'time-trial'))
+      expect(first).toBe(3) // week 4
+      const tt = plan.weeks[first].sessions.find((s) => s.type === 'time-trial')
+      expect(tt.structure.testM).toBeLessThanOrEqual(1600)
     }
   })
 })
