@@ -4,6 +4,8 @@ This is the master context file for working on this repo. Claude Code reads it a
 
 The running coach has its own full spec: @docs/running-coach.md
 
+Current status, open decisions and next steps: @docs/HANDOFF.md (update it at the end of every session)
+
 ---
 
 ## 1. What Forward Fitness Is
